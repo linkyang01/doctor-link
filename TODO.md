@@ -26,15 +26,15 @@
 
 ## P0：标准诊断包
 
-- [ ] 新增 package_builder.py
-- [ ] 生成标准 DoctorReports 目录
-- [ ] 生成 summary.md
-- [ ] 生成 problem-map.md
-- [ ] 生成 timeline.md
-- [ ] 生成 evidence-list.md
-- [ ] 生成 doctor-report.json
-- [ ] 生成 ai-context.json
-- [ ] 生成 user-assertions.json
+- [x] 新增 package_builder.py
+- [x] 生成标准 DoctorReports 目录
+- [x] 生成 summary.md
+- [x] 生成 problem-map.md
+- [x] 生成 timeline.md
+- [x] 生成 evidence-list.md
+- [x] 生成 doctor-report.json
+- [x] 生成 ai-context.json
+- [x] 生成 user-assertions.json
 
 ## P0：用户确认问题机制
 
@@ -48,11 +48,11 @@
 ## P0：问题地图与 AI 任务
 
 - [ ] 新增 problem_map_builder.py
-- [ ] 输出 problem-map.md
+- [x] 输出 problem-map.md
 - [ ] 升级 ai_task_generator.py
-- [ ] 增加 investigation-boundary.md
+- [x] 增加 investigation-boundary.md
 - [ ] 新增 verification_builder.py
-- [ ] 输出 fix-verification-checklist.md
+- [x] 输出 fix-verification-checklist.md
 
 ## P0：项目配置协议
 
