@@ -4,10 +4,11 @@ from pathlib import Path
 
 import click
 
+from doctor_link.core.ai_task_generator import generate_ai_task
+from doctor_link.core.package_builder import build_diagnostic_package, event_from_scan
 from doctor_link.core.scanner import scan_library
 from doctor_link.core.test_planner import generate_test_plan
 from doctor_link.core.report_generator import generate_basic_report
-from doctor_link.core.ai_task_generator import generate_ai_task
 
 
 @click.group()
@@ -50,7 +51,20 @@ def plan(library: Path) -> None:
 @click.argument("library", type=click.Path(exists=True, file_okay=False, path_type=Path))
 @click.option("--out", "output", type=click.Path(path_type=Path), default=Path("DoctorReports"), help="Output directory.")
 def report(library: Path, output: Path) -> None:
-    """Generate a basic Markdown and JSON report."""
+    """Generate a standard Doctor link diagnostic package."""
+    output.mkdir(parents=True, exist_ok=True)
+    scan_result = scan_library(library)
+    test_plan = generate_test_plan(scan_result)
+    event = event_from_scan(scan_result, test_plan, project="Doctor link")
+    package = build_diagnostic_package(event, output)
+    click.echo(f"Generated diagnostic package: {package.root_dir}")
+
+
+@main.command("legacy-report")
+@click.argument("library", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--out", "output", type=click.Path(path_type=Path), default=Path("DoctorReports"), help="Output directory.")
+def legacy_report(library: Path, output: Path) -> None:
+    """Generate the original basic Markdown and JSON report."""
     output.mkdir(parents=True, exist_ok=True)
     scan_result = scan_library(library)
     test_plan = generate_test_plan(scan_result)
