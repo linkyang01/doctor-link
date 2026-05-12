@@ -46,6 +46,10 @@ jobs:
           doctor-link plan VlyTestLibrary
           doctor-link report VlyTestLibrary --out DoctorReports
           doctor-link ai-task VlyTestLibrary --out DoctorReports
+          doctor-link env --project-root . --out DoctorReports/environment-smoke.json
+          doctor-link probe VlyTestLibrary/01-BasicFormats/sample.mp4 --ffprobe missing-ffprobe-for-ci --summary --out DoctorReports/probe-smoke.json
+          PACKAGE_DIR=$(find DoctorReports -mindepth 1 -maxdepth 1 -type d | head -n 1)
+          doctor-link record "$PACKAGE_DIR" --name "CI playback smoke" --status partial --expected "Sample should be playable" --actual "Placeholder media cannot be probed as playable" --file VlyTestLibrary/01-BasicFormats/sample.mp4 --note "CI smoke record"
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
