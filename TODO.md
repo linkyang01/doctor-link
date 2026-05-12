@@ -63,19 +63,27 @@
 
 ## P1：证据采集能力
 
-- [ ] 新增 environment_collector.py
-- [ ] 新增 command_runner.py
-- [ ] 新增 log_collector.py
-- [ ] 新增 media_probe.py
-- [ ] 新增 test_recorder.py
+- [x] 新增 environment_collector.py
+- [x] 新增 command_runner.py
+- [x] 新增 log_collector.py
+- [x] 新增 media_probe.py
+- [x] 新增 test_recorder.py
+- [x] 增加 doctor-link env 命令
+- [x] 增加 doctor-link probe 命令
+- [x] 增加 doctor-link record 命令
 
 ## P1：Vly Adapter
 
 - [ ] 定义 Vly Core Proof 测试矩阵
 - [ ] 支持 VlyTestLibrary 扫描
-- [ ] 支持 ffprobe 读取媒体信息
-- [ ] 支持播放测试结果记录
+- [x] 支持 ffprobe 读取媒体信息
+- [x] 支持播放测试结果记录
 - [ ] 支持 Go / No-Go 评估
+
+## P1：质量保障
+
+- [x] 增加 P1 证据采集基础测试
+- [x] 增加 CLI P1 烟测
 
 ## 工作规则
 
