@@ -49,7 +49,7 @@
 
 - [x] 新增 problem_map_builder.py
 - [x] 输出 problem-map.md
-- [ ] 升级 ai_task_generator.py
+- [x] 升级 ai_task_generator.py
 - [x] 增加 investigation-boundary.md
 - [x] 新增 verification_builder.py
 - [x] 输出 fix-verification-checklist.md
