@@ -1,0 +1,58 @@
+name: Doctor link CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install package and test tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -m pip install pytest
+
+      - name: Run tests
+        run: |
+          pytest -q --junitxml=junit/test-results-${{ matrix.python-version }}.xml
+
+      - name: Run CLI smoke tests
+        run: |
+          doctor-link --help
+          doctor-link init DoctorWorkspace
+          mkdir -p VlyTestLibrary/01-BasicFormats
+          echo "sample" > VlyTestLibrary/01-BasicFormats/sample.mp4
+          doctor-link scan VlyTestLibrary
+          doctor-link plan VlyTestLibrary
+          doctor-link report VlyTestLibrary --out DoctorReports
+          doctor-link ai-task VlyTestLibrary --out DoctorReports
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: doctor-link-test-results-${{ matrix.python-version }}
+          path: |
+            junit/test-results-${{ matrix.python-version }}.xml
+            DoctorReports/**
+          if-no-files-found: warn
