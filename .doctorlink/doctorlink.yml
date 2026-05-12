@@ -1,0 +1,27 @@
+project:
+  name: doctor-link
+  type: diagnostic-tool
+  adapter: generic
+
+collect:
+  environment:
+    - system
+    - python
+    - project
+  logs: []
+  commands:
+    - python --version
+    - doctor-link --help
+
+ai:
+  principles:
+    - evidence_first
+    - human_assertion_first
+    - no_unverified_fix_claims
+  boundaries:
+    - do not rewrite unrelated modules without evidence
+    - do not ignore human-confirmed issues without evidence
+  outputs:
+    - ai-context.json
+    - ai-task.md
+    - fix-verification-checklist.md
