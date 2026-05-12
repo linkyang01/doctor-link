@@ -11,7 +11,7 @@
 - [x] 建立 TODO.md
 - [x] 建立 ADR 决策记录目录
 - [x] 建立 P0 Diagnostic Foundation Issue
-- [ ] 建立 issue 模板
+- [x] 建立 issue 模板
 
 ## P0：诊断协议层
 
@@ -38,28 +38,28 @@
 
 ## P0：用户确认问题机制
 
-- [ ] 新增 user_assertion_manager.py
-- [ ] 增加 doctor-link assert 命令
-- [ ] 支持用户声明 expected_behavior
-- [ ] 支持用户声明 actual_behavior
-- [ ] 支持用户声明 why_user_thinks_it_is_wrong
-- [ ] 让 ai-task.md 强制包含用户确认问题
+- [x] 新增 user_assertion_manager.py
+- [x] 增加 doctor-link assert 命令
+- [x] 支持用户声明 expected_behavior
+- [x] 支持用户声明 actual_behavior
+- [x] 支持用户声明 why_user_thinks_it_is_wrong
+- [x] 让 ai-task.md 强制包含用户确认问题
 
 ## P0：问题地图与 AI 任务
 
-- [ ] 新增 problem_map_builder.py
+- [x] 新增 problem_map_builder.py
 - [x] 输出 problem-map.md
 - [ ] 升级 ai_task_generator.py
 - [x] 增加 investigation-boundary.md
-- [ ] 新增 verification_builder.py
+- [x] 新增 verification_builder.py
 - [x] 输出 fix-verification-checklist.md
 
 ## P0：项目配置协议
 
-- [ ] 新增 .doctorlink/doctorlink.yml 模板
-- [ ] 新增 .doctorlink/test-matrix.yml 模板
-- [ ] 新增 .doctorlink/assertions.yml 模板
-- [ ] 新增 .doctorlink/verification.yml 模板
+- [x] 新增 .doctorlink/doctorlink.yml 模板
+- [x] 新增 .doctorlink/test-matrix.yml 模板
+- [x] 新增 .doctorlink/assertions.yml 模板
+- [x] 新增 .doctorlink/verification.yml 模板
 
 ## P1：证据采集能力
 
