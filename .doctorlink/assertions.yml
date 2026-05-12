@@ -1,0 +1,16 @@
+assertions:
+  - id: human_confirmed_problem_must_be_preserved
+    severity: error
+    statement: Human-confirmed problems must be treated as first-class diagnostic signals.
+    expected_behavior: The assertion appears in user-assertions.json, problem-map.md, and ai-task.md.
+    ai_rule: Do not dismiss human-confirmed issues as normal behavior without evidence.
+
+  - id: vague_bug_report_is_not_enough
+    severity: warning
+    statement: A vague issue report is incomplete until evidence and reproduction steps are collected.
+    expected_behavior: Doctor link should request or generate evidence, timeline, and verification steps.
+
+  - id: no_fix_without_verification
+    severity: error
+    statement: A fix cannot be considered complete without a verification checklist and before/after evidence.
+    expected_behavior: fix-verification-checklist.md must exist for every diagnostic package.
