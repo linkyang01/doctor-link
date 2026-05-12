@@ -9,20 +9,20 @@
 - [x] 建立中英文 README
 - [x] 建立 GitHub Actions CI
 - [x] 建立 TODO.md
-- [ ] 建立 ADR 决策记录目录
-- [ ] 建立 P0 Diagnostic Foundation Issue
+- [x] 建立 ADR 决策记录目录
+- [x] 建立 P0 Diagnostic Foundation Issue
 - [ ] 建立 issue 模板
 
 ## P0：诊断协议层
 
-- [ ] 扩展 DiagnosticEvent 数据模型
-- [ ] 扩展 DiagnosticPackage 数据模型
-- [ ] 新增 EvidenceItem 数据模型
-- [ ] 新增 TimelineStep 数据模型
-- [ ] 新增 UserAssertion 数据模型
-- [ ] 新增 ProblemMap 数据模型
-- [ ] 新增 AITask 数据模型
-- [ ] 新增 VerificationChecklist 数据模型
+- [x] 扩展 DiagnosticEvent 数据模型
+- [x] 扩展 DiagnosticPackage 数据模型
+- [x] 新增 EvidenceItem 数据模型
+- [x] 新增 TimelineStep 数据模型
+- [x] 新增 UserAssertion 数据模型
+- [x] 新增 ProblemMap 数据模型
+- [x] 新增 AITask 数据模型
+- [x] 新增 VerificationChecklist 数据模型
 
 ## P0：标准诊断包
 
