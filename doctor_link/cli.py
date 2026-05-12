@@ -9,6 +9,7 @@ from doctor_link.core.package_builder import build_diagnostic_package, event_fro
 from doctor_link.core.scanner import scan_library
 from doctor_link.core.test_planner import generate_test_plan
 from doctor_link.core.report_generator import generate_basic_report
+from doctor_link.core.user_assertion_manager import add_user_assertion
 
 
 @click.group()
@@ -83,6 +84,39 @@ def ai_task(library: Path, output: Path) -> None:
     test_plan = generate_test_plan(scan_result)
     path = generate_ai_task(scan_result, test_plan, output)
     click.echo(f"Generated: {path}")
+
+
+@main.command("assert")
+@click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--statement", required=True, help="Human-confirmed problem statement.")
+@click.option("--expected", "expected_behavior", default=None, help="Expected behavior.")
+@click.option("--actual", "actual_behavior", default=None, help="Actual behavior.")
+@click.option("--why", "why_user_thinks_it_is_wrong", default=None, help="Why the user believes this is wrong.")
+@click.option("--severity", default="error", show_default=True, help="Assertion severity.")
+@click.option("--file", "related_file", default=None, help="Related file or artifact.")
+@click.option("--next-ai", "next_ai_instruction", default=None, help="Instruction for the next AI debugging pass.")
+def assert_problem(
+    package_dir: Path,
+    statement: str,
+    expected_behavior: str | None,
+    actual_behavior: str | None,
+    why_user_thinks_it_is_wrong: str | None,
+    severity: str,
+    related_file: str | None,
+    next_ai_instruction: str | None,
+) -> None:
+    """Add a human-confirmed problem to a diagnostic package."""
+    assertion = add_user_assertion(
+        package_dir=package_dir,
+        user_statement=statement,
+        expected_behavior=expected_behavior,
+        actual_behavior=actual_behavior,
+        why_user_thinks_it_is_wrong=why_user_thinks_it_is_wrong,
+        severity=severity,
+        related_file=related_file,
+        next_ai_instruction=next_ai_instruction,
+    )
+    click.echo(f"Added user assertion: {assertion.assertion_id}")
 
 
 if __name__ == "__main__":
