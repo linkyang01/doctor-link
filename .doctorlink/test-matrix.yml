@@ -1,0 +1,30 @@
+name: Doctor link P0 Foundation
+cases:
+  - id: generate_standard_package
+    type: diagnostic_package
+    required: true
+    expected:
+      - summary.md
+      - problem-map.md
+      - timeline.md
+      - evidence-list.md
+      - doctor-report.json
+      - ai-context.json
+      - ai-task.md
+      - fix-verification-checklist.md
+      - user-assertions.json
+
+  - id: add_user_assertion
+    type: human_assertion
+    required: true
+    expected:
+      - user assertion is written to user-assertions.json
+      - ai-task.md includes human-confirmed issue warning
+      - problem-map.md includes human-confirmed issue
+
+  - id: generate_verification_checklist
+    type: verification
+    required: true
+    expected:
+      - fix-verification-checklist.md exists
+      - checklist contains user-confirmed issue when present
