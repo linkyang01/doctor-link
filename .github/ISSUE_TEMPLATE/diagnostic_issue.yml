@@ -1,0 +1,65 @@
+name: Diagnostic issue
+description: Report a software problem with evidence for Doctor link diagnosis
+title: "[Diagnosis]: "
+labels: [diagnosis]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Problem summary
+      description: Describe what went wrong.
+      placeholder: The feature did not behave as expected...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should have happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What actually happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps
+      description: List the exact steps needed to reproduce the problem.
+      placeholder: |
+        1. Open...
+        2. Click...
+        3. Observe...
+    validations:
+      required: true
+
+  - type: textarea
+    id: user_assertion
+    attributes:
+      label: Human-confirmed issue
+      description: If AI missed or dismissed the issue, explain why you confirm this is a real problem.
+    validations:
+      required: false
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Attach logs, screenshots, command output, or Doctor link report paths.
+    validations:
+      required: false
+
+  - type: textarea
+    id: verification
+    attributes:
+      label: Fix verification
+      description: How should we prove the issue is fixed?
+    validations:
+      required: false
