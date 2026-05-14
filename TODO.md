@@ -128,6 +128,27 @@
 - [x] 更新 README.zh-CN.md
 - [x] 更新 README.en.md
 
+## P1+：collect 一键证据采集
+
+- [ ] 新增 collector.py
+- [ ] 支持环境信息采集并写入诊断包
+- [ ] 支持日志目录采集并写入诊断包
+- [ ] 支持命令执行输出采集并写入诊断包
+- [ ] 支持媒体 probe 采集并写入诊断包
+- [ ] 支持附件复制并写入诊断包
+- [ ] 每类证据生成 evidence item
+- [ ] 每次采集生成 timeline step
+- [ ] 写回 doctor-report.json
+- [ ] 写回 evidence-list.md
+- [ ] 写回 timeline.md
+- [ ] 写回 summary.md
+- [ ] 写回 ai-task.md
+- [ ] 增加 doctor-link collect 命令
+- [ ] 增加 collector 测试
+- [ ] 增加 collect CLI 烟测
+- [ ] 更新 README.zh-CN.md
+- [ ] 更新 README.en.md
+
 ## 工作规则
 
 1. 所有代码改动必须对应 TODO 或 Issue。
