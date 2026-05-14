@@ -1,23 +1,28 @@
 verification:
-  - id: rerun_original_issue
-    required: true
-    description: Reproduce the original issue before and after the fix.
+  write_back: false
+  required_signals:
+    - test_records
+    - report_comparison
+  checklist:
+    - id: rerun_original_issue
+      required: true
+      description: Reproduce the original issue before and after the fix.
 
-  - id: compare_reports
-    required: true
-    description: Compare before and after doctor-report.json files.
+    - id: compare_reports
+      required: true
+      description: Compare before and after doctor-report.json files.
 
-  - id: confirm_user_assertions_resolved
-    required: true
-    description: Confirm every human-confirmed issue is resolved, not ignored.
+    - id: confirm_user_assertions_resolved
+      required: true
+      description: Confirm every human-confirmed issue is resolved, not ignored.
 
-  - id: run_cli_smoke_tests
-    required: true
-    description: Run doctor-link CLI smoke tests.
-    commands:
-      - doctor-link --help
-      - doctor-link init DoctorWorkspace
+    - id: run_cli_smoke_tests
+      required: true
+      description: Run doctor-link CLI smoke tests.
+      commands:
+        - doctor-link --help
+        - doctor-link init DoctorWorkspace
 
-  - id: no_unrelated_changes
-    required: true
-    description: Confirm the fix did not modify unrelated modules outside the investigation boundary.
+    - id: no_unrelated_changes
+      required: true
+      description: Confirm the fix did not modify unrelated modules outside the investigation boundary.
