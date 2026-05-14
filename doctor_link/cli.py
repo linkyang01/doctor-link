@@ -1,15 +1,21 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import click
 
 from doctor_link.core.ai_task_generator import generate_ai_task
+from doctor_link.core.environment_collector import collect_environment
+from doctor_link.core.media_probe import probe_media, summarize_media_probe
 from doctor_link.core.package_builder import build_diagnostic_package, event_from_scan
+from doctor_link.core.report_comparator import write_report_comparison, write_report_comparison_to_package
 from doctor_link.core.scanner import scan_library
 from doctor_link.core.test_planner import generate_test_plan
 from doctor_link.core.report_generator import generate_basic_report
+from doctor_link.core.test_recorder import record_test_result
 from doctor_link.core.user_assertion_manager import add_user_assertion
+from doctor_link.core.vly_adapter import build_vly_core_proof_matrix, write_vly_core_proof_to_package
 
 
 @click.group()
@@ -84,6 +90,109 @@ def ai_task(library: Path, output: Path) -> None:
     test_plan = generate_test_plan(scan_result)
     path = generate_ai_task(scan_result, test_plan, output)
     click.echo(f"Generated: {path}")
+
+
+@main.command("env")
+@click.option("--project-root", type=click.Path(file_okay=False, path_type=Path), default=None, help="Optional project root to include.")
+@click.option("--out", "output", type=click.Path(path_type=Path), default=None, help="Optional JSON output path.")
+def env_command(project_root: Path | None, output: Path | None) -> None:
+    """Collect local environment evidence."""
+    payload = collect_environment(project_root)
+    text = json.dumps(payload, ensure_ascii=False, indent=2)
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(text, encoding="utf-8")
+        click.echo(f"Generated environment evidence: {output}")
+    else:
+        click.echo(text)
+
+
+@main.command("probe")
+@click.argument("file", type=click.Path(exists=True, dir_okay=False, path_type=Path))
+@click.option("--ffprobe", "ffprobe_binary", default="ffprobe", show_default=True, help="ffprobe executable.")
+@click.option("--out", "output", type=click.Path(path_type=Path), default=None, help="Optional JSON output path.")
+@click.option("--summary", "summary_only", is_flag=True, help="Print or write compact probe summary only.")
+def probe_command(file: Path, ffprobe_binary: str, output: Path | None, summary_only: bool) -> None:
+    """Probe a media file and return structured evidence."""
+    payload = probe_media(file, ffprobe_binary=ffprobe_binary)
+    if summary_only:
+        payload = summarize_media_probe(payload)
+    text = json.dumps(payload, ensure_ascii=False, indent=2)
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(text, encoding="utf-8")
+        click.echo(f"Generated media probe evidence: {output}")
+    else:
+        click.echo(text)
+
+
+@main.command("record")
+@click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--name", required=True, help="Test name.")
+@click.option("--status", default="unknown", show_default=True, type=click.Choice(["passed", "failed", "partial", "unknown"]), help="Test result status.")
+@click.option("--expected", "expected_behavior", default=None, help="Expected behavior.")
+@click.option("--actual", "actual_behavior", default=None, help="Actual behavior.")
+@click.option("--evidence-id", "evidence_ids", multiple=True, help="Related evidence ID. Can be repeated.")
+@click.option("--note", "user_note", default=None, help="Human note for this test result.")
+@click.option("--file", "related_file", default=None, help="Related file or test sample.")
+def record_command(
+    package_dir: Path,
+    name: str,
+    status: str,
+    expected_behavior: str | None,
+    actual_behavior: str | None,
+    evidence_ids: tuple[str, ...],
+    user_note: str | None,
+    related_file: str | None,
+) -> None:
+    """Record a test result into a diagnostic package."""
+    record = record_test_result(
+        package_dir=package_dir,
+        name=name,
+        status=status,
+        expected_behavior=expected_behavior,
+        actual_behavior=actual_behavior,
+        evidence_ids=list(evidence_ids),
+        user_note=user_note,
+        related_file=related_file,
+    )
+    click.echo(f"Recorded test result: {record.test_id}")
+
+
+@main.command("vly-proof")
+@click.argument("library", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--out", "output", type=click.Path(path_type=Path), default=None, help="Optional report output path.")
+@click.option("--json", "json_output", is_flag=True, help="Print or write JSON instead of Markdown.")
+@click.option("--package-dir", type=click.Path(exists=True, file_okay=False, path_type=Path), default=None, help="Optional diagnostic package to update with this proof as evidence.")
+def vly_proof(library: Path, output: Path | None, json_output: bool, package_dir: Path | None) -> None:
+    """Build a Vly Core Proof readiness report from a test library."""
+    scan_result = scan_library(library)
+    report = build_vly_core_proof_matrix(scan_result)
+    if package_dir is not None:
+        evidence = write_vly_core_proof_to_package(package_dir, report)
+        click.echo(f"Recorded Vly Core Proof evidence: {evidence.evidence_id}")
+    text = json.dumps(report.to_dict(), ensure_ascii=False, indent=2) if json_output else report.to_markdown()
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(text, encoding="utf-8")
+        click.echo(f"Generated Vly Core Proof report: {output}")
+    elif package_dir is None:
+        click.echo(text)
+
+
+@main.command("compare")
+@click.argument("before_report", type=click.Path(exists=True, dir_okay=False, path_type=Path))
+@click.argument("after_report", type=click.Path(exists=True, dir_okay=False, path_type=Path))
+@click.option("--out", "output", type=click.Path(path_type=Path), default=Path("DoctorReports/comparison"), help="Output directory for comparison files.")
+@click.option("--package-dir", type=click.Path(exists=True, file_okay=False, path_type=Path), default=None, help="Optional after diagnostic package to update with comparison evidence.")
+def compare_reports(before_report: Path, after_report: Path, output: Path, package_dir: Path | None) -> None:
+    """Compare before and after doctor-report.json files."""
+    comparison = write_report_comparison(before_report, after_report, output)
+    click.echo(f"Generated report comparison: {output}")
+    click.echo(f"Verification status: {comparison.status}")
+    if package_dir is not None:
+        evidence = write_report_comparison_to_package(before_report, package_dir)
+        click.echo(f"Recorded report comparison evidence: {evidence.evidence_id}")
 
 
 @main.command("assert")
