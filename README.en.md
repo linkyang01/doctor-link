@@ -252,15 +252,61 @@ If required files are missing, Doctor link does not pretend that the package is 
 
 ## Project configuration
 
-Projects can define their diagnostic rules in `.doctorlink/`:
+Projects can define diagnostic rules in `.doctorlink/`:
 
 ```text
 .doctorlink/
 ├── doctorlink.yml
+├── collect.yml
+├── package.yml
 ├── test-matrix.yml
 ├── assertions.yml
 └── verification.yml
 ```
+
+`collect`, `verify`, and `doctor-package` automatically search upward for a `.doctorlink` directory and load defaults from it. Explicit CLI parameters take priority over configuration files.
+
+### collect.yml example
+
+```yaml
+collect:
+  project_root: .
+  logs:
+    - logs/*.log
+  commands:
+    - python --version
+    - doctor-link --help
+  probes: []
+  attachments: []
+  redaction:
+    enabled: true
+    email: false
+    phone: false
+    patterns: []
+```
+
+### package.yml example
+
+```yaml
+package:
+  output_dir: DoctorReports
+  exclude_attachments: false
+  exclude_logs: false
+  exclude_screenshots: false
+  max_file_size: 1000000
+```
+
+### verification.yml example
+
+```yaml
+verification:
+  write_back: false
+  required_signals:
+    - test_records
+    - report_comparison
+```
+
+If `--logs`, `--command`, `--max-file-size`, or similar CLI options are omitted, Doctor link uses `.doctorlink` defaults. If those options are provided on the command line, the command line wins.
 
 ## First real scenario: Vly
 
@@ -292,10 +338,11 @@ It currently supports:
 7. basic evidence collection commands;
 8. one-command evidence collection;
 9. sensitive information redaction;
-10. verification task generation;
-11. Vly proof readiness;
-12. before/after report comparison;
-13. diagnostic package zip export.
+10. configuration-driven collection, verification, and package export;
+11. verification task generation;
+12. Vly proof readiness;
+13. before/after report comparison;
+14. diagnostic package zip export.
 
 ## Success standard for the first version
 
