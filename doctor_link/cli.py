@@ -6,6 +6,7 @@ from pathlib import Path
 import click
 
 from doctor_link.core.ai_task_generator import generate_ai_task
+from doctor_link.core.collector import collect_into_package
 from doctor_link.core.environment_collector import collect_environment
 from doctor_link.core.media_probe import probe_media, summarize_media_probe
 from doctor_link.core.package_builder import build_diagnostic_package, event_from_scan
@@ -227,6 +228,44 @@ def doctor_package(
     click.echo(f"Skipped files: {len(result.skipped_files)}")
     if not result.validation.is_valid:
         click.echo("Warning: diagnostic package is missing required files.")
+
+
+@main.command("collect")
+@click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--project-root", type=click.Path(file_okay=False, path_type=Path), default=None, help="Project root to collect environment evidence for.")
+@click.option("--logs", "log_patterns", multiple=True, help="Log file glob pattern. Can be repeated.")
+@click.option("--command", "commands", multiple=True, help="Command to execute and capture. Can be repeated.")
+@click.option("--probe", "probes", multiple=True, type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Media file to probe. Can be repeated.")
+@click.option("--attachment", "attachments", multiple=True, type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Attachment file to copy. Can be repeated.")
+@click.option("--note", default=None, help="Human note for this collection run.")
+@click.option("--ffprobe", "ffprobe_binary", default="ffprobe", show_default=True, help="ffprobe executable.")
+@click.option("--timeout", "command_timeout_seconds", default=30, show_default=True, help="Command timeout in seconds.")
+def collect_command(
+    package_dir: Path,
+    project_root: Path | None,
+    log_patterns: tuple[str, ...],
+    commands: tuple[str, ...],
+    probes: tuple[Path, ...],
+    attachments: tuple[Path, ...],
+    note: str | None,
+    ffprobe_binary: str,
+    command_timeout_seconds: int,
+) -> None:
+    """Collect environment, logs, commands, probes, and attachments into a diagnostic package."""
+    result = collect_into_package(
+        package_dir=package_dir,
+        project_root=project_root,
+        log_patterns=list(log_patterns),
+        commands=list(commands),
+        probes=list(probes),
+        attachments=list(attachments),
+        note=note,
+        ffprobe_binary=ffprobe_binary,
+        command_timeout_seconds=command_timeout_seconds,
+    )
+    click.echo(f"Collected evidence items: {len(result.evidence)}")
+    click.echo(f"Added timeline steps: {len(result.timeline_steps)}")
+    click.echo(f"Warnings: {len(result.warnings)}")
 
 
 @main.command("assert")
