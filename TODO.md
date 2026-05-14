@@ -82,12 +82,22 @@
 - [x] 增加 doctor-link vly-proof 命令
 - [x] 支持 vly-proof 写入标准诊断包
 
+## P1：修复验证闭环
+
+- [x] 新增 report_comparator.py
+- [x] 增加 doctor-link compare 命令
+- [x] 支持 before/after doctor-report.json 对比
+- [x] 输出 report-comparison.json
+- [x] 输出 report-comparison.md
+
 ## P1：质量保障
 
 - [x] 增加 P1 证据采集基础测试
 - [x] 增加 CLI P1 烟测
 - [x] 增加 Vly Adapter 基础测试
 - [x] 增加 Vly Proof 诊断包写入测试
+- [x] 增加 Report Comparison 基础测试
+- [x] 增加 compare CLI 烟测
 
 ## 工作规则
 
