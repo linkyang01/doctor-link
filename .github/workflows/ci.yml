@@ -42,12 +42,15 @@ jobs:
           doctor-link init DoctorWorkspace
           mkdir -p VlyTestLibrary/01-BasicFormats
           echo "sample" > VlyTestLibrary/01-BasicFormats/sample.mp4
+          echo "subtitle" > VlyTestLibrary/01-BasicFormats/sample.srt
+          echo "audio" > VlyTestLibrary/01-BasicFormats/sample.dts
           doctor-link scan VlyTestLibrary
           doctor-link plan VlyTestLibrary
           doctor-link report VlyTestLibrary --out DoctorReports
           doctor-link ai-task VlyTestLibrary --out DoctorReports
           doctor-link env --project-root . --out DoctorReports/environment-smoke.json
           doctor-link probe VlyTestLibrary/01-BasicFormats/sample.mp4 --ffprobe missing-ffprobe-for-ci --summary --out DoctorReports/probe-smoke.json
+          doctor-link vly-proof VlyTestLibrary --out DoctorReports/vly-proof-smoke.md
           PACKAGE_DIR=$(find DoctorReports -mindepth 1 -maxdepth 1 -type d | head -n 1)
           doctor-link record "$PACKAGE_DIR" --name "CI playback smoke" --status partial --expected "Sample should be playable" --actual "Placeholder media cannot be probed as playable" --file VlyTestLibrary/01-BasicFormats/sample.mp4 --note "CI smoke record"
 
