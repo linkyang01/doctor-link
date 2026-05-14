@@ -193,23 +193,23 @@
 
 ## P1+：.doctorlink 配置协议增强
 
-- [ ] 新增 config_loader.py
-- [ ] 新增 .doctorlink/collect.yml
-- [ ] 新增 .doctorlink/package.yml
-- [ ] 扩展 .doctorlink/doctorlink.yml
-- [ ] 扩展 .doctorlink/verification.yml
-- [ ] 支持默认项目根目录、日志、命令、probe、附件、排除目录
-- [ ] 支持默认敏感信息过滤规则
-- [ ] 支持默认最大文件大小和打包输出目录
-- [ ] 支持 CLI 参数覆盖配置文件
-- [ ] 支持配置校验
-- [ ] collect 接入配置读取
-- [ ] doctor-package 接入配置读取
-- [ ] verify 接入配置读取
-- [ ] 增加 config_loader 测试
-- [ ] 增加配置驱动 CLI 烟测
-- [ ] 更新 README.zh-CN.md
-- [ ] 更新 README.en.md
+- [x] 新增 config_loader.py
+- [x] 新增 .doctorlink/collect.yml
+- [x] 新增 .doctorlink/package.yml
+- [x] 扩展 .doctorlink/doctorlink.yml
+- [x] 扩展 .doctorlink/verification.yml
+- [x] 支持默认项目根目录、日志、命令、probe、附件、排除目录
+- [x] 支持默认敏感信息过滤规则
+- [x] 支持默认最大文件大小和打包输出目录
+- [x] 支持 CLI 参数覆盖配置文件
+- [x] 支持配置校验
+- [x] collect 接入配置读取
+- [x] doctor-package 接入配置读取
+- [x] verify 接入配置读取
+- [x] 增加 config_loader 测试
+- [x] 增加配置驱动 CLI 烟测
+- [x] 更新 README.zh-CN.md
+- [x] 更新 README.en.md
 
 ## 工作规则
 
