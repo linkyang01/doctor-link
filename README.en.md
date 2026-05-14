@@ -112,6 +112,7 @@ doctor-link init
 doctor-link scan <library>
 doctor-link plan <library>
 doctor-link report <library> --out DoctorReports
+doctor-link collect <package_dir> --project-root . --logs "logs/*.log" --command "python --version"
 doctor-link assert <package_dir> --statement "This is the problem"
 doctor-link env --project-root . --out environment.json
 doctor-link probe <file> --summary --out probe.json
@@ -120,6 +121,37 @@ doctor-link vly-proof <library> --package-dir <package_dir>
 doctor-link compare before.json after.json --package-dir <package_dir>
 doctor-link doctor-package <package_dir> --out DoctorReports/package.zip
 ```
+
+## One-command evidence collection
+
+`doctor-link collect` collects environment information, logs, command output, media probe results, and attachments into an existing diagnostic package.
+
+Example:
+
+```bash
+doctor-link collect DoctorReports/<package_dir> \
+  --project-root . \
+  --logs "logs/*.log" \
+  --command "python --version" \
+  --probe sample.mp4 \
+  --attachment input.txt \
+  --note "Additional evidence after user reproduction"
+```
+
+The command updates:
+
+- `doctor-report.json`
+- `evidence-list.md`
+- `timeline.md`
+- `summary.md`
+- `ai-task.md`
+- `evidence/environment.json`
+- `evidence/logs/`
+- `evidence/command-output/`
+- `evidence/test-results/`
+- `evidence/attachments/`
+
+If a command fails or media probing fails, the failure result is still preserved as evidence instead of being silently ignored.
 
 ## Diagnostic package export
 
@@ -191,9 +223,10 @@ It currently supports:
 5. AI task generation;
 6. fix verification checklist generation;
 7. basic evidence collection commands;
-8. Vly proof readiness;
-9. before/after report comparison;
-10. diagnostic package zip export.
+8. one-command evidence collection;
+9. Vly proof readiness;
+10. before/after report comparison;
+11. diagnostic package zip export.
 
 ## Success standard for the first version
 
@@ -201,10 +234,11 @@ The first version is successful when it can complete this loop:
 
 1. A user reports or selects a problem.
 2. Doctor link creates a standard diagnostic package.
-3. The user marks the confirmed problem.
-4. Doctor link generates a problem map.
-5. Doctor link generates an AI-ready debugging task.
-6. The AI task contains evidence, boundaries, and verification steps.
-7. Doctor link generates a fix verification checklist.
-8. Before/after diagnostic reports can be compared.
-9. The diagnostic package can be exported for handoff.
+3. Doctor link collects environment, logs, command output, media probe results, and attachments.
+4. The user marks the confirmed problem.
+5. Doctor link generates a problem map.
+6. Doctor link generates an AI-ready debugging task.
+7. The AI task contains evidence, boundaries, and verification steps.
+8. Doctor link generates a fix verification checklist.
+9. Before/after diagnostic reports can be compared.
+10. The diagnostic package can be exported for handoff.
