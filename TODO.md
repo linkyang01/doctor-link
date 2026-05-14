@@ -334,6 +334,17 @@
 
 详细执行清单见：`TODO-P3-P5.md`。
 
+## P6：诊断协议标准化与生态平台路线图入口
+
+- [x] 新建 P6 Issue：Diagnostic Protocol Standardization and Ecosystem Platform
+- [x] 新增 ADR：P6 Standardization and Ecosystem Roadmap
+- [x] 新增 `docs/roadmap/p6.md`
+- [x] 新增 `TODO-P6.md`
+- [ ] 获得明确授权后才启动 P6 实现开发
+- [ ] P6 完成后关闭 Issue #22
+
+详细执行清单见：`TODO-P6.md`。
+
 ## 工作规则
 
 1. 所有代码改动必须对应 TODO 或 Issue。
