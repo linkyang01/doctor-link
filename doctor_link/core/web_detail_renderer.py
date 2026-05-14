@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import html
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -61,23 +62,26 @@ def _overview(view: DiagnosticPackageView) -> str:
 def _timeline(view: DiagnosticPackageView) -> str:
     report = _dict(view.json_data("doctor_report"))
     steps = _list(report.get("timeline"))
+    anchor_map = _evidence_anchor_map(view)
     if steps:
-        content = "".join(_timeline_step(step) for step in steps)
+        content = "".join(_timeline_step(step, anchor_map) for step in steps)
     elif view.text("timeline"):
-        content = f"<div class=\"markdown\">{html.escape(view.text('timeline'))}</div>"
+        content = f"<div class=\"markdown\">{_linkify_evidence_text(view.text('timeline'), anchor_map)}</div>"
     else:
         content = "<p class=\"missing\">No timeline found.</p>"
     return f"<section id=\"timeline\"><h2>Timeline</h2><p class=\"muted\">Review failed, unknown, and evidence-linked steps first.</p>{content}</section>"
 
 
-def _timeline_step(step: Any) -> str:
+def _timeline_step(step: Any, anchor_map: dict[str, str]) -> str:
     data = _dict(step)
     title = str(data.get("title") or data.get("step") or data.get("action") or "Timeline step")
     status = str(data.get("status") or data.get("result") or "unknown")
     cls = _status_class(status)
+    evidence_links = _evidence_reference_block(data, anchor_map)
     return f"""
 <article class="mini-card {cls}"><h3>{html.escape(title)} <span class="badge {cls}">{html.escape(status)}</span></h3>
-<pre>{html.escape(json.dumps(data, ensure_ascii=False, indent=2))}</pre></article>
+{evidence_links}
+<pre>{_linkify_evidence_text(json.dumps(data, ensure_ascii=False, indent=2), anchor_map)}</pre></article>
 """
 
 
@@ -94,6 +98,8 @@ def _evidence(view: DiagnosticPackageView) -> str:
 def _evidence_item(item: EvidencePreview) -> str:
     ids = ", ".join(item.evidence_ids) if item.evidence_ids else "not linked"
     risk = "danger" if item.redaction_status == "no_redaction_report" and item.evidence_type in {"logs", "command-output"} else ""
+    anchor = _evidence_anchor(item)
+    id_anchors = "".join(f'<span id="{html.escape(_evidence_id_anchor(evidence_id))}"></span>' for evidence_id in item.evidence_ids)
     if item.content:
         content = _format_json(item.content) if item.preview_kind == "json" else item.content
         preview = f"<pre>{html.escape(content)}</pre>"
@@ -101,8 +107,8 @@ def _evidence_item(item: EvidencePreview) -> str:
         preview = f"<p class=\"missing\">{html.escape(item.warning or 'No inline preview.')}</p>"
     truncated = "<p class=\"muted\">Preview truncated.</p>" if item.truncated else ""
     return f"""
-<article class="mini-card"><h4>{html.escape(item.path)}</h4>
-<div class="badges"><span class="badge">{html.escape(item.preview_kind)}</span><span class="badge {risk}">redaction: {html.escape(item.redaction_status)}</span></div>
+<article id="{html.escape(anchor)}" class="mini-card evidence-card">{id_anchors}<h4>{html.escape(item.path)}</h4>
+<div class="badges"><span class="badge">{html.escape(item.preview_kind)}</span><span class="badge {risk}">redaction: {html.escape(item.redaction_status)}</span><a class="badge" href="#{html.escape(anchor)}">anchor</a></div>
 <p class="meta">{item.size_bytes} bytes · evidence IDs: {html.escape(ids)}</p>{preview}{truncated}</article>
 """
 
@@ -131,13 +137,14 @@ def _assertion(item: Any) -> str:
 def _ai_task(view: DiagnosticPackageView) -> str:
     task = view.text("ai_task")
     boundary = view.text("investigation_boundary")
+    anchor_map = _evidence_anchor_map(view)
     has_warning = "The human user has confirmed this as the problem" in task
     warning = "Human assertion warning present" if has_warning else "Human assertion warning not detected"
     cls = "success" if has_warning else "danger"
     return f"""
 <section id="ai-task"><h2>AI Task <span class="badge {cls}">{html.escape(warning)}</span></h2>
-<h3>Task</h3><div class="markdown">{html.escape(task or 'Missing ai-task.md')}</div>
-<h3>Investigation Boundary</h3><div class="markdown">{html.escape(boundary or 'Missing investigation-boundary.md')}</div></section>
+<h3>Task</h3><div class="markdown">{_linkify_evidence_text(task or 'Missing ai-task.md', anchor_map)}</div>
+<h3>Investigation Boundary</h3><div class="markdown">{_linkify_evidence_text(boundary or 'Missing investigation-boundary.md', anchor_map)}</div></section>
 """
 
 
@@ -147,15 +154,16 @@ def _verification(view: DiagnosticPackageView) -> str:
     missing = _list(result.get("missing_evidence"))
     rerun = _list(result.get("tests_to_rerun"))
     commands = _list(result.get("next_commands"))
+    anchor_map = _evidence_anchor_map(view)
     cls = _status_class(status)
     return f"""
 <section id="verification"><h2>Verification Workbench <span class="badge {cls}">{html.escape(status)}</span></h2>
 <p class="muted">The UI must not claim a fix is complete when evidence is missing.</p>
 <div class="stats"><div><strong>{len(missing)}</strong><span>Missing evidence</span></div><div><strong>{len(rerun)}</strong><span>Tests to rerun</span></div><div><strong>{len(commands)}</strong><span>Next commands</span></div></div>
-{_list_block('Missing Evidence', missing)}{_list_block('Tests To Rerun', rerun)}{_list_block('Suggested Next Commands', commands)}
-<h3>Checklist</h3><div class="markdown">{html.escape(view.text('verification_checklist') or 'Missing fix-verification-checklist.md')}</div>
-<h3>Plan</h3><div class="markdown">{html.escape(view.text('verification_plan') or 'Missing verification-plan.md')}</div>
-<h3>Raw Result</h3><pre>{html.escape(json.dumps(result, ensure_ascii=False, indent=2) if result else 'Missing verification-result.json')}</pre></section>
+{_list_block('Missing Evidence', missing, anchor_map)}{_list_block('Tests To Rerun', rerun, anchor_map)}{_list_block('Suggested Next Commands', commands, anchor_map)}
+<h3>Checklist</h3><div class="markdown">{_linkify_evidence_text(view.text('verification_checklist') or 'Missing fix-verification-checklist.md', anchor_map)}</div>
+<h3>Plan</h3><div class="markdown">{_linkify_evidence_text(view.text('verification_plan') or 'Missing verification-plan.md', anchor_map)}</div>
+<h3>Raw Result</h3><pre>{_linkify_evidence_text(json.dumps(result, ensure_ascii=False, indent=2) if result else 'Missing verification-result.json', anchor_map)}</pre></section>
 """
 
 
@@ -213,7 +221,7 @@ def _raw_files(view: DiagnosticPackageView) -> str:
 def _page(title: str, subtitle: str, main: str) -> str:
     nav = """<strong>Package</strong><a href="#overview">Overview</a><a href="#timeline">Timeline</a><a href="#evidence">Evidence</a><a href="#assertions">Assertions</a><a href="#ai-task">AI Task</a><a href="#verification">Verification</a><a href="#comparison">Comparison</a><a href="#redaction">Redaction</a><a href="#manifest">Manifest</a><a href="#raw">Raw Files</a>"""
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{html.escape(title)}</title><style>
-:root{{--bg:#f4f7fb;--panel:#fff;--text:#142033;--muted:#667085;--line:#d8e0ea;--accent:#315f9f;--accent-soft:#e7eef8;--warning:#8a5a00;--warning-bg:#fff6df;--danger:#8f1d1d;--danger-bg:#ffe8e8;--success:#17633a;--success-bg:#e6f6ee;--code-bg:#0f172a;--code-text:#e5e7eb}}*{{box-sizing:border-box}}body{{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);line-height:1.55}}header{{padding:28px 36px;background:linear-gradient(135deg,#1f4f86,#4e79ad);color:#fff}}header h1{{margin:0 0 8px;font-size:28px}}header p{{margin:0;opacity:.9}}.layout{{display:grid;grid-template-columns:280px 1fr;gap:24px;padding:24px}}nav{{position:sticky;top:24px;align-self:start;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}}nav a{{display:block;padding:8px 10px;color:var(--accent);text-decoration:none;border-radius:8px}}nav a:hover{{background:var(--accent-soft)}}section,.mini-card{{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:18px;box-shadow:0 6px 18px rgba(15,23,42,.05)}}h2{{margin:0 0 10px;font-size:20px}}h3{{margin:18px 0 8px;font-size:17px}}h4{{margin:0 0 8px;font-size:14px}}.meta,.muted{{color:var(--muted);font-size:13px}}.missing{{color:var(--muted);font-style:italic}}.warnings{{background:var(--warning-bg);border-color:#f4d58d;color:var(--warning)}}pre{{overflow:auto;background:var(--code-bg);color:var(--code-text);border-radius:10px;padding:14px;white-space:pre-wrap;word-break:break-word;max-height:420px}}.markdown{{white-space:pre-wrap}}.badge{{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:12px}}.badge.danger,.mini-card.danger{{background:var(--danger-bg);color:var(--danger)}}.badge.success,.mini-card.success{{background:var(--success-bg);color:var(--success)}}.grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}}.stats,.kv{{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin:14px 0}}.stats div,.kv div{{background:var(--accent-soft);border-radius:10px;padding:10px}}.stats strong,.kv strong{{display:block}}.stats span,.kv span{{color:var(--muted);font-size:12px}}.badges{{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}}@media(max-width:900px){{.layout{{grid-template-columns:1fr}}nav{{position:static}}}}
+:root{{--bg:#f4f7fb;--panel:#fff;--text:#142033;--muted:#667085;--line:#d8e0ea;--accent:#315f9f;--accent-soft:#e7eef8;--warning:#8a5a00;--warning-bg:#fff6df;--danger:#8f1d1d;--danger-bg:#ffe8e8;--success:#17633a;--success-bg:#e6f6ee;--code-bg:#0f172a;--code-text:#e5e7eb}}*{{box-sizing:border-box}}body{{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);line-height:1.55}}header{{padding:28px 36px;background:linear-gradient(135deg,#1f4f86,#4e79ad);color:#fff}}header h1{{margin:0 0 8px;font-size:28px}}header p{{margin:0;opacity:.9}}.layout{{display:grid;grid-template-columns:280px 1fr;gap:24px;padding:24px}}nav{{position:sticky;top:24px;align-self:start;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}}nav a{{display:block;padding:8px 10px;color:var(--accent);text-decoration:none;border-radius:8px}}nav a:hover{{background:var(--accent-soft)}}section,.mini-card{{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:18px;box-shadow:0 6px 18px rgba(15,23,42,.05)}}h2{{margin:0 0 10px;font-size:20px}}h3{{margin:18px 0 8px;font-size:17px}}h4{{margin:0 0 8px;font-size:14px}}.meta,.muted{{color:var(--muted);font-size:13px}}.missing{{color:var(--muted);font-style:italic}}.warnings{{background:var(--warning-bg);border-color:#f4d58d;color:var(--warning)}}pre{{overflow:auto;background:var(--code-bg);color:var(--code-text);border-radius:10px;padding:14px;white-space:pre-wrap;word-break:break-word;max-height:420px}}.markdown{{white-space:pre-wrap}}.badge{{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:12px;text-decoration:none}}.badge.danger,.mini-card.danger{{background:var(--danger-bg);color:var(--danger)}}.badge.success,.mini-card.success{{background:var(--success-bg);color:var(--success)}}.grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}}.stats,.kv{{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin:14px 0}}.stats div,.kv div{{background:var(--accent-soft);border-radius:10px;padding:10px}}.stats strong,.kv strong{{display:block}}.stats span,.kv span{{color:var(--muted);font-size:12px}}.badges{{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}}.evidence-link{{color:var(--accent);font-weight:600}}@media(max-width:900px){{.layout{{grid-template-columns:1fr}}nav{{position:static}}}}
 </style></head><body><header><h1>Doctor link Diagnostic Package Workbench</h1><p>{html.escape(subtitle)}</p></header><div class="layout"><nav>{nav}</nav><main>{main}</main></div></body></html>"""
 
 
@@ -221,8 +229,11 @@ def _items(values: list[Any]) -> str:
     return "".join(f"<li>{html.escape(str(item))}</li>" for item in values)
 
 
-def _list_block(title: str, values: list[Any]) -> str:
-    return f"<h3>{html.escape(title)}</h3><ul>{_items(values) or '<li>None</li>'}</ul>"
+def _list_block(title: str, values: list[Any], anchor_map: dict[str, str] | None = None) -> str:
+    if not values:
+        return f"<h3>{html.escape(title)}</h3><ul><li>None</li></ul>"
+    items = "".join(f"<li>{_linkify_evidence_text(str(item), anchor_map or {})}</li>" for item in values)
+    return f"<h3>{html.escape(title)}</h3><ul>{items}</ul>"
 
 
 def _dict(value: Any) -> dict[str, Any]:
@@ -272,3 +283,64 @@ def _status_class(status: str) -> str:
     if status in {"candidate_verified", "ready", "passed", "success"}:
         return "success"
     return ""
+
+
+def _evidence_anchor(item: EvidencePreview) -> str:
+    return "evidence-" + _slug(item.path)
+
+
+def _evidence_id_anchor(evidence_id: str) -> str:
+    return "evidence-id-" + _slug(evidence_id)
+
+
+def _evidence_anchor_map(view: DiagnosticPackageView) -> dict[str, str]:
+    mapping: dict[str, str] = {}
+    for item in view.evidence_previews:
+        anchor = _evidence_anchor(item)
+        mapping[item.path] = anchor
+        mapping[Path(item.path).name] = anchor
+        for evidence_id in item.evidence_ids:
+            mapping[evidence_id] = anchor
+    return mapping
+
+
+def _evidence_reference_block(data: dict[str, Any], anchor_map: dict[str, str]) -> str:
+    refs: list[str] = []
+    for key in ["evidence_id", "evidence_ids", "evidence", "path", "file", "related_file"]:
+        value = data.get(key)
+        if isinstance(value, list):
+            refs.extend(str(item) for item in value)
+        elif value:
+            refs.append(str(value))
+    links = []
+    for ref in refs:
+        anchor = _lookup_evidence_anchor(ref, anchor_map)
+        if anchor:
+            links.append(f'<a class="badge" href="#{html.escape(anchor)}">{html.escape(ref)}</a>')
+    return f"<div class=\"badges\">{''.join(links)}</div>" if links else ""
+
+
+def _linkify_evidence_text(text: str, anchor_map: dict[str, str]) -> str:
+    escaped = html.escape(text)
+    for ref in sorted(anchor_map, key=len, reverse=True):
+        if not ref:
+            continue
+        anchor = anchor_map[ref]
+        pattern = re.compile(rf"(?<![\w./-]){re.escape(html.escape(ref))}(?![\w./-])")
+        escaped = pattern.sub(f'<a class="evidence-link" href="#{html.escape(anchor)}">{html.escape(ref)}</a>', escaped)
+    return escaped
+
+
+def _lookup_evidence_anchor(ref: str, anchor_map: dict[str, str]) -> str | None:
+    if ref in anchor_map:
+        return anchor_map[ref]
+    normalized = ref.replace("\\", "/")
+    if normalized in anchor_map:
+        return anchor_map[normalized]
+    name = Path(normalized).name
+    return anchor_map.get(name)
+
+
+def _slug(value: str) -> str:
+    slug = re.sub(r"[^A-Za-z0-9_-]+", "-", value).strip("-").lower()
+    return slug or "item"
