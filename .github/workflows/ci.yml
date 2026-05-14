@@ -64,6 +64,8 @@ jobs:
           doctor-link verify "$PACKAGE_DIR" --write-back
           doctor-link doctor-package "$PACKAGE_DIR" --out DoctorReports/doctor-package-smoke.zip --exclude-attachments --max-file-size 1000000
           doctor-link doctor-package "$PACKAGE_DIR"
+          doctor-link view "$PACKAGE_DIR" --build-only
+          test -f "$PACKAGE_DIR/.doctorlink-web/index.html"
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
