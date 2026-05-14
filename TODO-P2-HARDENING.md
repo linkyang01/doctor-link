@@ -6,7 +6,7 @@ Plan: docs/p2-hardening-plan.md
 - [x] Reopen Issue #15
 - [x] Add plan file
 - [x] Add hardening checklist
-- [ ] Add comparison reader
+- [x] Add comparison reader
 - [ ] Add evidence anchors
 - [ ] Improve verification signals
 - [ ] Align README and release notes
