@@ -104,10 +104,10 @@
 ## P1+：项目管理与架构准备
 
 - [x] 新建 GitHub Issue：P1+ Evidence Collection Pipeline
-- [ ] 新增 ADR：P1+ CLI evidence pipeline
-- [ ] 明确 P1+ 三个核心命令边界：collect / verify / doctor-package
-- [ ] 确认 P1+ 不引入 Web UI
-- [ ] 确认 P1+ 不改变 P0/P1 已有诊断协议
+- [x] 新增 ADR：P1+ CLI evidence pipeline
+- [x] 明确 P1+ 三个核心命令边界：collect / verify / doctor-package
+- [x] 确认 P1+ 不引入 Web UI
+- [x] 确认 P1+ 不改变 P0/P1 已有诊断协议
 
 ## P1+：doctor-package 诊断包打包
 
