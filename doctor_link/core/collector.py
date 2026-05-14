@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import shutil
 import shlex
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Sequence
 
@@ -12,6 +12,7 @@ from doctor_link.core.environment_collector import collect_environment
 from doctor_link.core.log_collector import collect_log_files
 from doctor_link.core.media_probe import probe_media, summarize_media_probe
 from doctor_link.core.models import EvidenceItem, TimelineStep, utc_now_iso
+from doctor_link.core.redactor import RedactionOptions, RedactionReport, redact_files, redact_text
 
 
 @dataclass
@@ -21,6 +22,7 @@ class CollectionResult:
     evidence: list[EvidenceItem] = field(default_factory=list)
     timeline_steps: list[TimelineStep] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
+    redaction_report: dict[str, Any] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -29,6 +31,7 @@ class CollectionResult:
             "evidence": [item.to_dict() for item in self.evidence],
             "timeline_steps": [item.to_dict() for item in self.timeline_steps],
             "warnings": self.warnings,
+            "redaction_report": self.redaction_report,
         }
 
 
@@ -42,6 +45,8 @@ def collect_into_package(
     note: str | None = None,
     ffprobe_binary: str = "ffprobe",
     command_timeout_seconds: int = 30,
+    redact: bool = True,
+    redaction_options: RedactionOptions | None = None,
 ) -> CollectionResult:
     """Collect evidence and write it into an existing diagnostic package."""
     package_dir = package_dir.resolve()
@@ -49,13 +54,15 @@ def collect_into_package(
         raise FileNotFoundError(f"Diagnostic package not found: {package_dir}")
 
     result = CollectionResult(package_dir=str(package_dir))
+    redaction_report = RedactionReport()
+    redaction_options = redaction_options or RedactionOptions()
 
     if project_root is not None:
         _collect_environment(package_dir, project_root, result)
     if log_patterns:
-        _collect_logs(package_dir, log_patterns, result)
+        _collect_logs(package_dir, log_patterns, result, redact, redaction_options, redaction_report)
     if commands:
-        _collect_commands(package_dir, commands, command_timeout_seconds, result)
+        _collect_commands(package_dir, commands, command_timeout_seconds, result, redact, redaction_options, redaction_report)
     if probes:
         _collect_probes(package_dir, probes, ffprobe_binary, result)
     if attachments:
@@ -63,6 +70,8 @@ def collect_into_package(
     if note:
         result.warnings.append(f"User note: {note}")
 
+    if redact:
+        _write_redaction_report(package_dir, redaction_report, result)
     _write_collection_result(package_dir, result)
     _update_package_files(package_dir, result)
     return result
@@ -93,9 +102,21 @@ def _collect_environment(package_dir: Path, project_root: Path, result: Collecti
     result.timeline_steps.append(step)
 
 
-def _collect_logs(package_dir: Path, patterns: Sequence[str], result: CollectionResult) -> None:
+def _collect_logs(
+    package_dir: Path,
+    patterns: Sequence[str],
+    result: CollectionResult,
+    redact: bool,
+    redaction_options: RedactionOptions,
+    redaction_report: RedactionReport,
+) -> None:
     target_dir = package_dir / "evidence" / "logs"
     collected = collect_log_files(patterns, target_dir)
+    if redact and collected:
+        report = redact_files(collected, package_dir / "redaction-report.md", redaction_options)
+        for item in report.files:
+            redaction_report.files.append(item)
+            redaction_report.total_replacements += int(item.get("replacements", 0))
     evidence = EvidenceItem(
         kind="logs",
         title="Collected log files",
@@ -118,14 +139,29 @@ def _collect_logs(package_dir: Path, patterns: Sequence[str], result: Collection
     result.timeline_steps.append(step)
 
 
-def _collect_commands(package_dir: Path, commands: Sequence[str], timeout_seconds: int, result: CollectionResult) -> None:
+def _collect_commands(
+    package_dir: Path,
+    commands: Sequence[str],
+    timeout_seconds: int,
+    result: CollectionResult,
+    redact: bool,
+    redaction_options: RedactionOptions,
+    redaction_report: RedactionReport,
+) -> None:
     output_dir = package_dir / "evidence" / "command-output"
     output_dir.mkdir(parents=True, exist_ok=True)
     for index, command_text in enumerate(commands, start=1):
         command = shlex.split(command_text)
         command_result = run_command(command, timeout_seconds=timeout_seconds)
+        payload = command_result.to_dict()
+        if redact:
+            for field_name in ["stdout", "stderr"]:
+                if payload.get(field_name):
+                    redacted = redact_text(str(payload[field_name]), redaction_options)
+                    payload[field_name] = redacted.redacted_text
+                    redaction_report.add_file(f"command-output/command-{index}.json:{field_name}", redacted)
         target = output_dir / f"command-{index}.json"
-        target.write_text(json.dumps(command_result.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
+        target.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
         evidence = EvidenceItem(
             kind="command_output",
             title=f"Command output: {command_text}",
@@ -230,6 +266,14 @@ def _step(
     )
 
 
+def _write_redaction_report(package_dir: Path, report: RedactionReport, result: CollectionResult) -> None:
+    report_path = package_dir / "redaction-report.md"
+    report_path.write_text(report.to_markdown(), encoding="utf-8")
+    json_path = package_dir / "redaction-report.json"
+    json_path.write_text(json.dumps(report.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
+    result.redaction_report = report.to_dict()
+
+
 def _write_collection_result(package_dir: Path, result: CollectionResult) -> None:
     target = package_dir / "evidence" / "test-results" / "collection-result.json"
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -255,6 +299,8 @@ def _update_report_json(package_dir: Path, result: CollectionResult) -> None:
     payload.setdefault("evidence", []).extend(item.to_dict() for item in result.evidence)
     payload.setdefault("timeline", []).extend(step.to_dict() for step in result.timeline_steps)
     payload.setdefault("collections", []).append(result.to_dict())
+    if result.redaction_report is not None:
+        payload["redaction_report"] = result.redaction_report
     ai_task = payload.setdefault("ai_task", {})
     ai_task.setdefault("evidence_ids", []).extend(item.evidence_id for item in result.evidence)
     ai_task.setdefault("requested_work", []).append("Review newly collected evidence before proposing code changes.")
@@ -298,6 +344,7 @@ def _append_timeline(package_dir: Path, steps: list[TimelineStep]) -> None:
 
 
 def _append_summary(package_dir: Path, result: CollectionResult) -> None:
+    redactions = result.redaction_report.get("total_replacements", 0) if result.redaction_report else 0
     _append(
         package_dir / "summary.md",
         "\n".join([
@@ -307,6 +354,7 @@ def _append_summary(package_dir: Path, result: CollectionResult) -> None:
             f"- Evidence items: `{len(result.evidence)}`",
             f"- Timeline steps: `{len(result.timeline_steps)}`",
             f"- Warnings: `{len(result.warnings)}`",
+            f"- Redactions: `{redactions}`",
             "",
         ]),
     )
@@ -319,6 +367,8 @@ def _append_ai_task(package_dir: Path, result: CollectionResult) -> None:
         "Review these evidence items before proposing or validating fixes:",
     ]
     lines.extend(f"- `{item.evidence_id}`: {item.title}" for item in result.evidence)
+    if result.redaction_report is not None:
+        lines.extend(["", f"Redaction replacements: `{result.redaction_report.get('total_replacements', 0)}`"])
     if result.warnings:
         lines.extend(["", "Warnings:"])
         lines.extend(f"- {warning}" for warning in result.warnings)
