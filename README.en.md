@@ -47,7 +47,8 @@ It provides:
 - AI-ready task generation;
 - fix verification planning;
 - before/after diagnostic comparison;
-- diagnostic package export.
+- diagnostic package export;
+- local diagnostic package browsing.
 
 ## Key concept: User Assertion
 
@@ -121,6 +122,7 @@ doctor-link record <package_dir> --name "Test name" --status partial
 doctor-link vly-proof <library> --package-dir <package_dir>
 doctor-link compare before.json after.json --package-dir <package_dir>
 doctor-link doctor-package <package_dir> --out DoctorReports/package.zip
+doctor-link view <package_dir>
 ```
 
 ## One-command evidence collection
@@ -250,6 +252,54 @@ The exporter writes:
 
 If required files are missing, Doctor link does not pretend that the package is complete. The warning is preserved in the manifest and command output. If `redaction-report.md` is missing, the export notes will remind reviewers to check for sensitive information before sharing.
 
+## Local diagnostic package browser
+
+`doctor-link view` opens a local, read-only browser view for a diagnostic package. It does not modify package contents.
+
+Example:
+
+```bash
+doctor-link view DoctorReports/<package_dir>
+```
+
+Optional parameters:
+
+```bash
+doctor-link view DoctorReports/<package_dir> \
+  --host 127.0.0.1 \
+  --port 8765 \
+  --no-open-browser
+```
+
+Build static HTML without starting the local server:
+
+```bash
+doctor-link view DoctorReports/<package_dir> --build-only
+```
+
+The command generates:
+
+```text
+DoctorReports/<package_dir>/.doctorlink-web/index.html
+```
+
+The current view includes:
+
+- summary;
+- problem-map;
+- timeline;
+- evidence-list;
+- user assertions;
+- AI task;
+- investigation boundary;
+- verification checklist / verification plan / verification result;
+- redaction report;
+- manifest;
+- package readme;
+- evidence file list.
+
+The first P2 Web UI batch is local and read-only. It does not add cloud sync, login, or any replacement for the CLI diagnostic workflow.
+
 ## Project configuration
 
 Projects can define diagnostic rules in `.doctorlink/`:
@@ -325,7 +375,7 @@ Doctor link will help Vly verify whether it can become an all-in-one media playe
 
 ## Current status
 
-Doctor link has completed the P0/P1 diagnostic foundation and is moving into the P1+ CLI evidence pipeline stage.
+Doctor link has completed the P0/P1/P1+ diagnostic foundation and is moving into the P2 local Web UI / diagnostic package browser stage.
 
 It currently supports:
 
@@ -342,7 +392,8 @@ It currently supports:
 11. verification task generation;
 12. Vly proof readiness;
 13. before/after report comparison;
-14. diagnostic package zip export.
+14. diagnostic package zip export;
+15. local read-only diagnostic package browser.
 
 ## Success standard for the first version
 
@@ -359,3 +410,4 @@ The first version is successful when it can complete this loop:
 9. Doctor link generates a fix verification plan.
 10. Before/after diagnostic reports can be compared.
 11. The diagnostic package can be exported for handoff.
+12. The diagnostic package can be browsed locally.
