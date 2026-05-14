@@ -215,18 +215,18 @@
 
 - [x] 新建 GitHub Issue：P2 Local Web UI / Diagnostic Package Browser
 - [x] 新增 ADR：Local Web UI Boundary
-- [ ] 新增 web package reader
-- [ ] 新增静态 HTML 渲染器
-- [ ] 支持读取 summary / timeline / evidence / assertions / ai-task / verification
-- [ ] 支持读取 redaction report / manifest / package readme
-- [ ] 新增 doctor-link view 命令
-- [ ] 支持 --host / --port / --no-open-browser
-- [ ] 保持本地只读浏览，不修改诊断包
-- [ ] 增加 package reader 测试
-- [ ] 增加 HTML renderer 测试
-- [ ] 增加 view CLI 烟测
-- [ ] 更新 README.zh-CN.md
-- [ ] 更新 README.en.md
+- [x] 新增 web package reader
+- [x] 新增静态 HTML 渲染器
+- [x] 支持读取 summary / timeline / evidence / assertions / ai-task / verification
+- [x] 支持读取 redaction report / manifest / package readme
+- [x] 新增 doctor-link view 命令
+- [x] 支持 --host / --port / --no-open-browser
+- [x] 保持本地只读浏览，不修改诊断包
+- [x] 增加 package reader 测试
+- [x] 增加 HTML renderer 测试
+- [x] 增加 view CLI 烟测
+- [x] 更新 README.zh-CN.md
+- [x] 更新 README.en.md
 
 ## 工作规则
 
