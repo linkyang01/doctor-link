@@ -9,7 +9,7 @@ from doctor_link.core.ai_task_generator import generate_ai_task
 from doctor_link.core.environment_collector import collect_environment
 from doctor_link.core.media_probe import probe_media, summarize_media_probe
 from doctor_link.core.package_builder import build_diagnostic_package, event_from_scan
-from doctor_link.core.report_comparator import write_report_comparison
+from doctor_link.core.report_comparator import write_report_comparison, write_report_comparison_to_package
 from doctor_link.core.scanner import scan_library
 from doctor_link.core.test_planner import generate_test_plan
 from doctor_link.core.report_generator import generate_basic_report
@@ -184,11 +184,15 @@ def vly_proof(library: Path, output: Path | None, json_output: bool, package_dir
 @click.argument("before_report", type=click.Path(exists=True, dir_okay=False, path_type=Path))
 @click.argument("after_report", type=click.Path(exists=True, dir_okay=False, path_type=Path))
 @click.option("--out", "output", type=click.Path(path_type=Path), default=Path("DoctorReports/comparison"), help="Output directory for comparison files.")
-def compare_reports(before_report: Path, after_report: Path, output: Path) -> None:
+@click.option("--package-dir", type=click.Path(exists=True, file_okay=False, path_type=Path), default=None, help="Optional after diagnostic package to update with comparison evidence.")
+def compare_reports(before_report: Path, after_report: Path, output: Path, package_dir: Path | None) -> None:
     """Compare before and after doctor-report.json files."""
     comparison = write_report_comparison(before_report, after_report, output)
     click.echo(f"Generated report comparison: {output}")
     click.echo(f"Verification status: {comparison.status}")
+    if package_dir is not None:
+        evidence = write_report_comparison_to_package(before_report, package_dir)
+        click.echo(f"Recorded report comparison evidence: {evidence.evidence_id}")
 
 
 @main.command("assert")
