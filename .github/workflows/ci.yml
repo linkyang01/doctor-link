@@ -40,11 +40,12 @@ jobs:
         run: |
           doctor-link --help
           doctor-link init DoctorWorkspace
-          mkdir -p VlyTestLibrary/01-BasicFormats
+          mkdir -p VlyTestLibrary/01-BasicFormats logs
           echo "sample" > VlyTestLibrary/01-BasicFormats/sample.mp4
           echo "subtitle" > VlyTestLibrary/01-BasicFormats/sample.srt
           echo "audio" > VlyTestLibrary/01-BasicFormats/sample.dts
           echo "password=ci-secret user@example.com" > VlyTestLibrary/app.log
+          echo "password=config-secret" > logs/config.log
           echo "attachment" > VlyTestLibrary/input.txt
           doctor-link scan VlyTestLibrary
           doctor-link plan VlyTestLibrary
@@ -56,11 +57,13 @@ jobs:
           cp "$PACKAGE_DIR/doctor-report.json" DoctorReports/before-smoke.json
           doctor-link collect "$PACKAGE_DIR" --project-root . --logs "VlyTestLibrary/*.log" --command "python -c \"print('api_key=ci_command_secret')\"" --probe VlyTestLibrary/01-BasicFormats/sample.mp4 --attachment VlyTestLibrary/input.txt --ffprobe missing-ffprobe-for-ci --note "CI collect smoke" --redact-email --redact-pattern "ci_command_secret"
           test -f "$PACKAGE_DIR/redaction-report.md"
+          doctor-link collect "$PACKAGE_DIR" --ffprobe missing-ffprobe-for-ci --note "CI config-driven collect smoke"
           doctor-link vly-proof VlyTestLibrary --out DoctorReports/vly-proof-smoke.md --package-dir "$PACKAGE_DIR"
           doctor-link record "$PACKAGE_DIR" --name "CI playback smoke" --status partial --expected "Sample should be playable" --actual "Placeholder media cannot be probed as playable" --file VlyTestLibrary/01-BasicFormats/sample.mp4 --note "CI smoke record"
           doctor-link compare DoctorReports/before-smoke.json "$PACKAGE_DIR/doctor-report.json" --out DoctorReports/comparison-smoke --package-dir "$PACKAGE_DIR"
           doctor-link verify "$PACKAGE_DIR" --write-back
           doctor-link doctor-package "$PACKAGE_DIR" --out DoctorReports/doctor-package-smoke.zip --exclude-attachments --max-file-size 1000000
+          doctor-link doctor-package "$PACKAGE_DIR"
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
