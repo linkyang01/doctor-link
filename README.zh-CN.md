@@ -46,7 +46,8 @@ Doctor link 不是日志查看器，也不是提示词生成器。
 - 用户确认问题保留；
 - AI 修复任务生成；
 - 修复验证计划；
-- 修复前后诊断报告对比。
+- 修复前后诊断报告对比；
+- 诊断包打包交付。
 
 ## 关键概念：User Assertion 用户确认问题
 
@@ -76,59 +77,6 @@ Layer 4: AI Collaboration Package AI 协作层
 Layer 5: Fix Verification Loop 修复验证闭环
 ```
 
-### Layer 1：Diagnostic Protocol 诊断协议层
-
-核心模型：
-
-- DiagnosticEvent
-- DiagnosticPackage
-- EvidenceItem
-- TimelineStep
-- UserAssertion
-- ProblemMap
-- AITask
-- VerificationChecklist
-
-### Layer 2：Evidence Collection 证据采集层
-
-采集内容：
-
-- 系统环境；
-- 日志；
-- 命令输出；
-- 测试结果；
-- 文件与附件；
-- 截图；
-- 外部工具输出。
-
-### Layer 3：Human Diagnosis Surface 人类诊断层
-
-给人看的输出：
-
-- summary.md
-- problem-map.md
-- timeline.md
-- evidence-list.md
-- user-assertions.json
-
-### Layer 4：AI Collaboration Package AI 协作层
-
-给 AI / Codex 看的输出：
-
-- ai-context.json
-- ai-task.md
-- investigation-boundary.md
-- fix-verification-checklist.md
-
-### Layer 5：Fix Verification Loop 修复验证闭环
-
-修复验证输出：
-
-- before-report.json
-- after-report.json
-- regression-result.json
-- Go / No-Go 结论
-
 ## 标准诊断包
 
 每次诊断应生成如下结构：
@@ -157,25 +105,51 @@ DoctorReports/
         └── attachments/
 ```
 
-## 运行模式
+## 常用命令
 
-Doctor link 支持三种诊断模式。
+```bash
+doctor-link init
+doctor-link scan <library>
+doctor-link plan <library>
+doctor-link report <library> --out DoctorReports
+doctor-link assert <package_dir> --statement "这里就是问题"
+doctor-link env --project-root . --out environment.json
+doctor-link probe <file> --summary --out probe.json
+doctor-link record <package_dir> --name "测试名称" --status partial
+doctor-link vly-proof <library> --package-dir <package_dir>
+doctor-link compare before.json after.json --package-dir <package_dir>
+doctor-link doctor-package <package_dir> --out DoctorReports/package.zip
+```
 
-### 1. External Mode 外部诊断模式
+## 诊断包打包交付
 
-Doctor link 在目标程序外部运行，收集项目文件、日志、命令输出、环境信息和用户确认问题。
+`doctor-link doctor-package` 用于把标准诊断包导出为 zip，便于交付给 AI Code、Codex、开发人员或评审人员。
 
-这是第一版优先实现的模式。
+示例：
 
-### 2. Sidecar Mode 伴随运行模式
+```bash
+doctor-link doctor-package DoctorReports/<package_dir> \
+  --out DoctorReports/doctor-package.zip
+```
 
-Doctor link 与目标程序同时运行，监听日志、进程状态、文件变化、测试执行过程和手动失败标记。
+可选过滤：
 
-### 3. Embedded SDK Mode 嵌入式 SDK 模式
+```bash
+doctor-link doctor-package DoctorReports/<package_dir> \
+  --out DoctorReports/doctor-package.zip \
+  --exclude-attachments \
+  --exclude-logs \
+  --exclude-screenshots \
+  --max-file-size 1000000
+```
 
-目标程序可以选择接入轻量 SDK，主动上报结构化运行时事件。
+导出时会生成：
 
-该模式是可选增强，不应成为 Doctor link 可用的前提。
+- `manifest.json`：记录导出时间、校验结果、包含文件和跳过文件；
+- `package-readme.md`：说明该 zip 的用途、校验结果和跳过文件；
+- `.zip` 文件：保留原诊断包目录结构。
+
+如果诊断包缺少必需文件，命令不会伪装成功，而是会在 manifest 和命令输出中保留警告。
 
 ## 项目配置
 
@@ -204,22 +178,11 @@ Doctor link 将帮助 Vly 验证它是否能成为全能媒体播放器，重点
 - 用户确认的播放问题；
 - 是否进入下一阶段的 Go / No-Go 判断。
 
-## 规划命令
-
-```bash
-doctor-link init
-doctor-link scan
-doctor-link report
-doctor-link assert
-doctor-link ai-task
-doctor-link verify-plan
-```
-
 ## 当前状态
 
-Doctor link 当前处于地基建设阶段。
+Doctor link 当前已完成 P0/P1 诊断地基，并进入 P1+ CLI 证据流水线增强阶段。
 
-当前优先实现：
+已具备：
 
 1. 核心数据模型；
 2. 标准诊断包生成；
@@ -227,7 +190,10 @@ Doctor link 当前处于地基建设阶段。
 4. 问题地图生成；
 5. AI 任务生成；
 6. 修复验证清单生成；
-7. `.doctorlink/` 配置模板。
+7. 证据采集基础命令；
+8. Vly proof；
+9. 修复前后报告对比；
+10. 诊断包 zip 导出。
 
 ## 第一版成功标准
 
@@ -240,4 +206,5 @@ Doctor link 当前处于地基建设阶段。
 5. Doctor link 生成 AI 可执行的修复任务；
 6. AI 任务包含证据、边界和验证步骤；
 7. Doctor link 生成修复验证清单；
-8. 修复前后诊断报告可以对比。
+8. 修复前后诊断报告可以对比；
+9. 诊断包可以打包交付。
