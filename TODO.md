@@ -89,6 +89,7 @@
 - [x] 支持 before/after doctor-report.json 对比
 - [x] 输出 report-comparison.json
 - [x] 输出 report-comparison.md
+- [x] 支持 compare 写入 after 标准诊断包
 
 ## P1：质量保障
 
@@ -98,6 +99,7 @@
 - [x] 增加 Vly Proof 诊断包写入测试
 - [x] 增加 Report Comparison 基础测试
 - [x] 增加 compare CLI 烟测
+- [x] 增加 Report Comparison 诊断包写入测试
 
 ## 工作规则
 
