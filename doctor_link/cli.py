@@ -17,6 +17,7 @@ from doctor_link.core.test_planner import generate_test_plan
 from doctor_link.core.report_generator import generate_basic_report
 from doctor_link.core.test_recorder import record_test_result
 from doctor_link.core.user_assertion_manager import add_user_assertion
+from doctor_link.core.verification_runner import run_verification
 from doctor_link.core.vly_adapter import build_vly_core_proof_matrix, write_vly_core_proof_to_package
 
 
@@ -266,6 +267,19 @@ def collect_command(
     click.echo(f"Collected evidence items: {len(result.evidence)}")
     click.echo(f"Added timeline steps: {len(result.timeline_steps)}")
     click.echo(f"Warnings: {len(result.warnings)}")
+
+
+@main.command("verify")
+@click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--write-back", is_flag=True, help="Write verification result back into doctor-report.json, summary.md, and ai-task.md.")
+def verify_command(package_dir: Path, write_back: bool) -> None:
+    """Generate a verification plan and result for a diagnostic package."""
+    result = run_verification(package_dir, write_back=write_back)
+    click.echo(f"Generated verification plan: {package_dir / 'verification-plan.md'}")
+    click.echo(f"Generated verification result: {package_dir / 'verification-result.json'}")
+    click.echo(f"Verification status: {result.status}")
+    if result.missing_evidence:
+        click.echo(f"Missing evidence: {len(result.missing_evidence)}")
 
 
 @main.command("assert")

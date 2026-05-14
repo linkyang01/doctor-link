@@ -113,6 +113,7 @@ doctor-link scan <library>
 doctor-link plan <library>
 doctor-link report <library> --out DoctorReports
 doctor-link collect <package_dir> --project-root . --logs "logs/*.log" --command "python --version"
+doctor-link verify <package_dir> --write-back
 doctor-link assert <package_dir> --statement "This is the problem"
 doctor-link env --project-root . --out environment.json
 doctor-link probe <file> --summary --out probe.json
@@ -152,6 +153,37 @@ The command updates:
 - `evidence/attachments/`
 
 If a command fails or media probing fails, the failure result is still preserved as evidence instead of being silently ignored.
+
+## Fix verification task generation
+
+`doctor-link verify` reads the diagnostic package verification checklist, test records, user assertions, Vly proof, and report comparison to generate a verification plan and structured verification result.
+
+Example:
+
+```bash
+doctor-link verify DoctorReports/<package_dir> --write-back
+```
+
+The command writes:
+
+- `verification-plan.md`
+- `verification-result.json`
+
+When `--write-back` is used, it also updates:
+
+- `doctor-report.json`
+- `summary.md`
+- `ai-task.md`
+
+Verification statuses include:
+
+- `ready`
+- `missing_evidence`
+- `not_verified`
+- `candidate_verified`
+- `needs_review`
+
+Doctor link does not claim a fix is verified just because a verification plan exists. It lists missing evidence, tests to rerun, and suggested next commands.
 
 ## Diagnostic package export
 
@@ -224,9 +256,10 @@ It currently supports:
 6. fix verification checklist generation;
 7. basic evidence collection commands;
 8. one-command evidence collection;
-9. Vly proof readiness;
-10. before/after report comparison;
-11. diagnostic package zip export.
+9. verification task generation;
+10. Vly proof readiness;
+11. before/after report comparison;
+12. diagnostic package zip export.
 
 ## Success standard for the first version
 
@@ -239,6 +272,6 @@ The first version is successful when it can complete this loop:
 5. Doctor link generates a problem map.
 6. Doctor link generates an AI-ready debugging task.
 7. The AI task contains evidence, boundaries, and verification steps.
-8. Doctor link generates a fix verification checklist.
+8. Doctor link generates a fix verification plan.
 9. Before/after diagnostic reports can be compared.
 10. The diagnostic package can be exported for handoff.

@@ -149,6 +149,31 @@
 - [x] 更新 README.zh-CN.md
 - [x] 更新 README.en.md
 
+## P1+：verify 验证任务生成
+
+- [x] 新增 verification_runner.py
+- [x] 读取 fix-verification-checklist.md
+- [x] 读取 doctor-report.json
+- [x] 读取 user-assertions.json
+- [x] 读取 test_records
+- [x] 读取 report_comparison
+- [x] 读取 vly_core_proof
+- [x] 判断验证状态：ready / missing_evidence / not_verified / candidate_verified / needs_review
+- [x] 生成 verification-plan.md
+- [x] 生成 verification-result.json
+- [x] 输出缺失证据清单
+- [x] 输出必须重跑的测试
+- [x] 输出建议下一步命令
+- [x] 增加 doctor-link verify 命令
+- [x] 支持 --write-back
+- [x] 写回 doctor-report.json
+- [x] 写回 summary.md
+- [x] 写回 ai-task.md
+- [x] 增加 verification_runner 测试
+- [x] 增加 verify CLI 烟测
+- [x] 更新 README.zh-CN.md
+- [x] 更新 README.en.md
+
 ## 工作规则
 
 1. 所有代码改动必须对应 TODO 或 Issue。
