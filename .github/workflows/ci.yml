@@ -55,6 +55,7 @@ jobs:
           doctor-link vly-proof VlyTestLibrary --out DoctorReports/vly-proof-smoke.md --package-dir "$PACKAGE_DIR"
           doctor-link record "$PACKAGE_DIR" --name "CI playback smoke" --status partial --expected "Sample should be playable" --actual "Placeholder media cannot be probed as playable" --file VlyTestLibrary/01-BasicFormats/sample.mp4 --note "CI smoke record"
           doctor-link compare DoctorReports/before-smoke.json "$PACKAGE_DIR/doctor-report.json" --out DoctorReports/comparison-smoke --package-dir "$PACKAGE_DIR"
+          doctor-link doctor-package "$PACKAGE_DIR" --out DoctorReports/doctor-package-smoke.zip --exclude-attachments --max-file-size 1000000
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
