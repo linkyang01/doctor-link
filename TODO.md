@@ -320,6 +320,20 @@
 - [ ] Issue #15 全部完成后关闭
 - [ ] 准备版本发布说明草稿，但不发布版本
 
+## P3-P5：后续路线图入口
+
+- [x] 新建 P3 Issue：AI Coding Collaboration Layer
+- [x] 新建 P4 Issue：Automated Diagnosis Pipeline
+- [x] 新建 P5 Issue：Productization and Release Readiness
+- [x] 新增 ADR：P3-P5 Roadmap
+- [x] 新增 `docs/roadmap/p3-p5.md`
+- [x] 新增 `TODO-P3-P5.md`
+- [ ] P3 完成后关闭 Issue #18
+- [ ] P4 完成后关闭 Issue #19
+- [ ] P5 完成后关闭 Issue #20
+
+详细执行清单见：`TODO-P3-P5.md`。
+
 ## 工作规则
 
 1. 所有代码改动必须对应 TODO 或 Issue。
