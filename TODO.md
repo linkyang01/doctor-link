@@ -80,12 +80,14 @@
 - [x] 支持播放测试结果记录
 - [x] 支持 Go / No-Go 评估
 - [x] 增加 doctor-link vly-proof 命令
+- [x] 支持 vly-proof 写入标准诊断包
 
 ## P1：质量保障
 
 - [x] 增加 P1 证据采集基础测试
 - [x] 增加 CLI P1 烟测
 - [x] 增加 Vly Adapter 基础测试
+- [x] 增加 Vly Proof 诊断包写入测试
 
 ## 工作规则
 
