@@ -4,6 +4,7 @@ project:
   adapter: generic
 
 collect:
+  project_root: .
   environment:
     - system
     - python
@@ -12,6 +13,12 @@ collect:
   commands:
     - python --version
     - doctor-link --help
+  probes: []
+  attachments: []
+
+package:
+  output_dir: DoctorReports
+  max_file_size: 1000000
 
 ai:
   principles:
