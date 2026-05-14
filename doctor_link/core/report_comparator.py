@@ -5,7 +5,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
-from doctor_link.core.models import utc_now_iso
+from doctor_link.core.models import EvidenceItem, TimelineStep, utc_now_iso
 
 
 @dataclass
@@ -149,6 +149,48 @@ def write_report_comparison(before_report: Path, after_report: Path, output_dir:
     return comparison
 
 
+def write_report_comparison_to_package(before_report: Path, after_package_dir: Path) -> EvidenceItem:
+    """Compare a before report with an after package and write verification evidence into the after package."""
+    after_package_dir = after_package_dir.resolve()
+    if not after_package_dir.is_dir():
+        raise FileNotFoundError(f"Diagnostic package not found: {after_package_dir}")
+    after_report = after_package_dir / "doctor-report.json"
+    comparison = compare_doctor_reports(before_report, after_report)
+
+    evidence_dir = after_package_dir / "evidence" / "test-results"
+    evidence_dir.mkdir(parents=True, exist_ok=True)
+    json_path = evidence_dir / "report-comparison.json"
+    md_path = evidence_dir / "report-comparison.md"
+    json_path.write_text(json.dumps(comparison.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
+    md_path.write_text(comparison.to_markdown(), encoding="utf-8")
+
+    evidence = EvidenceItem(
+        kind="report_comparison",
+        title="Before/after diagnostic report comparison",
+        source="doctor-link compare",
+        path=str(json_path.relative_to(after_package_dir)),
+        content=f"Verification status: {comparison.status}\n{comparison.summary}",
+    )
+    step = TimelineStep(
+        order=_next_order(after_package_dir),
+        action="compare_doctor_reports",
+        target=str(before_report),
+        expected_result="After report should contain evidence that the original human-confirmed issue is resolved.",
+        actual_result=f"{comparison.status}: {comparison.summary}",
+        status="passed" if comparison.status == "candidate_verified" else "failed",
+        evidence_ids=[evidence.evidence_id],
+        is_failure_point=comparison.status != "candidate_verified",
+        user_note="Comparison status is evidence for verification, not a standalone proof of production readiness.",
+    )
+
+    _update_after_package(after_package_dir, comparison, evidence, step)
+    _append_evidence_markdown(after_package_dir, evidence, md_path.relative_to(after_package_dir))
+    _append_timeline_markdown(after_package_dir, step)
+    _append_ai_task(after_package_dir, comparison, evidence)
+    _append_summary(after_package_dir, comparison)
+    return evidence
+
+
 def _read_report(path: Path) -> dict[str, Any]:
     if not path.exists():
         raise FileNotFoundError(f"doctor-report.json not found: {path}")
@@ -167,6 +209,104 @@ def _assertion_statements(report: dict[str, Any]) -> set[str]:
     return statements
 
 
+def _update_after_package(
+    after_package_dir: Path,
+    comparison: ReportComparison,
+    evidence: EvidenceItem,
+    step: TimelineStep,
+) -> None:
+    path = after_package_dir / "doctor-report.json"
+    payload = _read_report(path)
+    payload["report_comparison"] = comparison.to_dict()
+    payload.setdefault("evidence", []).append(evidence.to_dict())
+    payload.setdefault("timeline", []).append(step.to_dict())
+    ai_task = payload.setdefault("ai_task", {})
+    ai_task.setdefault("evidence_ids", []).append(evidence.evidence_id)
+    if comparison.status != "candidate_verified":
+        ai_task.setdefault("requested_work", []).append(
+            "Review report comparison evidence before marking the fix as verified."
+        )
+    ai_task.setdefault("verification_steps", []).append(
+        "Review `evidence/test-results/report-comparison.md` and confirm verification status is acceptable."
+    )
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _append_evidence_markdown(after_package_dir: Path, evidence: EvidenceItem, markdown_path: Path) -> None:
+    _append(
+        after_package_dir / "evidence-list.md",
+        "\n".join(
+            [
+                f"\n## {evidence.title}",
+                "",
+                f"- ID: `{evidence.evidence_id}`",
+                f"- Kind: `{evidence.kind}`",
+                f"- Source: `{evidence.source}`",
+                f"- JSON Path: `{evidence.path}`",
+                f"- Markdown Path: `{markdown_path}`",
+                "",
+                evidence.content or "No content preview.",
+                "",
+            ]
+        ),
+    )
+
+
+def _append_timeline_markdown(after_package_dir: Path, step: TimelineStep) -> None:
+    marker = " **Failure point**" if step.is_failure_point else ""
+    _append(
+        after_package_dir / "timeline.md",
+        "\n".join(
+            [
+                f"\n## Step {step.order}: {step.action}{marker}",
+                "",
+                f"- Time: `{step.timestamp}`",
+                f"- Target: `{step.target or 'N/A'}`",
+                f"- Status: `{step.status}`",
+                f"- Expected: {step.expected_result or 'N/A'}",
+                f"- Actual: {step.actual_result or 'N/A'}",
+                f"- Evidence: {', '.join(step.evidence_ids)}",
+                f"- User note: {step.user_note or 'N/A'}",
+                "",
+            ]
+        ),
+    )
+
+
+def _append_ai_task(after_package_dir: Path, comparison: ReportComparison, evidence: EvidenceItem) -> None:
+    lines = [
+        "\n## Report comparison verification evidence",
+        "",
+        f"- Verification status: `{comparison.status}`",
+        f"- Evidence: `{evidence.evidence_id}`",
+        f"- Summary: {comparison.summary}",
+        "- Boundary: Do not claim the fix is verified unless comparison status and test evidence support it.",
+    ]
+    if comparison.status != "candidate_verified":
+        lines.append("- Instruction: Continue investigation or add missing verification evidence before closing.")
+    _append(after_package_dir / "ai-task.md", "\n".join(lines) + "\n")
+
+
+def _append_summary(after_package_dir: Path, comparison: ReportComparison) -> None:
+    _append(
+        after_package_dir / "summary.md",
+        f"\n## Report comparison verification\n\n- Status: `{comparison.status}`\n- Summary: {comparison.summary}\n",
+    )
+
+
+def _next_order(package_dir: Path) -> int:
+    path = package_dir / "doctor-report.json"
+    if not path.exists():
+        return 1
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return 1
+    orders = [item.get("order") for item in payload.get("timeline", []) if isinstance(item, dict)]
+    numeric_orders = [item for item in orders if isinstance(item, int)]
+    return max(numeric_orders, default=0) + 1
+
+
 def _build_summary(
     resolved: list[str],
     remaining: list[str],
@@ -182,6 +322,11 @@ def _build_summary(
         f"Test record delta: {test_record_delta}.",
     ]
     return " ".join(parts)
+
+
+def _append(path: Path, text: str) -> None:
+    current = path.read_text(encoding="utf-8") if path.exists() else ""
+    path.write_text(current.rstrip() + "\n" + text.lstrip("\n"), encoding="utf-8")
 
 
 def _list(items: list[str]) -> list[str]:
