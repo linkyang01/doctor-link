@@ -125,8 +125,8 @@
 - [x] 增加 doctor-link doctor-package 命令
 - [x] 增加 package exporter 测试
 - [x] 增加 doctor-package CLI 烟测
-- [ ] 更新 README.zh-CN.md
-- [ ] 更新 README.en.md
+- [x] 更新 README.zh-CN.md
+- [x] 更新 README.en.md
 
 ## 工作规则
 
