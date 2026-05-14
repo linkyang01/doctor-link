@@ -4,6 +4,7 @@ import html
 import json
 from pathlib import Path
 
+from doctor_link.core.reports_indexer import DiagnosticPackageIndexItem, DiagnosticReportsIndex
 from doctor_link.core.web_package_reader import DiagnosticPackageView, PackageJsonSection, PackageSection
 
 
@@ -27,89 +28,74 @@ def render_package_html(view: DiagnosticPackageView) -> str:
     warnings = "".join(f"<li>{html.escape(item)}</li>" for item in view.warnings) or "<li>None</li>"
     nav = "".join(nav_items)
 
-    return f"""<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Doctor link - {html.escape(view.title)}</title>
-  <style>
-    :root {{
-      --bg: #f4f7fb;
-      --panel: #ffffff;
-      --text: #142033;
-      --muted: #667085;
-      --line: #d8e0ea;
-      --accent: #315f9f;
-      --accent-soft: #e7eef8;
-      --warning: #8a5a00;
-      --warning-bg: #fff6df;
-      --code-bg: #0f172a;
-      --code-text: #e5e7eb;
-    }}
-    * {{ box-sizing: border-box; }}
-    body {{
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.55;
-    }}
-    header {{
-      padding: 28px 36px;
-      background: linear-gradient(135deg, #1f4f86, #4e79ad);
-      color: #fff;
-    }}
-    header h1 {{ margin: 0 0 8px; font-size: 28px; }}
-    header p {{ margin: 0; opacity: .9; }}
-    .layout {{ display: grid; grid-template-columns: 280px 1fr; gap: 24px; padding: 24px; }}
-    nav {{ position: sticky; top: 24px; align-self: start; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }}
-    nav a {{ display: block; padding: 8px 10px; color: var(--accent); text-decoration: none; border-radius: 8px; }}
-    nav a:hover {{ background: var(--accent-soft); }}
-    main {{ min-width: 0; }}
-    section {{ background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 22px; margin-bottom: 18px; box-shadow: 0 6px 18px rgba(15, 23, 42, .05); }}
-    h2 {{ margin: 0 0 10px; font-size: 20px; }}
-    .meta {{ color: var(--muted); font-size: 13px; margin-bottom: 14px; }}
-    .missing {{ color: var(--muted); font-style: italic; }}
-    .warnings {{ background: var(--warning-bg); border-color: #f4d58d; color: var(--warning); }}
-    pre {{ overflow: auto; background: var(--code-bg); color: var(--code-text); border-radius: 10px; padding: 14px; white-space: pre-wrap; word-break: break-word; }}
-    .markdown {{ white-space: pre-wrap; }}
-    .evidence-list {{ columns: 2; padding-left: 20px; }}
-    .badge {{ display: inline-block; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 12px; }}
-    @media (max-width: 900px) {{
-      .layout {{ grid-template-columns: 1fr; }}
-      nav {{ position: static; }}
-      .evidence-list {{ columns: 1; }}
-    }}
-  </style>
-</head>
-<body>
-  <header>
-    <h1>Doctor link Diagnostic Package Browser</h1>
-    <p>{html.escape(view.title)} · {html.escape(view.package_dir)}</p>
-  </header>
-  <div class="layout">
-    <nav aria-label="Package sections">
-      <strong>Sections</strong>
-      {nav}
-      <a href="#evidence-files">Evidence Files</a>
-    </nav>
-    <main>
+    return _page(
+        title=f"Doctor link - {view.title}",
+        header_title="Doctor link Diagnostic Package Browser",
+        header_subtitle=f"{view.title} · {view.package_dir}",
+        nav=f"<strong>Sections</strong>{nav}<a href=\"#evidence-files\">Evidence Files</a>",
+        main=f"""
       <section class="warnings">
         <h2>Package Warnings</h2>
         <ul>{warnings}</ul>
       </section>
       {''.join(body_sections)}
-    </main>
-  </div>
-</body>
-</html>
-"""
+""",
+    )
+
+
+def render_reports_index_html(index: DiagnosticReportsIndex) -> str:
+    """Render a DoctorReports index as a self-contained HTML page."""
+    packages = sorted(index.packages, key=lambda item: item.updated_at or "", reverse=True)
+    warning_items = "".join(f"<li>{html.escape(item)}</li>" for item in index.warnings) or "<li>None</li>"
+    cards = "".join(_render_package_card(item) for item in packages) or "<p class=\"missing\">No diagnostic packages found.</p>"
+    filters = _render_filter_panel(index)
+    return _page(
+        title="Doctor link - Reports Index",
+        header_title="Doctor link Diagnostic Workbench",
+        header_subtitle=f"{index.total_packages} package(s) · {index.reports_root}",
+        nav="""
+          <strong>Workbench</strong>
+          <a href="#overview">Overview</a>
+          <a href="#filters">Status Filters</a>
+          <a href="#packages">Packages</a>
+          <a href="#warnings">Warnings</a>
+        """,
+        main=f"""
+      <section id="overview">
+        <h2>Reports Overview</h2>
+        <div class="stats">
+          <div><strong>{index.total_packages}</strong><span>Total packages</span></div>
+          <div><strong>{_count_with_assertions(index)}</strong><span>With user assertions</span></div>
+          <div><strong>{_count_verification_blockers(index)}</strong><span>Verification blockers</span></div>
+          <div><strong>{_count_redaction_warnings(index)}</strong><span>Redaction warnings</span></div>
+        </div>
+      </section>
+      <section id="filters">
+        <h2>Status Filters</h2>
+        {filters}
+      </section>
+      <section id="packages">
+        <h2>Diagnostic Packages <span id="visible-count" class="badge">{index.total_packages} visible</span></h2>
+        <div class="cards">{cards}</div>
+      </section>
+      <section id="warnings" class="warnings">
+        <h2>Index Warnings</h2>
+        <ul>{warning_items}</ul>
+      </section>
+""",
+        script=_filter_script(),
+    )
 
 
 def write_package_html(view: DiagnosticPackageView, output: Path) -> Path:
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(render_package_html(view), encoding="utf-8")
+    return output
+
+
+def write_reports_index_html(index: DiagnosticReportsIndex, output: Path) -> Path:
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(render_reports_index_html(index), encoding="utf-8")
     return output
 
 
@@ -155,3 +141,216 @@ def _render_evidence_files(evidence_files: list[str]) -> str:
   <ul class="evidence-list">{items}</ul>
 </section>
 """
+
+
+def _render_package_card(item: DiagnosticPackageIndexItem) -> str:
+    warning_list = "".join(f"<li>{html.escape(warning)}</li>" for warning in item.warnings[:4])
+    if item.warning_count > 4:
+        warning_list += f"<li>+ {item.warning_count - 4} more warning(s)</li>"
+    warnings = f"<ul class=\"compact\">{warning_list}</ul>" if warning_list else "<p class=\"muted\">No package warnings.</p>"
+    detail_href = f"packages/{html.escape(item.relative_path)}/index.html"
+    has_assertions = "yes" if item.user_assertion_count > 0 else "no"
+    redaction_warning = "yes" if item.redaction_status in {"missing", "invalid"} else "no"
+    return f"""
+<article class="card" data-verification="{html.escape(item.verification_status)}" data-assertions="{has_assertions}" data-redaction-warning="{redaction_warning}" data-redaction="{html.escape(item.redaction_status)}">
+  <div class="card-head">
+    <h3>{html.escape(item.name)}</h3>
+    <a class="open" href="{detail_href}">Open</a>
+  </div>
+  <p class="muted">{html.escape(item.project)}</p>
+  <p>{html.escape(item.summary)}</p>
+  <div class="badges">
+    {_status_badge('verification', item.verification_status)}
+    {_status_badge('redaction', item.redaction_status)}
+    {_status_badge('export', item.package_export_status)}
+  </div>
+  <dl class="metrics">
+    <div><dt>Evidence</dt><dd>{item.evidence_count}</dd></div>
+    <div><dt>Timeline</dt><dd>{item.timeline_count}</dd></div>
+    <div><dt>Assertions</dt><dd>{item.user_assertion_count}</dd></div>
+    <div><dt>Warnings</dt><dd>{item.warning_count}</dd></div>
+  </dl>
+  <p class="meta">Updated: {html.escape(item.updated_at or 'unknown')}</p>
+  {warnings}
+</article>
+"""
+
+
+def _render_filter_panel(index: DiagnosticReportsIndex) -> str:
+    verification = sorted({item.verification_status for item in index.packages})
+    verification_options = "".join(f"<option value=\"{html.escape(status)}\">{html.escape(status)} ({_count_status(index, 'verification_status', status)})</option>" for status in verification)
+    return f"""
+<div class="controls" role="group" aria-label="Diagnostic package filters">
+  <label>Verification status
+    <select id="verification-filter">
+      <option value="">All</option>
+      {verification_options}
+    </select>
+  </label>
+  <label>User assertions
+    <select id="assertion-filter">
+      <option value="">All</option>
+      <option value="yes">With assertions ({_count_with_assertions(index)})</option>
+      <option value="no">Without assertions ({index.total_packages - _count_with_assertions(index)})</option>
+    </select>
+  </label>
+  <label>Redaction risk
+    <select id="redaction-filter">
+      <option value="">All</option>
+      <option value="yes">Needs review ({_count_redaction_warnings(index)})</option>
+      <option value="no">Report present ({index.total_packages - _count_redaction_warnings(index)})</option>
+    </select>
+  </label>
+  <button type="button" id="reset-filters">Reset</button>
+</div>
+<p class="muted">Filters run locally in this browser page. They do not modify diagnostic packages.</p>
+"""
+
+
+def _page(title: str, header_title: str, header_subtitle: str, nav: str, main: str, script: str = "") -> str:
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{html.escape(title)}</title>
+  <style>
+    :root {{
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --text: #142033;
+      --muted: #667085;
+      --line: #d8e0ea;
+      --accent: #315f9f;
+      --accent-soft: #e7eef8;
+      --warning: #8a5a00;
+      --warning-bg: #fff6df;
+      --danger: #8f1d1d;
+      --danger-bg: #ffe8e8;
+      --success: #17633a;
+      --success-bg: #e6f6ee;
+      --code-bg: #0f172a;
+      --code-text: #e5e7eb;
+    }}
+    * {{ box-sizing: border-box; }}
+    body {{ margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); line-height: 1.55; }}
+    header {{ padding: 28px 36px; background: linear-gradient(135deg, #1f4f86, #4e79ad); color: #fff; }}
+    header h1 {{ margin: 0 0 8px; font-size: 28px; }}
+    header p {{ margin: 0; opacity: .9; }}
+    .layout {{ display: grid; grid-template-columns: 280px 1fr; gap: 24px; padding: 24px; }}
+    nav {{ position: sticky; top: 24px; align-self: start; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }}
+    nav a {{ display: block; padding: 8px 10px; color: var(--accent); text-decoration: none; border-radius: 8px; }}
+    nav a:hover {{ background: var(--accent-soft); }}
+    main {{ min-width: 0; }}
+    section, .card {{ background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 22px; margin-bottom: 18px; box-shadow: 0 6px 18px rgba(15, 23, 42, .05); }}
+    h2 {{ margin: 0 0 10px; font-size: 20px; }}
+    h3 {{ margin: 0 0 8px; font-size: 17px; }}
+    .meta, .muted {{ color: var(--muted); font-size: 13px; }}
+    .missing {{ color: var(--muted); font-style: italic; }}
+    .warnings {{ background: var(--warning-bg); border-color: #f4d58d; color: var(--warning); }}
+    pre {{ overflow: auto; background: var(--code-bg); color: var(--code-text); border-radius: 10px; padding: 14px; white-space: pre-wrap; word-break: break-word; }}
+    .markdown {{ white-space: pre-wrap; }}
+    .evidence-list {{ columns: 2; padding-left: 20px; }}
+    .badge {{ display: inline-block; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 12px; }}
+    .badge.danger {{ background: var(--danger-bg); color: var(--danger); }}
+    .badge.success {{ background: var(--success-bg); color: var(--success); }}
+    .cards {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }}
+    .card {{ margin: 0; }}
+    .card-head {{ display: flex; justify-content: space-between; gap: 12px; align-items: start; }}
+    .open {{ color: #fff; background: var(--accent); padding: 7px 10px; border-radius: 8px; text-decoration: none; font-size: 13px; }}
+    .badges {{ display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0; }}
+    .metrics {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 0; }}
+    .metrics div, .stats div {{ background: var(--accent-soft); border-radius: 10px; padding: 10px; }}
+    .metrics dt, .stats span {{ color: var(--muted); font-size: 12px; }}
+    .metrics dd {{ margin: 0; font-weight: 700; }}
+    .stats {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }}
+    .stats strong {{ display: block; font-size: 28px; }}
+    .controls {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; align-items: end; }}
+    .controls label {{ display: grid; gap: 6px; color: var(--muted); font-size: 13px; }}
+    select, button {{ border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; background: #fff; color: var(--text); }}
+    button {{ background: var(--accent); color: #fff; cursor: pointer; }}
+    .compact {{ padding-left: 18px; margin: 8px 0 0; }}
+    @media (max-width: 900px) {{ .layout {{ grid-template-columns: 1fr; }} nav {{ position: static; }} .evidence-list {{ columns: 1; }} .metrics {{ grid-template-columns: repeat(2, 1fr); }} }}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>{html.escape(header_title)}</h1>
+    <p>{html.escape(header_subtitle)}</p>
+  </header>
+  <div class="layout">
+    <nav aria-label="Navigation">
+      {nav}
+    </nav>
+    <main>
+      {main}
+    </main>
+  </div>
+  {script}
+</body>
+</html>
+"""
+
+
+def _status_badge(kind: str, status: str) -> str:
+    css = ""
+    if status in {"not_verified", "missing", "missing_evidence", "invalid", "invalid_manifest"}:
+        css = " danger"
+    elif status in {"candidate_verified", "ready", "redacted", "clean", "exported"}:
+        css = " success"
+    return f'<span class="badge{css}">{html.escape(kind)}: {html.escape(status)}</span>'
+
+
+def _filter_script() -> str:
+    return """
+<script>
+(function () {
+  const verification = document.getElementById('verification-filter');
+  const assertions = document.getElementById('assertion-filter');
+  const redaction = document.getElementById('redaction-filter');
+  const reset = document.getElementById('reset-filters');
+  const count = document.getElementById('visible-count');
+  const cards = Array.from(document.querySelectorAll('.card'));
+
+  function applyFilters() {
+    let visible = 0;
+    cards.forEach((card) => {
+      const matchVerification = !verification.value || card.dataset.verification === verification.value;
+      const matchAssertions = !assertions.value || card.dataset.assertions === assertions.value;
+      const matchRedaction = !redaction.value || card.dataset.redactionWarning === redaction.value;
+      const show = matchVerification && matchAssertions && matchRedaction;
+      card.hidden = !show;
+      if (show) visible += 1;
+    });
+    if (count) count.textContent = visible + ' visible';
+  }
+
+  [verification, assertions, redaction].forEach((control) => control && control.addEventListener('change', applyFilters));
+  if (reset) {
+    reset.addEventListener('click', () => {
+      verification.value = '';
+      assertions.value = '';
+      redaction.value = '';
+      applyFilters();
+    });
+  }
+  applyFilters();
+}());
+</script>
+"""
+
+
+def _count_status(index: DiagnosticReportsIndex, attr: str, value: str) -> int:
+    return sum(1 for item in index.packages if getattr(item, attr) == value)
+
+
+def _count_with_assertions(index: DiagnosticReportsIndex) -> int:
+    return sum(1 for item in index.packages if item.user_assertion_count > 0)
+
+
+def _count_verification_blockers(index: DiagnosticReportsIndex) -> int:
+    return sum(1 for item in index.packages if item.verification_status in {"missing", "missing_evidence", "not_verified"})
+
+
+def _count_redaction_warnings(index: DiagnosticReportsIndex) -> int:
+    return sum(1 for item in index.packages if item.redaction_status in {"missing", "invalid"})

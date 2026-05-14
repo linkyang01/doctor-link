@@ -123,6 +123,7 @@ doctor-link vly-proof <library> --package-dir <package_dir>
 doctor-link compare before.json after.json --package-dir <package_dir>
 doctor-link doctor-package <package_dir> --out DoctorReports/package.zip
 doctor-link view <package_dir>
+doctor-link view DoctorReports
 ```
 
 ## One-command evidence collection
@@ -254,18 +255,35 @@ If required files are missing, Doctor link does not pretend that the package is 
 
 ## Local diagnostic package browser
 
-`doctor-link view` opens a local, read-only browser view for a diagnostic package. It does not modify package contents.
+`doctor-link view` opens a local, read-only browser view for diagnostic packages. It does not modify package contents.
 
-Example:
+View one diagnostic package:
 
 ```bash
 doctor-link view DoctorReports/<package_dir>
 ```
 
+View the whole `DoctorReports` directory and generate a local diagnostic workbench index:
+
+```bash
+doctor-link view DoctorReports
+```
+
+The workbench index supports:
+
+- identifying multiple standard diagnostic packages;
+- showing project name, problem summary, created time, and updated time;
+- showing evidence count, timeline step count, and user assertion count;
+- showing verification status, redaction status, and package export status;
+- opening individual package detail pages from the list;
+- filtering by verification status;
+- filtering by whether user assertions exist;
+- filtering by whether redaction warnings exist.
+
 Optional parameters:
 
 ```bash
-doctor-link view DoctorReports/<package_dir> \
+doctor-link view DoctorReports \
   --host 127.0.0.1 \
   --port 8765 \
   --no-open-browser
@@ -274,16 +292,17 @@ doctor-link view DoctorReports/<package_dir> \
 Build static HTML without starting the local server:
 
 ```bash
-doctor-link view DoctorReports/<package_dir> --build-only
+doctor-link view DoctorReports --build-only
 ```
 
 The command generates:
 
 ```text
-DoctorReports/<package_dir>/.doctorlink-web/index.html
+DoctorReports/.doctorlink-web/index.html
+DoctorReports/.doctorlink-web/packages/<package_dir>/index.html
 ```
 
-The current view includes:
+A package detail page currently includes:
 
 - summary;
 - problem-map;
@@ -298,7 +317,7 @@ The current view includes:
 - package readme;
 - evidence file list.
 
-The first P2 Web UI batch is local and read-only. It does not add cloud sync, login, or any replacement for the CLI diagnostic workflow.
+The P2 Web UI is local and read-only. It does not add cloud sync, login, or any replacement for the CLI diagnostic workflow.
 
 ## Project configuration
 
@@ -375,7 +394,7 @@ Doctor link will help Vly verify whether it can become an all-in-one media playe
 
 ## Current status
 
-Doctor link has completed the P0/P1/P1+ diagnostic foundation and is moving into the P2 local Web UI / diagnostic package browser stage.
+Doctor link has completed the P0/P1/P1+ diagnostic foundation and is moving into the P2 local Web UI / diagnostic workbench stage.
 
 It currently supports:
 
@@ -393,7 +412,8 @@ It currently supports:
 12. Vly proof readiness;
 13. before/after report comparison;
 14. diagnostic package zip export;
-15. local read-only diagnostic package browser.
+15. local read-only diagnostic package browser;
+16. multi-package diagnostic workbench index.
 
 ## Success standard for the first version
 
@@ -411,3 +431,4 @@ The first version is successful when it can complete this loop:
 10. Before/after diagnostic reports can be compared.
 11. The diagnostic package can be exported for handoff.
 12. The diagnostic package can be browsed locally.
+13. Multiple diagnostic packages can be browsed and filtered in a local workbench.

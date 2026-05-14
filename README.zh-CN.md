@@ -123,6 +123,7 @@ doctor-link vly-proof <library> --package-dir <package_dir>
 doctor-link compare before.json after.json --package-dir <package_dir>
 doctor-link doctor-package <package_dir> --out DoctorReports/package.zip
 doctor-link view <package_dir>
+doctor-link view DoctorReports
 ```
 
 ## 一键证据采集
@@ -256,16 +257,33 @@ doctor-link doctor-package DoctorReports/<package_dir> \
 
 `doctor-link view` 用于在本地浏览器中打开诊断包，只读查看诊断上下文，不修改诊断包内容。
 
-示例：
+查看单个诊断包：
 
 ```bash
 doctor-link view DoctorReports/<package_dir>
 ```
 
+查看整个 `DoctorReports` 目录，生成本地诊断工作台首页：
+
+```bash
+doctor-link view DoctorReports
+```
+
+工作台首页支持：
+
+- 识别多个标准诊断包；
+- 展示项目名、问题摘要、创建时间、更新时间；
+- 展示 evidence 数量、timeline 步骤数、user assertion 数量；
+- 展示 verification 状态、redaction 状态、package export 状态；
+- 从列表页进入单个诊断包详情页；
+- 按 verification 状态筛选；
+- 按是否存在用户确认问题筛选；
+- 按是否存在 redaction warning 筛选。
+
 可选参数：
 
 ```bash
-doctor-link view DoctorReports/<package_dir> \
+doctor-link view DoctorReports \
   --host 127.0.0.1 \
   --port 8765 \
   --no-open-browser
@@ -274,16 +292,17 @@ doctor-link view DoctorReports/<package_dir> \
 仅生成静态 HTML，不启动服务：
 
 ```bash
-doctor-link view DoctorReports/<package_dir> --build-only
+doctor-link view DoctorReports --build-only
 ```
 
 该命令会生成：
 
 ```text
-DoctorReports/<package_dir>/.doctorlink-web/index.html
+DoctorReports/.doctorlink-web/index.html
+DoctorReports/.doctorlink-web/packages/<package_dir>/index.html
 ```
 
-当前浏览内容包括：
+单个诊断包详情当前浏览内容包括：
 
 - summary
 - problem-map
@@ -298,7 +317,7 @@ DoctorReports/<package_dir>/.doctorlink-web/index.html
 - package readme
 - evidence 文件清单
 
-P2 第一批 Web UI 只负责本地只读浏览，不做云端同步、不做账号登录、不替代 CLI 诊断流程。
+P2 Web UI 只负责本地只读浏览，不做云端同步、不做账号登录、不替代 CLI 诊断流程。
 
 ## 项目配置
 
@@ -375,7 +394,7 @@ Doctor link 将帮助 Vly 验证它是否能成为全能媒体播放器，重点
 
 ## 当前状态
 
-Doctor link 当前已完成 P0/P1/P1+ 诊断地基，并进入 P2 本地 Web UI / 诊断包浏览器阶段。
+Doctor link 当前已完成 P0/P1/P1+ 诊断地基，并进入 P2 本地 Web UI / 诊断工作台阶段。
 
 已具备：
 
@@ -393,7 +412,8 @@ Doctor link 当前已完成 P0/P1/P1+ 诊断地基，并进入 P2 本地 Web UI 
 12. Vly proof；
 13. 修复前后报告对比；
 14. 诊断包 zip 导出；
-15. 本地只读诊断包浏览器。
+15. 本地只读诊断包浏览器；
+16. 多诊断包工作台首页。
 
 ## 第一版成功标准
 
@@ -410,4 +430,5 @@ Doctor link 当前已完成 P0/P1/P1+ 诊断地基，并进入 P2 本地 Web UI 
 9. Doctor link 生成修复验证计划；
 10. 修复前后诊断报告可以对比；
 11. 诊断包可以打包交付；
-12. 诊断包可以本地可视化浏览。
+12. 诊断包可以本地可视化浏览；
+13. 多个诊断包可以在本地工作台中统一浏览和筛选。

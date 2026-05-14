@@ -231,26 +231,26 @@
 ## P2：诊断工作台路线图
 
 - [x] 新增 ADR：P2 Diagnostic Workbench Roadmap
-- [ ] 将 P2 Web UI 从单包静态页升级为本地诊断工作台
-- [ ] 保持本地优先、只读优先、证据优先、用户确认问题优先
-- [ ] 明确任何写回能力都必须另写 ADR 并显式操作
-- [ ] 更新 Issue #15，纳入完整 P2 工作台计划
+- [x] 将 P2 Web UI 从单包静态页升级为本地诊断工作台
+- [x] 保持本地优先、只读优先、证据优先、用户确认问题优先
+- [x] 明确任何写回能力都必须另写 ADR 并显式操作
+- [x] 更新 Issue #15，纳入完整 P2 工作台计划
 
 ## P2：诊断包列表与导航
 
-- [ ] 新增 reports_indexer.py，扫描 DoctorReports 目录
-- [ ] 识别多个标准诊断包
-- [ ] 提取每个诊断包的项目名、问题摘要、创建时间、更新时间
-- [ ] 提取 evidence 数量、timeline 步骤数、user assertion 数量
-- [ ] 提取 verification 状态、redaction 状态、package export 状态
-- [ ] 生成诊断包列表页
-- [ ] 支持从列表页进入单个诊断包详情
-- [ ] 支持按 verification 状态筛选
-- [ ] 支持按是否存在用户确认问题筛选
-- [ ] 支持按是否存在 redaction warning 筛选
-- [ ] 增加 reports indexer 测试
-- [ ] 增加 reports list HTML 测试
-- [ ] 增加 CLI smoke 覆盖
+- [x] 新增 reports_indexer.py，扫描 DoctorReports 目录
+- [x] 识别多个标准诊断包
+- [x] 提取每个诊断包的项目名、问题摘要、创建时间、更新时间
+- [x] 提取 evidence 数量、timeline 步骤数、user assertion 数量
+- [x] 提取 verification 状态、redaction 状态、package export 状态
+- [x] 生成诊断包列表页
+- [x] 支持从列表页进入单个诊断包详情
+- [x] 支持按 verification 状态筛选
+- [x] 支持按是否存在用户确认问题筛选
+- [x] 支持按是否存在 redaction warning 筛选
+- [x] 增加 reports indexer 测试
+- [x] 增加 reports list HTML 测试
+- [x] 增加 CLI smoke 覆盖
 
 ## P2：诊断包详情页增强
 
