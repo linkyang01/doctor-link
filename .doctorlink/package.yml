@@ -1,0 +1,6 @@
+package:
+  output_dir: DoctorReports
+  exclude_attachments: false
+  exclude_logs: false
+  exclude_screenshots: false
+  max_file_size: 1000000
