@@ -9,8 +9,9 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 from doctor_link.core.reports_indexer import index_reports
+from doctor_link.core.web_detail_renderer import write_package_detail_html
 from doctor_link.core.web_package_reader import read_package_view
-from doctor_link.core.web_renderer import write_package_html, write_reports_index_html
+from doctor_link.core.web_renderer import write_reports_index_html
 
 
 @dataclass
@@ -29,7 +30,7 @@ def build_web_view(package_dir: Path, output_dir: Path | None = None) -> WebView
 
     output_dir = (output_dir or package_dir / ".doctorlink-web").resolve()
     view = read_package_view(package_dir)
-    index_path = write_package_html(view, output_dir / "index.html")
+    index_path = write_package_detail_html(view, output_dir / "index.html")
     return WebViewResult(
         package_dir=str(package_dir),
         output_dir=str(output_dir),
@@ -49,7 +50,7 @@ def build_reports_index_view(reports_root: Path, output_dir: Path | None = None)
         package_dir = Path(package.path)
         view = read_package_view(package_dir)
         detail_dir = output_dir / "packages" / package.relative_path
-        write_package_html(view, detail_dir / "index.html")
+        write_package_detail_html(view, detail_dir / "index.html")
     return WebViewResult(
         package_dir=str(reports_root),
         output_dir=str(output_dir),
