@@ -8,7 +8,7 @@ Plan: docs/p2-hardening-plan.md
 - [x] Add hardening checklist
 - [x] Add comparison reader
 - [x] Add evidence anchors
-- [ ] Improve verification signals
+- [x] Improve verification signals
 - [ ] Align README and release notes
 - [ ] Align main TODO
 - [ ] Add final P2 audit

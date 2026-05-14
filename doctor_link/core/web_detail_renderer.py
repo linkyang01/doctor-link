@@ -150,17 +150,22 @@ def _ai_task(view: DiagnosticPackageView) -> str:
 
 def _verification(view: DiagnosticPackageView) -> str:
     result = _dict(view.json_data("verification_result"))
+    report = _dict(view.json_data("doctor_report"))
     status = str(result.get("status") or "missing")
     missing = _list(result.get("missing_evidence"))
     rerun = _list(result.get("tests_to_rerun"))
     commands = _list(result.get("next_commands"))
     anchor_map = _evidence_anchor_map(view)
     cls = _status_class(status)
+    comparison_status = str(result.get("report_comparison_status") or _nested(report, ["verification_result", "report_comparison_status"]) or "unknown")
+    vly_status = str(result.get("vly_core_proof_status") or _nested(report, ["verification_result", "vly_core_proof_status"]) or "unknown")
+    coverage = _assertion_test_coverage(view, result, report)
     return f"""
 <section id="verification"><h2>Verification Workbench <span class="badge {cls}">{html.escape(status)}</span></h2>
 <p class="muted">The UI must not claim a fix is complete when evidence is missing.</p>
-<div class="stats"><div><strong>{len(missing)}</strong><span>Missing evidence</span></div><div><strong>{len(rerun)}</strong><span>Tests to rerun</span></div><div><strong>{len(commands)}</strong><span>Next commands</span></div></div>
+<div class="stats"><div><strong>{len(missing)}</strong><span>Missing evidence</span></div><div><strong>{len(rerun)}</strong><span>Tests to rerun</span></div><div><strong>{len(commands)}</strong><span>Next commands</span></div><div><strong>{html.escape(comparison_status)}</strong><span>Report comparison</span></div><div><strong>{html.escape(vly_status)}</strong><span>Vly Core Proof</span></div><div><strong>{_coverage_summary(coverage)}</strong><span>Assertion coverage</span></div></div>
 {_list_block('Missing Evidence', missing, anchor_map)}{_list_block('Tests To Rerun', rerun, anchor_map)}{_list_block('Suggested Next Commands', commands, anchor_map)}
+{_verification_signal_panel(comparison_status, vly_status, coverage)}
 <h3>Checklist</h3><div class="markdown">{_linkify_evidence_text(view.text('verification_checklist') or 'Missing fix-verification-checklist.md', anchor_map)}</div>
 <h3>Plan</h3><div class="markdown">{_linkify_evidence_text(view.text('verification_plan') or 'Missing verification-plan.md', anchor_map)}</div>
 <h3>Raw Result</h3><pre>{_linkify_evidence_text(json.dumps(result, ensure_ascii=False, indent=2) if result else 'Missing verification-result.json', anchor_map)}</pre></section>
@@ -278,9 +283,9 @@ def _display_delta(value: int | None) -> str:
 
 
 def _status_class(status: str) -> str:
-    if status in {"missing", "missing_evidence", "not_verified", "failed", "error", "unknown", "invalid_json"}:
+    if status in {"missing", "missing_evidence", "not_verified", "failed", "error", "unknown", "invalid_json", "missing_coverage"}:
         return "danger"
-    if status in {"candidate_verified", "ready", "passed", "success"}:
+    if status in {"candidate_verified", "ready", "passed", "success", "covered"}:
         return "success"
     return ""
 
@@ -344,3 +349,67 @@ def _lookup_evidence_anchor(ref: str, anchor_map: dict[str, str]) -> str | None:
 def _slug(value: str) -> str:
     slug = re.sub(r"[^A-Za-z0-9_-]+", "-", value).strip("-").lower()
     return slug or "item"
+
+
+def _assertion_test_coverage(
+    view: DiagnosticPackageView,
+    verification_result: dict[str, Any],
+    report: dict[str, Any],
+) -> list[dict[str, Any]]:
+    explicit = verification_result.get("assertion_test_coverage") or _nested(report, ["verification_result", "assertion_test_coverage"])
+    if isinstance(explicit, list):
+        return [_dict(item) for item in explicit if isinstance(item, dict)]
+    assertions = _list(view.json_data("user_assertions"))
+    if not assertions:
+        return []
+    return [
+        {
+            "assertion_id": _assertion_id(assertion, index),
+            "statement": _assertion_statement(assertion),
+            "status": "unknown",
+            "covered_by_test_records": [],
+        }
+        for index, assertion in enumerate(assertions, start=1)
+    ]
+
+
+def _assertion_id(assertion: Any, index: int) -> str:
+    if isinstance(assertion, dict):
+        return str(assertion.get("assertion_id") or assertion.get("id") or f"assertion-{index}")
+    return f"assertion-{index}"
+
+
+def _assertion_statement(assertion: Any) -> str:
+    if isinstance(assertion, dict):
+        return str(assertion.get("user_statement") or assertion.get("statement") or "")
+    return str(assertion)
+
+
+def _coverage_summary(coverage: list[dict[str, Any]]) -> str:
+    if not coverage:
+        return "none"
+    covered = sum(1 for item in coverage if str(item.get("status")) == "covered")
+    return f"{covered}/{len(coverage)} covered"
+
+
+def _verification_signal_panel(comparison_status: str, vly_status: str, coverage: list[dict[str, Any]]) -> str:
+    return f"""
+<h3>Verification Signals</h3>
+<div class="badges"><span class="badge {_status_class(comparison_status)}">report comparison: {html.escape(comparison_status)}</span><span class="badge {_status_class(vly_status)}">vly core proof: {html.escape(vly_status)}</span></div>
+{_assertion_coverage_panel(coverage)}
+"""
+
+
+def _assertion_coverage_panel(coverage: list[dict[str, Any]]) -> str:
+    if not coverage:
+        return "<h3>Assertion Test Coverage</h3><p class=\"missing\">No assertion coverage data found.</p>"
+    rows = []
+    for item in coverage:
+        status = str(item.get("status") or "unknown")
+        assertion_id = str(item.get("assertion_id") or item.get("id") or "unknown")
+        statement = str(item.get("statement") or item.get("user_statement") or "")
+        tests = _list(item.get("covered_by_test_records") or item.get("test_records"))
+        rows.append(
+            f"<article class=\"mini-card {_status_class(status)}\"><h4>{html.escape(assertion_id)} <span class=\"badge {_status_class(status)}\">{html.escape(status)}</span></h4><p>{html.escape(statement or 'No statement available.')}</p>{_list_block('Covered By Test Records', tests)}</article>"
+        )
+    return f"<h3>Assertion Test Coverage</h3><div class=\"grid\">{''.join(rows)}</div>"
