@@ -211,7 +211,7 @@
 - [x] 更新 README.zh-CN.md
 - [x] 更新 README.en.md
 
-## P2：本地 Web UI / 诊断包浏览器
+## P2：本地 Web UI / 诊断包浏览器基础
 
 - [x] 新建 GitHub Issue：P2 Local Web UI / Diagnostic Package Browser
 - [x] 新增 ADR：Local Web UI Boundary
@@ -227,6 +227,98 @@
 - [x] 增加 view CLI 烟测
 - [x] 更新 README.zh-CN.md
 - [x] 更新 README.en.md
+
+## P2：诊断工作台路线图
+
+- [x] 新增 ADR：P2 Diagnostic Workbench Roadmap
+- [ ] 将 P2 Web UI 从单包静态页升级为本地诊断工作台
+- [ ] 保持本地优先、只读优先、证据优先、用户确认问题优先
+- [ ] 明确任何写回能力都必须另写 ADR 并显式操作
+- [ ] 更新 Issue #15，纳入完整 P2 工作台计划
+
+## P2：诊断包列表与导航
+
+- [ ] 新增 reports_indexer.py，扫描 DoctorReports 目录
+- [ ] 识别多个标准诊断包
+- [ ] 提取每个诊断包的项目名、问题摘要、创建时间、更新时间
+- [ ] 提取 evidence 数量、timeline 步骤数、user assertion 数量
+- [ ] 提取 verification 状态、redaction 状态、package export 状态
+- [ ] 生成诊断包列表页
+- [ ] 支持从列表页进入单个诊断包详情
+- [ ] 支持按 verification 状态筛选
+- [ ] 支持按是否存在用户确认问题筛选
+- [ ] 支持按是否存在 redaction warning 筛选
+- [ ] 增加 reports indexer 测试
+- [ ] 增加 reports list HTML 测试
+- [ ] 增加 CLI smoke 覆盖
+
+## P2：诊断包详情页增强
+
+- [ ] 将单页浏览拆分为 Overview / Timeline / Evidence / Assertions / AI Task / Verification / Redaction / Manifest 视图
+- [ ] Overview 显示诊断状态摘要
+- [ ] Timeline 高亮失败步骤、未知步骤和关键证据
+- [ ] Evidence 支持按类型分组：environment / logs / command-output / test-results / attachments
+- [ ] Assertions 高亮用户确认问题，并显示 expected / actual / why
+- [ ] AI Task 高亮调查边界、禁止忽略用户确认问题、验证要求
+- [ ] Verification 显示 missing_evidence、tests_to_rerun、next_commands
+- [ ] Redaction 显示替换数量、命中规则、未过滤风险提示
+- [ ] Manifest 显示 included / skipped 文件和导出校验结果
+- [ ] 增加详情页渲染测试
+- [ ] 增加可访问性基础检查
+
+## P2：before / after 对比可视化
+
+- [ ] 新增 web_comparison_reader.py
+- [ ] 读取 report-comparison.json 与 report-comparison.md
+- [ ] 展示 before / after 包摘要
+- [ ] 展示 resolved / unresolved / new / changed signals
+- [ ] 高亮 not_verified 与 candidate_verified 状态
+- [ ] 支持从 verification 页面跳转到 comparison 页面
+- [ ] 支持缺失 comparison 时提示下一步 compare 命令
+- [ ] 增加 comparison reader 测试
+- [ ] 增加 comparison HTML 渲染测试
+
+## P2：Evidence 详情体验
+
+- [ ] 支持安全预览日志文件
+- [ ] 支持安全预览命令输出 JSON
+- [ ] 支持安全预览 test-results JSON
+- [ ] 支持安全预览 media probe 结果
+- [ ] 支持附件列表展示但不直接内嵌未知二进制
+- [ ] 支持证据 ID 到文件路径的映射
+- [ ] 支持从 timeline / ai-task / verification 跳转到 evidence 详情
+- [ ] 对可能含敏感信息的证据显示 redaction 状态提醒
+- [ ] 增加 evidence preview 测试
+
+## P2：验证工作台
+
+- [ ] 显示 verification_result.status 的视觉状态
+- [ ] 显示缺失证据清单
+- [ ] 显示必须重跑的测试
+- [ ] 显示建议下一步命令
+- [ ] 显示 report_comparison_status 与 vly_core_proof_status
+- [ ] 显示用户确认问题是否已有对应测试记录
+- [ ] 不允许 UI 文案在缺证据时宣称“已修复”
+- [ ] 增加 verification workbench 测试
+
+## P2：本地审阅与备注模式（后续决策项）
+
+- [ ] 设计 review notes 数据结构
+- [ ] 写 ADR：是否允许 Web UI 写回诊断包
+- [ ] 若允许写回，必须记录 reviewer、时间、内容、来源页面
+- [ ] 支持只读模式与显式写回模式区分
+- [ ] 支持导出 review notes 到诊断包
+- [ ] 增加 review mode 测试
+
+## P2：质量保障与发布准备
+
+- [ ] 增加 P2 Web UI 端到端 smoke
+- [ ] 增加多诊断包样例 fixture
+- [ ] 增加缺失文件 / 损坏 JSON / 空 evidence 场景测试
+- [ ] 增加 README.zh-CN.md P2 完整工作台说明
+- [ ] 增加 README.en.md P2 完整工作台说明
+- [ ] Issue #15 全部完成后关闭
+- [ ] 准备版本发布说明草稿，但不发布版本
 
 ## 工作规则
 
