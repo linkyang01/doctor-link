@@ -10,9 +10,9 @@ from doctor_link.core.web_renderer import render_reports_index_html
 from doctor_link.core.web_server import build_reports_index_view, build_web_view
 
 
-def _build_package(root: Path, summary: str) -> Path:
+def _build_package(root: Path, summary: str, project_suffix: str) -> Path:
     package = build_diagnostic_package(
-        DiagnosticEvent(project="Doctor link", category="index", summary=summary),
+        DiagnosticEvent(project=f"Doctor link {project_suffix}", category="index", summary=summary),
         root,
     )
     assert package.root_dir is not None
@@ -21,8 +21,8 @@ def _build_package(root: Path, summary: str) -> Path:
 
 def test_index_reports_extracts_package_status_counts_and_warnings(tmp_path: Path) -> None:
     reports_root = tmp_path / "DoctorReports"
-    first = _build_package(reports_root, "First issue")
-    second = _build_package(reports_root, "Second issue")
+    first = _build_package(reports_root, "First item", "alpha")
+    second = _build_package(reports_root, "Second item", "beta")
 
     (first / "verification-result.json").write_text(
         json.dumps({"status": "candidate_verified"}, ensure_ascii=False, indent=2),
@@ -33,7 +33,7 @@ def test_index_reports_extracts_package_status_counts_and_warnings(tmp_path: Pat
         encoding="utf-8",
     )
     (first / "user-assertions.json").write_text(
-        json.dumps([{"user_statement": "User confirmed issue signal"}], ensure_ascii=False, indent=2),
+        json.dumps([{"user_statement": "User supplied assertion"}], ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
     (second / "verification-result.json").write_text(
@@ -44,12 +44,12 @@ def test_index_reports_extracts_package_status_counts_and_warnings(tmp_path: Pat
     index = index_reports(reports_root)
 
     assert index.total_packages == 2
-    first_item = next(item for item in index.packages if item.summary == "First issue")
+    first_item = next(item for item in index.packages if item.summary == "First item")
     assert first_item.verification_status == "candidate_verified"
     assert first_item.redaction_status == "redacted"
     assert first_item.user_assertion_count == 1
 
-    second_item = next(item for item in index.packages if item.summary == "Second issue")
+    second_item = next(item for item in index.packages if item.summary == "Second item")
     assert second_item.verification_status == "missing_evidence"
     assert second_item.redaction_status == "missing"
     assert second_item.warning_count >= 1
@@ -57,36 +57,38 @@ def test_index_reports_extracts_package_status_counts_and_warnings(tmp_path: Pat
 
 def test_filter_packages_by_verification_assertions_and_redaction(tmp_path: Path) -> None:
     reports_root = tmp_path / "DoctorReports"
-    first = _build_package(reports_root, "Verified issue")
-    second = _build_package(reports_root, "Blocked issue")
+    first = _build_package(reports_root, "Ready item", "gamma")
+    second = _build_package(reports_root, "Review item", "delta")
     (first / "verification-result.json").write_text(json.dumps({"status": "ready"}), encoding="utf-8")
     (first / "redaction-report.json").write_text(json.dumps({"total_replacements": 0}), encoding="utf-8")
     (second / "verification-result.json").write_text(json.dumps({"status": "not_verified"}), encoding="utf-8")
-    (second / "user-assertions.json").write_text(json.dumps([{"user_statement": "Confirmed issue signal"}]), encoding="utf-8")
+    (second / "user-assertions.json").write_text(json.dumps([{"user_statement": "User supplied assertion"}]), encoding="utf-8")
 
     index = index_reports(reports_root)
 
-    assert [item.summary for item in filter_packages(index, verification_status="ready")] == ["Verified issue"]
-    assert [item.summary for item in filter_packages(index, has_user_assertions=True)] == ["Blocked issue"]
-    assert [item.summary for item in filter_packages(index, has_redaction_warning=True)] == ["Blocked issue"]
+    assert [item.summary for item in filter_packages(index, verification_status="ready")] == ["Ready item"]
+    assert [item.summary for item in filter_packages(index, has_user_assertions=True)] == ["Review item"]
+    assert [item.summary for item in filter_packages(index, has_redaction_warning=True)] == ["Review item"]
 
 
 def test_render_reports_index_html_and_build_reports_view(tmp_path: Path) -> None:
     reports_root = tmp_path / "DoctorReports"
-    package_dir = _build_package(reports_root, "Index render issue")
+    package_dir = _build_package(reports_root, "Index render item", "render")
     (package_dir / "redaction-report.json").write_text(json.dumps({"total_replacements": 0}), encoding="utf-8")
 
     index = index_reports(reports_root)
     html = render_reports_index_html(index)
 
     assert "Doctor link Diagnostic Workbench" in html
-    assert "Index render issue" in html
+    assert "Index render item" in html
     assert "Status Filters" in html
+    assert "verification-filter" in html
+    assert "redaction-filter" in html
 
     built = build_reports_index_view(reports_root)
     index_path = Path(built.index_path)
     assert index_path.exists()
-    assert "Index render issue" in index_path.read_text(encoding="utf-8")
+    assert "Index render item" in index_path.read_text(encoding="utf-8")
     assert (Path(built.output_dir) / "packages" / package_dir.name / "index.html").exists()
 
     built_auto = build_web_view(reports_root)
