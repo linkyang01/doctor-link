@@ -101,6 +101,33 @@
 - [x] 增加 compare CLI 烟测
 - [x] 增加 Report Comparison 诊断包写入测试
 
+## P1+：项目管理与架构准备
+
+- [x] 新建 GitHub Issue：P1+ Evidence Collection Pipeline
+- [ ] 新增 ADR：P1+ CLI evidence pipeline
+- [ ] 明确 P1+ 三个核心命令边界：collect / verify / doctor-package
+- [ ] 确认 P1+ 不引入 Web UI
+- [ ] 确认 P1+ 不改变 P0/P1 已有诊断协议
+
+## P1+：doctor-package 诊断包打包
+
+- [ ] 新增 package_exporter.py
+- [ ] 实现诊断包结构校验
+- [ ] 检查必需文件是否存在
+- [ ] 生成 manifest.json
+- [ ] 生成 package-readme.md
+- [ ] 支持导出 zip
+- [ ] 支持默认包含完整诊断包
+- [ ] 支持排除 attachments / logs / screenshots
+- [ ] 支持 max-file-size 跳过超限文件
+- [ ] 保留目录结构
+- [ ] 防止路径穿越
+- [ ] 增加 doctor-link doctor-package 命令
+- [ ] 增加 package exporter 测试
+- [ ] 增加 doctor-package CLI 烟测
+- [ ] 更新 README.zh-CN.md
+- [ ] 更新 README.en.md
+
 ## 工作规则
 
 1. 所有代码改动必须对应 TODO 或 Issue。
