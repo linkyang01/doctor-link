@@ -111,20 +111,20 @@
 
 ## P1+：doctor-package 诊断包打包
 
-- [ ] 新增 package_exporter.py
-- [ ] 实现诊断包结构校验
-- [ ] 检查必需文件是否存在
-- [ ] 生成 manifest.json
-- [ ] 生成 package-readme.md
-- [ ] 支持导出 zip
-- [ ] 支持默认包含完整诊断包
-- [ ] 支持排除 attachments / logs / screenshots
-- [ ] 支持 max-file-size 跳过超限文件
-- [ ] 保留目录结构
-- [ ] 防止路径穿越
-- [ ] 增加 doctor-link doctor-package 命令
-- [ ] 增加 package exporter 测试
-- [ ] 增加 doctor-package CLI 烟测
+- [x] 新增 package_exporter.py
+- [x] 实现诊断包结构校验
+- [x] 检查必需文件是否存在
+- [x] 生成 manifest.json
+- [x] 生成 package-readme.md
+- [x] 支持导出 zip
+- [x] 支持默认包含完整诊断包
+- [x] 支持排除 attachments / logs / screenshots
+- [x] 支持 max-file-size 跳过超限文件
+- [x] 保留目录结构
+- [x] 防止路径穿越
+- [x] 增加 doctor-link doctor-package 命令
+- [x] 增加 package exporter 测试
+- [x] 增加 doctor-package CLI 烟测
 - [ ] 更新 README.zh-CN.md
 - [ ] 更新 README.en.md
 
