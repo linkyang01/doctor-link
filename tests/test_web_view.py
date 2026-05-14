@@ -28,6 +28,7 @@ def test_read_package_view_reads_core_sections(tmp_path: Path) -> None:
     assert any(section.key == "summary" and section.exists for section in view.sections)
     assert any(section.key == "doctor_report" and section.exists for section in view.json_sections)
     assert "evidence/logs/app.log" in view.evidence_files
+    assert any(preview.path == "evidence/logs/app.log" for preview in view.evidence_previews)
 
 
 def test_render_package_html_contains_diagnostic_sections(tmp_path: Path) -> None:
@@ -55,3 +56,4 @@ def test_write_and_build_web_view(tmp_path: Path) -> None:
     assert index_path.exists()
     assert index_path.name == "index.html"
     assert Path(built.output_dir).name == ".doctorlink-web"
+    assert "Doctor link Diagnostic Package Workbench" in index_path.read_text(encoding="utf-8")
