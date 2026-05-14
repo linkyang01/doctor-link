@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from doctor_link.core.web_comparison_reader import read_web_comparison
 from doctor_link.core.web_package_reader import DiagnosticPackageView, EvidencePreview
 
 
@@ -159,17 +160,35 @@ def _verification(view: DiagnosticPackageView) -> str:
 
 
 def _comparison(view: DiagnosticPackageView) -> str:
-    data = _dict(view.json_data("report_comparison_json"))
-    markdown = view.text("report_comparison")
-    if not data and not markdown:
+    comparison = read_web_comparison(Path(view.package_dir))
+    if not comparison.exists:
         return "<section id=\"comparison\"><h2>Before / After Comparison</h2><p class=\"missing\">No comparison found.</p><pre>doctor-link compare before.json after.json --package-dir &lt;package_dir&gt;</pre></section>"
-    buckets = []
-    for key in ["resolved", "unresolved", "new", "changed", "resolved_signals", "unresolved_signals", "new_signals", "changed_signals"]:
-        value = data.get(key)
-        if isinstance(value, list):
-            buckets.append(f"<div><strong>{len(value)}</strong><span>{html.escape(key.replace('_', ' '))}</span></div>")
-    stats = f"<div class=\"stats\">{''.join(buckets)}</div>" if buckets else ""
-    return f"<section id=\"comparison\"><h2>Before / After Comparison</h2>{stats}<div class=\"markdown\">{html.escape(markdown)}</div><pre>{html.escape(json.dumps(data, ensure_ascii=False, indent=2) if data else 'Missing report-comparison.json')}</pre></section>"
+    cls = _status_class(comparison.status)
+    stats = f"""
+<div class="stats">
+<div><strong>{len(comparison.resolved_signals)}</strong><span>Resolved</span></div>
+<div><strong>{len(comparison.unresolved_signals)}</strong><span>Unresolved</span></div>
+<div><strong>{len(comparison.new_signals)}</strong><span>New</span></div>
+<div><strong>{len(comparison.changed_signals)}</strong><span>Changed</span></div>
+<div><strong>{_display_delta(comparison.evidence_delta)}</strong><span>Evidence delta</span></div>
+<div><strong>{_display_delta(comparison.test_record_delta)}</strong><span>Test record delta</span></div>
+</div>
+"""
+    body = f"""
+<section id="comparison"><h2>Before / After Comparison <span class="badge {cls}">{html.escape(comparison.status)}</span></h2>
+<p>{html.escape(comparison.summary or 'No comparison summary available.')}</p>
+<div class="kv"><div><strong>Before</strong><span>{html.escape(comparison.before_report or 'Not provided')}</span></div><div><strong>After</strong><span>{html.escape(comparison.after_report or 'Not provided')}</span></div></div>
+{stats}
+{_list_block('Resolved Signals', comparison.resolved_signals)}
+{_list_block('Unresolved Signals', comparison.unresolved_signals)}
+{_list_block('New Signals', comparison.new_signals)}
+{_list_block('Changed Signals', comparison.changed_signals)}
+{_list_block('Comparison Notes', comparison.notes)}
+"""
+    if comparison.error:
+        body += f"<p class=\"missing\">{html.escape(comparison.error)}</p>"
+    body += f"<h3>Markdown</h3><div class=\"markdown\">{html.escape(comparison.markdown or 'Missing report-comparison.md')}</div><h3>Raw Comparison JSON</h3><pre>{html.escape(json.dumps(comparison.raw, ensure_ascii=False, indent=2) if comparison.raw else 'Missing report-comparison.json')}</pre></section>"
+    return body
 
 
 def _redaction(view: DiagnosticPackageView) -> str:
@@ -243,8 +262,12 @@ def _format_json(text: str) -> str:
         return text
 
 
+def _display_delta(value: int | None) -> str:
+    return "unknown" if value is None else str(value)
+
+
 def _status_class(status: str) -> str:
-    if status in {"missing", "missing_evidence", "not_verified", "failed", "error", "unknown"}:
+    if status in {"missing", "missing_evidence", "not_verified", "failed", "error", "unknown", "invalid_json"}:
         return "danger"
     if status in {"candidate_verified", "ready", "passed", "success"}:
         return "success"
