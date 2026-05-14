@@ -9,6 +9,7 @@ from doctor_link.core.ai_task_generator import generate_ai_task
 from doctor_link.core.environment_collector import collect_environment
 from doctor_link.core.media_probe import probe_media, summarize_media_probe
 from doctor_link.core.package_builder import build_diagnostic_package, event_from_scan
+from doctor_link.core.package_exporter import PackageExportOptions, export_package
 from doctor_link.core.report_comparator import write_report_comparison, write_report_comparison_to_package
 from doctor_link.core.scanner import scan_library
 from doctor_link.core.test_planner import generate_test_plan
@@ -193,6 +194,39 @@ def compare_reports(before_report: Path, after_report: Path, output: Path, packa
     if package_dir is not None:
         evidence = write_report_comparison_to_package(before_report, package_dir)
         click.echo(f"Recorded report comparison evidence: {evidence.evidence_id}")
+
+
+@main.command("doctor-package")
+@click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--out", "output", type=click.Path(path_type=Path), default=None, help="Output zip path.")
+@click.option("--exclude-attachments", is_flag=True, help="Exclude evidence/attachments from the zip.")
+@click.option("--exclude-logs", is_flag=True, help="Exclude evidence/logs from the zip.")
+@click.option("--exclude-screenshots", is_flag=True, help="Exclude evidence/screenshots from the zip.")
+@click.option("--max-file-size", type=int, default=None, help="Skip files larger than this size in bytes.")
+def doctor_package(
+    package_dir: Path,
+    output: Path | None,
+    exclude_attachments: bool,
+    exclude_logs: bool,
+    exclude_screenshots: bool,
+    max_file_size: int | None,
+) -> None:
+    """Export a diagnostic package as a zip handoff package."""
+    result = export_package(
+        package_dir=package_dir,
+        output_zip=output,
+        options=PackageExportOptions(
+            exclude_attachments=exclude_attachments,
+            exclude_logs=exclude_logs,
+            exclude_screenshots=exclude_screenshots,
+            max_file_size=max_file_size,
+        ),
+    )
+    click.echo(f"Generated diagnostic package zip: {result.output_zip}")
+    click.echo(f"Included files: {len(result.included_files)}")
+    click.echo(f"Skipped files: {len(result.skipped_files)}")
+    if not result.validation.is_valid:
+        click.echo("Warning: diagnostic package is missing required files.")
 
 
 @main.command("assert")
