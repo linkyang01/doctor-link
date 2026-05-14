@@ -7,6 +7,7 @@ import click
 
 from doctor_link.core.ai_task_generator import generate_ai_task
 from doctor_link.core.collector import collect_into_package
+from doctor_link.core.config_loader import load_config, merge_collect_cli, merge_package_cli, merge_verify_cli
 from doctor_link.core.environment_collector import collect_environment
 from doctor_link.core.media_probe import probe_media, summarize_media_probe
 from doctor_link.core.package_builder import build_diagnostic_package, event_from_scan
@@ -215,14 +216,24 @@ def doctor_package(
     max_file_size: int | None,
 ) -> None:
     """Export a diagnostic package as a zip handoff package."""
+    config = load_config(package_dir)
+    package_config = merge_package_cli(
+        config.package,
+        output=output,
+        exclude_attachments=exclude_attachments,
+        exclude_logs=exclude_logs,
+        exclude_screenshots=exclude_screenshots,
+        max_file_size=max_file_size,
+    )
+    output_zip = output or Path(package_config.output_dir) / f"{package_dir.name}.zip"
     result = export_package(
         package_dir=package_dir,
-        output_zip=output,
+        output_zip=output_zip,
         options=PackageExportOptions(
-            exclude_attachments=exclude_attachments,
-            exclude_logs=exclude_logs,
-            exclude_screenshots=exclude_screenshots,
-            max_file_size=max_file_size,
+            exclude_attachments=package_config.exclude_attachments,
+            exclude_logs=package_config.exclude_logs,
+            exclude_screenshots=package_config.exclude_screenshots,
+            max_file_size=package_config.max_file_size,
         ),
     )
     click.echo(f"Generated diagnostic package zip: {result.output_zip}")
@@ -262,21 +273,34 @@ def collect_command(
     custom_patterns: tuple[str, ...],
 ) -> None:
     """Collect environment, logs, commands, probes, and attachments into a diagnostic package."""
+    config = load_config(package_dir)
+    collect_config = merge_collect_cli(
+        config.collect,
+        project_root=project_root,
+        log_patterns=log_patterns,
+        commands=commands,
+        probes=probes,
+        attachments=attachments,
+        no_redact=no_redact,
+        redact_email=redact_email,
+        redact_phone=redact_phone,
+        custom_patterns=custom_patterns,
+    )
     result = collect_into_package(
         package_dir=package_dir,
-        project_root=project_root,
-        log_patterns=list(log_patterns),
-        commands=list(commands),
-        probes=list(probes),
-        attachments=list(attachments),
+        project_root=Path(collect_config.project_root) if collect_config.project_root else None,
+        log_patterns=collect_config.logs,
+        commands=collect_config.commands,
+        probes=[Path(item) for item in collect_config.probes],
+        attachments=[Path(item) for item in collect_config.attachments],
         note=note,
         ffprobe_binary=ffprobe_binary,
         command_timeout_seconds=command_timeout_seconds,
-        redact=not no_redact,
+        redact=collect_config.redact,
         redaction_options=RedactionOptions(
-            redact_email=redact_email,
-            redact_phone=redact_phone,
-            custom_patterns=list(custom_patterns),
+            redact_email=collect_config.redact_email,
+            redact_phone=collect_config.redact_phone,
+            custom_patterns=collect_config.redact_patterns,
         ),
     )
     click.echo(f"Collected evidence items: {len(result.evidence)}")
@@ -291,7 +315,9 @@ def collect_command(
 @click.option("--write-back", is_flag=True, help="Write verification result back into doctor-report.json, summary.md, and ai-task.md.")
 def verify_command(package_dir: Path, write_back: bool) -> None:
     """Generate a verification plan and result for a diagnostic package."""
-    result = run_verification(package_dir, write_back=write_back)
+    config = load_config(package_dir)
+    verify_config = merge_verify_cli(config.verification, write_back=write_back)
+    result = run_verification(package_dir, write_back=verify_config.write_back)
     click.echo(f"Generated verification plan: {package_dir / 'verification-plan.md'}")
     click.echo(f"Generated verification result: {package_dir / 'verification-result.json'}")
     click.echo(f"Verification status: {result.status}")
