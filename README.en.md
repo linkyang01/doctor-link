@@ -46,7 +46,8 @@ It provides:
 - user-confirmed issue preservation;
 - AI-ready task generation;
 - fix verification planning;
-- before/after diagnostic comparison.
+- before/after diagnostic comparison;
+- diagnostic package export.
 
 ## Key concept: User Assertion
 
@@ -76,59 +77,6 @@ Layer 4: AI Collaboration Package
 Layer 5: Fix Verification Loop
 ```
 
-### Layer 1: Diagnostic Protocol
-
-Core models:
-
-- DiagnosticEvent
-- DiagnosticPackage
-- EvidenceItem
-- TimelineStep
-- UserAssertion
-- ProblemMap
-- AITask
-- VerificationChecklist
-
-### Layer 2: Evidence Collection
-
-Collects:
-
-- environment information;
-- logs;
-- command outputs;
-- test results;
-- files and attachments;
-- screenshots;
-- external tool outputs.
-
-### Layer 3: Human Diagnosis Surface
-
-Human-readable outputs:
-
-- summary.md
-- problem-map.md
-- timeline.md
-- evidence-list.md
-- user-assertions.json
-
-### Layer 4: AI Collaboration Package
-
-AI-readable outputs:
-
-- ai-context.json
-- ai-task.md
-- investigation-boundary.md
-- fix-verification-checklist.md
-
-### Layer 5: Fix Verification Loop
-
-Fix validation outputs:
-
-- before-report.json
-- after-report.json
-- regression-result.json
-- Go / No-Go conclusion
-
 ## Standard diagnostic package
 
 Each diagnosis should generate a package like this:
@@ -157,25 +105,51 @@ DoctorReports/
         └── attachments/
 ```
 
-## Runtime modes
+## Common commands
 
-Doctor link supports three diagnostic modes:
+```bash
+doctor-link init
+doctor-link scan <library>
+doctor-link plan <library>
+doctor-link report <library> --out DoctorReports
+doctor-link assert <package_dir> --statement "This is the problem"
+doctor-link env --project-root . --out environment.json
+doctor-link probe <file> --summary --out probe.json
+doctor-link record <package_dir> --name "Test name" --status partial
+doctor-link vly-proof <library> --package-dir <package_dir>
+doctor-link compare before.json after.json --package-dir <package_dir>
+doctor-link doctor-package <package_dir> --out DoctorReports/package.zip
+```
 
-### 1. External Mode
+## Diagnostic package export
 
-Doctor link runs outside the target program and collects project files, logs, command outputs, environment information, and user assertions.
+`doctor-link doctor-package` exports a standard diagnostic package as a zip file for handoff to AI coding tools, developers, or reviewers.
 
-This is the first mode to implement.
+Example:
 
-### 2. Sidecar Mode
+```bash
+doctor-link doctor-package DoctorReports/<package_dir> \
+  --out DoctorReports/doctor-package.zip
+```
 
-Doctor link runs alongside the target program and watches logs, process status, file changes, test execution, and manual failure markers.
+Optional filters:
 
-### 3. Embedded SDK Mode
+```bash
+doctor-link doctor-package DoctorReports/<package_dir> \
+  --out DoctorReports/doctor-package.zip \
+  --exclude-attachments \
+  --exclude-logs \
+  --exclude-screenshots \
+  --max-file-size 1000000
+```
 
-The target program can optionally integrate a lightweight SDK to emit structured runtime events.
+The exporter writes:
 
-This is optional and should not be required for Doctor link to be useful.
+- `manifest.json`: export time, validation result, included files, and skipped files;
+- `package-readme.md`: handoff notes, validation result, and skipped file summary;
+- `.zip` output preserving the diagnostic package directory structure.
+
+If required files are missing, Doctor link does not pretend that the package is complete. The warning is preserved in the manifest and command output.
 
 ## Project configuration
 
@@ -204,22 +178,11 @@ Doctor link will help Vly verify whether it can become an all-in-one media playe
 - user-confirmed playback issues;
 - Go / No-Go decision for the next stage.
 
-## Planned commands
-
-```bash
-doctor-link init
-doctor-link scan
-doctor-link report
-doctor-link assert
-doctor-link ai-task
-doctor-link verify-plan
-```
-
 ## Current status
 
-Doctor link is in the foundation-building stage.
+Doctor link has completed the P0/P1 diagnostic foundation and is moving into the P1+ CLI evidence pipeline stage.
 
-The current priority is to implement:
+It currently supports:
 
 1. core data models;
 2. standard diagnostic package generation;
@@ -227,7 +190,10 @@ The current priority is to implement:
 4. problem map generation;
 5. AI task generation;
 6. fix verification checklist generation;
-7. `.doctorlink/` configuration templates.
+7. basic evidence collection commands;
+8. Vly proof readiness;
+9. before/after report comparison;
+10. diagnostic package zip export.
 
 ## Success standard for the first version
 
@@ -241,3 +207,4 @@ The first version is successful when it can complete this loop:
 6. The AI task contains evidence, boundaries, and verification steps.
 7. Doctor link generates a fix verification checklist.
 8. Before/after diagnostic reports can be compared.
+9. The diagnostic package can be exported for handoff.
