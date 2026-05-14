@@ -75,7 +75,7 @@ def render_reports_index_html(index: DiagnosticReportsIndex) -> str:
         {filters}
       </section>
       <section id="packages">
-        <h2>Diagnostic Packages</h2>
+        <h2>Diagnostic Packages <span id="visible-count" class="badge">{index.total_packages} visible</span></h2>
         <div class="cards">{cards}</div>
       </section>
       <section id="warnings" class="warnings">
@@ -83,6 +83,7 @@ def render_reports_index_html(index: DiagnosticReportsIndex) -> str:
         <ul>{warning_items}</ul>
       </section>
 """,
+        script=_filter_script(),
     )
 
 
@@ -148,8 +149,10 @@ def _render_package_card(item: DiagnosticPackageIndexItem) -> str:
         warning_list += f"<li>+ {item.warning_count - 4} more warning(s)</li>"
     warnings = f"<ul class=\"compact\">{warning_list}</ul>" if warning_list else "<p class=\"muted\">No package warnings.</p>"
     detail_href = f"packages/{html.escape(item.relative_path)}/index.html"
+    has_assertions = "yes" if item.user_assertion_count > 0 else "no"
+    redaction_warning = "yes" if item.redaction_status in {"missing", "invalid"} else "no"
     return f"""
-<article class="card" data-verification="{html.escape(item.verification_status)}" data-assertions="{item.user_assertion_count}" data-redaction="{html.escape(item.redaction_status)}">
+<article class="card" data-verification="{html.escape(item.verification_status)}" data-assertions="{has_assertions}" data-redaction-warning="{redaction_warning}" data-redaction="{html.escape(item.redaction_status)}">
   <div class="card-head">
     <h3>{html.escape(item.name)}</h3>
     <a class="open" href="{detail_href}">Open</a>
@@ -175,31 +178,36 @@ def _render_package_card(item: DiagnosticPackageIndexItem) -> str:
 
 def _render_filter_panel(index: DiagnosticReportsIndex) -> str:
     verification = sorted({item.verification_status for item in index.packages})
-    redaction = sorted({item.redaction_status for item in index.packages})
-    verification_items = "".join(f"<li><span class=\"badge\">{html.escape(status)}</span> {_count_status(index, 'verification_status', status)}</li>" for status in verification)
-    redaction_items = "".join(f"<li><span class=\"badge\">{html.escape(status)}</span> {_count_status(index, 'redaction_status', status)}</li>" for status in redaction)
+    verification_options = "".join(f"<option value=\"{html.escape(status)}\">{html.escape(status)} ({_count_status(index, 'verification_status', status)})</option>" for status in verification)
     return f"""
-<div class="filter-grid">
-  <div>
-    <h3>Verification</h3>
-    <ul class="compact">{verification_items or '<li>None</li>'}</ul>
-  </div>
-  <div>
-    <h3>Redaction</h3>
-    <ul class="compact">{redaction_items or '<li>None</li>'}</ul>
-  </div>
-  <div>
-    <h3>User Assertions</h3>
-    <ul class="compact">
-      <li><span class="badge">with assertions</span> {_count_with_assertions(index)}</li>
-      <li><span class="badge">without assertions</span> {index.total_packages - _count_with_assertions(index)}</li>
-    </ul>
-  </div>
+<div class="controls" role="group" aria-label="Diagnostic package filters">
+  <label>Verification status
+    <select id="verification-filter">
+      <option value="">All</option>
+      {verification_options}
+    </select>
+  </label>
+  <label>User assertions
+    <select id="assertion-filter">
+      <option value="">All</option>
+      <option value="yes">With assertions ({_count_with_assertions(index)})</option>
+      <option value="no">Without assertions ({index.total_packages - _count_with_assertions(index)})</option>
+    </select>
+  </label>
+  <label>Redaction risk
+    <select id="redaction-filter">
+      <option value="">All</option>
+      <option value="yes">Needs review ({_count_redaction_warnings(index)})</option>
+      <option value="no">Report present ({index.total_packages - _count_redaction_warnings(index)})</option>
+    </select>
+  </label>
+  <button type="button" id="reset-filters">Reset</button>
 </div>
+<p class="muted">Filters run locally in this browser page. They do not modify diagnostic packages.</p>
 """
 
 
-def _page(title: str, header_title: str, header_subtitle: str, nav: str, main: str) -> str:
+def _page(title: str, header_title: str, header_subtitle: str, nav: str, main: str, script: str = "") -> str:
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -257,7 +265,10 @@ def _page(title: str, header_title: str, header_subtitle: str, nav: str, main: s
     .metrics dd {{ margin: 0; font-weight: 700; }}
     .stats {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }}
     .stats strong {{ display: block; font-size: 28px; }}
-    .filter-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }}
+    .controls {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; align-items: end; }}
+    .controls label {{ display: grid; gap: 6px; color: var(--muted); font-size: 13px; }}
+    select, button {{ border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; background: #fff; color: var(--text); }}
+    button {{ background: var(--accent); color: #fff; cursor: pointer; }}
     .compact {{ padding-left: 18px; margin: 8px 0 0; }}
     @media (max-width: 900px) {{ .layout {{ grid-template-columns: 1fr; }} nav {{ position: static; }} .evidence-list {{ columns: 1; }} .metrics {{ grid-template-columns: repeat(2, 1fr); }} }}
   </style>
@@ -275,6 +286,7 @@ def _page(title: str, header_title: str, header_subtitle: str, nav: str, main: s
       {main}
     </main>
   </div>
+  {script}
 </body>
 </html>
 """
@@ -287,6 +299,45 @@ def _status_badge(kind: str, status: str) -> str:
     elif status in {"candidate_verified", "ready", "redacted", "clean", "exported"}:
         css = " success"
     return f'<span class="badge{css}">{html.escape(kind)}: {html.escape(status)}</span>'
+
+
+def _filter_script() -> str:
+    return """
+<script>
+(function () {
+  const verification = document.getElementById('verification-filter');
+  const assertions = document.getElementById('assertion-filter');
+  const redaction = document.getElementById('redaction-filter');
+  const reset = document.getElementById('reset-filters');
+  const count = document.getElementById('visible-count');
+  const cards = Array.from(document.querySelectorAll('.card'));
+
+  function applyFilters() {
+    let visible = 0;
+    cards.forEach((card) => {
+      const matchVerification = !verification.value || card.dataset.verification === verification.value;
+      const matchAssertions = !assertions.value || card.dataset.assertions === assertions.value;
+      const matchRedaction = !redaction.value || card.dataset.redactionWarning === redaction.value;
+      const show = matchVerification && matchAssertions && matchRedaction;
+      card.hidden = !show;
+      if (show) visible += 1;
+    });
+    if (count) count.textContent = visible + ' visible';
+  }
+
+  [verification, assertions, redaction].forEach((control) => control && control.addEventListener('change', applyFilters));
+  if (reset) {
+    reset.addEventListener('click', () => {
+      verification.value = '';
+      assertions.value = '';
+      redaction.value = '';
+      applyFilters();
+    });
+  }
+  applyFilters();
+}());
+</script>
+"""
 
 
 def _count_status(index: DiagnosticReportsIndex, attr: str, value: str) -> int:
