@@ -11,6 +11,7 @@ from doctor_link.core.environment_collector import collect_environment
 from doctor_link.core.media_probe import probe_media, summarize_media_probe
 from doctor_link.core.package_builder import build_diagnostic_package, event_from_scan
 from doctor_link.core.package_exporter import PackageExportOptions, export_package
+from doctor_link.core.redactor import RedactionOptions
 from doctor_link.core.report_comparator import write_report_comparison, write_report_comparison_to_package
 from doctor_link.core.scanner import scan_library
 from doctor_link.core.test_planner import generate_test_plan
@@ -241,6 +242,10 @@ def doctor_package(
 @click.option("--note", default=None, help="Human note for this collection run.")
 @click.option("--ffprobe", "ffprobe_binary", default="ffprobe", show_default=True, help="ffprobe executable.")
 @click.option("--timeout", "command_timeout_seconds", default=30, show_default=True, help="Command timeout in seconds.")
+@click.option("--no-redact", is_flag=True, help="Disable automatic redaction for collected logs and command output.")
+@click.option("--redact-email", is_flag=True, help="Also redact email addresses from collected text evidence.")
+@click.option("--redact-phone", is_flag=True, help="Also redact phone numbers from collected text evidence.")
+@click.option("--redact-pattern", "custom_patterns", multiple=True, help="Custom regular expression to redact. Can be repeated.")
 def collect_command(
     package_dir: Path,
     project_root: Path | None,
@@ -251,6 +256,10 @@ def collect_command(
     note: str | None,
     ffprobe_binary: str,
     command_timeout_seconds: int,
+    no_redact: bool,
+    redact_email: bool,
+    redact_phone: bool,
+    custom_patterns: tuple[str, ...],
 ) -> None:
     """Collect environment, logs, commands, probes, and attachments into a diagnostic package."""
     result = collect_into_package(
@@ -263,10 +272,18 @@ def collect_command(
         note=note,
         ffprobe_binary=ffprobe_binary,
         command_timeout_seconds=command_timeout_seconds,
+        redact=not no_redact,
+        redaction_options=RedactionOptions(
+            redact_email=redact_email,
+            redact_phone=redact_phone,
+            custom_patterns=list(custom_patterns),
+        ),
     )
     click.echo(f"Collected evidence items: {len(result.evidence)}")
     click.echo(f"Added timeline steps: {len(result.timeline_steps)}")
     click.echo(f"Warnings: {len(result.warnings)}")
+    if result.redaction_report is not None:
+        click.echo(f"Redactions: {result.redaction_report.get('total_replacements', 0)}")
 
 
 @main.command("verify")
