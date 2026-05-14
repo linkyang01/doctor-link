@@ -21,6 +21,7 @@ from doctor_link.core.test_recorder import record_test_result
 from doctor_link.core.user_assertion_manager import add_user_assertion
 from doctor_link.core.verification_runner import run_verification
 from doctor_link.core.vly_adapter import build_vly_core_proof_matrix, write_vly_core_proof_to_package
+from doctor_link.core.web_server import build_web_view, serve_web_view
 
 
 @click.group()
@@ -323,6 +324,21 @@ def verify_command(package_dir: Path, write_back: bool) -> None:
     click.echo(f"Verification status: {result.status}")
     if result.missing_evidence:
         click.echo(f"Missing evidence: {len(result.missing_evidence)}")
+
+
+@main.command("view")
+@click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--host", default="127.0.0.1", show_default=True, help="Host for the local web server.")
+@click.option("--port", default=8765, show_default=True, type=int, help="Port for the local web server. Use 0 for any available port.")
+@click.option("--no-open-browser", is_flag=True, help="Do not automatically open the browser.")
+@click.option("--build-only", is_flag=True, help="Build static HTML without starting the local server.")
+def view_command(package_dir: Path, host: str, port: int, no_open_browser: bool, build_only: bool) -> None:
+    """Open a local read-only diagnostic package browser."""
+    if build_only:
+        result = build_web_view(package_dir)
+        click.echo(f"Generated package web view: {result.index_path}")
+        return
+    serve_web_view(package_dir, host=host, port=port, open_browser=not no_open_browser)
 
 
 @main.command("assert")
