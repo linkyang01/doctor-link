@@ -74,16 +74,18 @@
 
 ## P1：Vly Adapter
 
-- [ ] 定义 Vly Core Proof 测试矩阵
-- [ ] 支持 VlyTestLibrary 扫描
+- [x] 定义 Vly Core Proof 测试矩阵
+- [x] 支持 VlyTestLibrary 扫描
 - [x] 支持 ffprobe 读取媒体信息
 - [x] 支持播放测试结果记录
-- [ ] 支持 Go / No-Go 评估
+- [x] 支持 Go / No-Go 评估
+- [x] 增加 doctor-link vly-proof 命令
 
 ## P1：质量保障
 
 - [x] 增加 P1 证据采集基础测试
 - [x] 增加 CLI P1 烟测
+- [x] 增加 Vly Adapter 基础测试
 
 ## 工作规则
 
