@@ -14,6 +14,7 @@ from doctor_link.core.test_planner import generate_test_plan
 from doctor_link.core.report_generator import generate_basic_report
 from doctor_link.core.test_recorder import record_test_result
 from doctor_link.core.user_assertion_manager import add_user_assertion
+from doctor_link.core.vly_adapter import build_vly_core_proof_matrix
 
 
 @click.group()
@@ -155,6 +156,23 @@ def record_command(
         related_file=related_file,
     )
     click.echo(f"Recorded test result: {record.test_id}")
+
+
+@main.command("vly-proof")
+@click.argument("library", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--out", "output", type=click.Path(path_type=Path), default=None, help="Optional report output path.")
+@click.option("--json", "json_output", is_flag=True, help="Print or write JSON instead of Markdown.")
+def vly_proof(library: Path, output: Path | None, json_output: bool) -> None:
+    """Build a Vly Core Proof readiness report from a test library."""
+    scan_result = scan_library(library)
+    report = build_vly_core_proof_matrix(scan_result)
+    text = json.dumps(report.to_dict(), ensure_ascii=False, indent=2) if json_output else report.to_markdown()
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(text, encoding="utf-8")
+        click.echo(f"Generated Vly Core Proof report: {output}")
+    else:
+        click.echo(text)
 
 
 @main.command("assert")
