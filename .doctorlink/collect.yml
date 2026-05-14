@@ -1,0 +1,14 @@
+collect:
+  project_root: .
+  logs:
+    - logs/*.log
+  commands:
+    - python --version
+    - doctor-link --help
+  probes: []
+  attachments: []
+  redaction:
+    enabled: true
+    email: false
+    phone: false
+    patterns: []
