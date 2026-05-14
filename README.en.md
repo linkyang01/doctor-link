@@ -154,6 +154,41 @@ The command updates:
 
 If a command fails or media probing fails, the failure result is still preserved as evidence instead of being silently ignored.
 
+### Sensitive information redaction
+
+`doctor-link collect` automatically redacts sensitive information from logs and command output by default and generates:
+
+- `redaction-report.md`
+- `redaction-report.json`
+
+Default redaction covers:
+
+- password
+- secret
+- api_key / api-key
+- access_token / access-token
+- token
+- Cookie
+- Authorization Header
+
+Optional redaction:
+
+```bash
+doctor-link collect DoctorReports/<package_dir> \
+  --logs "logs/*.log" \
+  --redact-email \
+  --redact-phone \
+  --redact-pattern "internal-[0-9]+"
+```
+
+If raw logs and command output must be preserved, use:
+
+```bash
+doctor-link collect DoctorReports/<package_dir> --logs "logs/*.log" --no-redact
+```
+
+Use `--no-redact` only when the package will not be shared externally, because tokens, passwords, cookies, or other secrets may be exposed.
+
 ## Fix verification task generation
 
 `doctor-link verify` reads the diagnostic package verification checklist, test records, user assertions, Vly proof, and report comparison to generate a verification plan and structured verification result.
@@ -213,7 +248,7 @@ The exporter writes:
 - `package-readme.md`: handoff notes, validation result, and skipped file summary;
 - `.zip` output preserving the diagnostic package directory structure.
 
-If required files are missing, Doctor link does not pretend that the package is complete. The warning is preserved in the manifest and command output.
+If required files are missing, Doctor link does not pretend that the package is complete. The warning is preserved in the manifest and command output. If `redaction-report.md` is missing, the export notes will remind reviewers to check for sensitive information before sharing.
 
 ## Project configuration
 
@@ -256,10 +291,11 @@ It currently supports:
 6. fix verification checklist generation;
 7. basic evidence collection commands;
 8. one-command evidence collection;
-9. verification task generation;
-10. Vly proof readiness;
-11. before/after report comparison;
-12. diagnostic package zip export.
+9. sensitive information redaction;
+10. verification task generation;
+11. Vly proof readiness;
+12. before/after report comparison;
+13. diagnostic package zip export.
 
 ## Success standard for the first version
 
@@ -268,10 +304,11 @@ The first version is successful when it can complete this loop:
 1. A user reports or selects a problem.
 2. Doctor link creates a standard diagnostic package.
 3. Doctor link collects environment, logs, command output, media probe results, and attachments.
-4. The user marks the confirmed problem.
-5. Doctor link generates a problem map.
-6. Doctor link generates an AI-ready debugging task.
-7. The AI task contains evidence, boundaries, and verification steps.
-8. Doctor link generates a fix verification plan.
-9. Before/after diagnostic reports can be compared.
-10. The diagnostic package can be exported for handoff.
+4. Doctor link redacts sensitive information from logs and command output.
+5. The user marks the confirmed problem.
+6. Doctor link generates a problem map.
+7. Doctor link generates an AI-ready debugging task.
+8. The AI task contains evidence, boundaries, and verification steps.
+9. Doctor link generates a fix verification plan.
+10. Before/after diagnostic reports can be compared.
+11. The diagnostic package can be exported for handoff.

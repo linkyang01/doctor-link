@@ -174,6 +174,23 @@
 - [x] 更新 README.zh-CN.md
 - [x] 更新 README.en.md
 
+## P1+：敏感信息过滤
+
+- [x] 新增 redactor.py
+- [x] 支持 token / secret / password / api_key / access_token 过滤
+- [x] 支持 Cookie 与 Authorization Header 过滤
+- [x] 支持用户自定义正则
+- [x] 支持邮箱和手机号可选脱敏
+- [x] 支持 redaction-report.md 输出
+- [x] collect 采集命令输出时自动过滤
+- [x] collect 采集日志时自动过滤
+- [x] doctor-package 打包前可选过滤报告
+- [x] 增加 --no-redact 参数
+- [x] 增加 redactor 测试
+- [x] 增加 redactor CI 覆盖
+- [x] 更新 README.zh-CN.md
+- [x] 更新 README.en.md
+
 ## 工作规则
 
 1. 所有代码改动必须对应 TODO 或 Issue。

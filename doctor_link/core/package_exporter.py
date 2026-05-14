@@ -69,6 +69,8 @@ class PackageExportResult:
     skipped_files: list[PackageManifestFile]
     manifest_path: str
     package_readme_path: str
+    redaction_report_present: bool = False
+    redaction_report_path: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         payload = asdict(self)
@@ -92,6 +94,8 @@ def validate_package(package_dir: Path) -> PackageValidationResult:
     for subdir in ["logs", "screenshots", "command-output", "test-results", "attachments"]:
         if not (evidence_dir / subdir).is_dir():
             warnings.append(f"Missing evidence subdirectory: evidence/{subdir}")
+    if not (package_dir / "redaction-report.md").is_file():
+        warnings.append("No redaction-report.md found. Sensitive information filtering may not have been run.")
 
     return PackageValidationResult(
         package_dir=str(package_dir),
@@ -125,6 +129,7 @@ def export_package(
 
     manifest_path = package_dir / "manifest.json"
     readme_path = package_dir / "package-readme.md"
+    redaction_report = package_dir / "redaction-report.md"
 
     result = PackageExportResult(
         package_dir=str(package_dir),
@@ -135,6 +140,8 @@ def export_package(
         skipped_files=skipped,
         manifest_path=str(manifest_path),
         package_readme_path=str(readme_path),
+        redaction_report_present=redaction_report.is_file(),
+        redaction_report_path=str(redaction_report) if redaction_report.is_file() else None,
     )
 
     manifest_path.write_text(json.dumps(result.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
@@ -190,12 +197,18 @@ def _render_package_readme(result: PackageExportResult) -> str:
         f"- Package valid: `{result.validation.is_valid}`",
         f"- Included files: `{len(result.included_files)}`",
         f"- Skipped files: `{len(result.skipped_files)}`",
+        f"- Redaction report present: `{result.redaction_report_present}`",
         "",
         "## Missing required files",
     ]
     lines.extend(_list(result.validation.missing_required_files))
     lines.extend(["", "## Warnings"])
     lines.extend(_list(result.validation.warnings))
+    lines.extend(["", "## Redaction"])
+    if result.redaction_report_present:
+        lines.append(f"- Redaction report: `{result.redaction_report_path}`")
+    else:
+        lines.append("- No redaction report found. Review package contents before sharing externally.")
     lines.extend(["", "## Skipped files"])
     lines.extend([f"- `{item.path}`: {item.reason}" for item in result.skipped_files] or ["- None"])
     lines.extend(
