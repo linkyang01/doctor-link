@@ -319,6 +319,30 @@ A package detail page currently includes:
 
 The P2 Web UI is local and read-only. It does not add cloud sync, login, or any replacement for the CLI diagnostic workflow.
 
+## P2+ mainline workbench enhancements
+
+P2+ is a mainline enhancement task group after P2. It improves the local diagnostic workbench without changing the default read-only boundary.
+
+P2+ adds:
+
+- evidence reverse reference summaries;
+- clearer verification status reasons;
+- copy-ready next command blocks;
+- assertion coverage with linked test record statuses;
+- AI handoff blocks for task, boundary, and verification checklist content;
+- a Codex / AI Code handoff template;
+- a representative sample diagnostic package fixture.
+
+Tracking and audit files:
+
+- `TODO-P2PLUS.md`
+- `docs/roadmap/p2plus.md`
+- `docs/adr/0009-p2plus-mainline-enhancement.md`
+- `docs/ai-code-handoff-template.md`
+- `docs/p2plus-final-audit.md`
+
+Review notes write-back remains deferred. The Web UI remains local and read-only by default.
+
 ## Project configuration
 
 Projects can define diagnostic rules in `.doctorlink/`:
@@ -394,7 +418,7 @@ Doctor link will help Vly verify whether it can become an all-in-one media playe
 
 ## Current status
 
-Doctor link has completed the P0/P1/P1+ diagnostic foundation and is moving into the P2 local Web UI / diagnostic workbench stage.
+Doctor link has completed the P0/P1/P1+/P2 diagnostic foundation and local diagnostic workbench. P2+ is included as a mainline enhancement task group for workbench review quality and AI Coding handoff.
 
 It currently supports:
 
@@ -413,7 +437,8 @@ It currently supports:
 13. before/after report comparison;
 14. diagnostic package zip export;
 15. local read-only diagnostic package browser;
-16. multi-package diagnostic workbench index.
+16. multi-package diagnostic workbench index;
+17. P2+ evidence review, verification reason display, and AI handoff enhancements.
 
 ## Success standard for the first version
 

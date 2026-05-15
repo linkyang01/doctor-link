@@ -1,0 +1,16 @@
+{
+  "status": "not_verified",
+  "missing_evidence": ["report_comparison", "ev-log-1"],
+  "tests_to_rerun": ["Fixture regression test"],
+  "next_commands": ["doctor-link record tests/fixtures/p2plus_sample_package --name Fixture --status passed --assertion-id assertion-1"],
+  "report_comparison_status": "not_verified",
+  "vly_core_proof_status": "unknown",
+  "assertion_test_coverage": [
+    {
+      "assertion_id": "assertion-1",
+      "statement": "The sample behavior is not acceptable",
+      "status": "covered",
+      "covered_by_test_records": ["test-1"]
+    }
+  ]
+}

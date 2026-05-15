@@ -1,0 +1,42 @@
+{
+  "event": {
+    "project": "P2+ Fixture",
+    "category": "web",
+    "summary": "Sample package for P2+ workbench review"
+  },
+  "evidence": [
+    {
+      "evidence_id": "ev-log-1",
+      "kind": "log",
+      "title": "Application log",
+      "path": "evidence/logs/app.log"
+    }
+  ],
+  "timeline": [
+    {
+      "order": 1,
+      "action": "open_sample",
+      "target": "sample input",
+      "status": "failed",
+      "evidence_ids": ["ev-log-1"]
+    }
+  ],
+  "test_records": [
+    {
+      "test_id": "test-1",
+      "name": "Fixture regression test",
+      "status": "failed",
+      "related_assertion_ids": ["assertion-1"],
+      "evidence_ids": ["ev-log-1"]
+    }
+  ],
+  "report_comparison": {
+    "status": "not_verified"
+  },
+  "ai_task": {
+    "evidence_ids": ["ev-log-1"],
+    "related_assertion_ids": ["assertion-1"],
+    "requested_work": ["Investigate fixture regression test"],
+    "verification_steps": ["Rerun fixture regression test"]
+  }
+}

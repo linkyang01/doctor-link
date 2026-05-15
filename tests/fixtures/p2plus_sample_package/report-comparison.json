@@ -1,0 +1,13 @@
+{
+  "status": "not_verified",
+  "summary": "Fixture comparison is not verified",
+  "before_report": "before-doctor-report.json",
+  "after_report": "doctor-report.json",
+  "remaining_user_assertions": ["assertion-1"],
+  "resolved_user_assertions": [],
+  "new_user_assertions": [],
+  "changed_signals": ["verification still blocked"],
+  "evidence_delta": 1,
+  "test_record_delta": 1,
+  "notes": ["Fixture needs another verification run"]
+}
