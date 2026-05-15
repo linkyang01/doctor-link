@@ -13,4 +13,4 @@ Plan: docs/p2-hardening-plan.md
 - [x] Keep main README stable; detailed P2 hardening is documented in final audit
 - [x] Keep main TODO for later safe historical alignment; this file is the P2 hardening checklist
 - [x] Add final P2 audit
-- [ ] Close Issue #15 after CI passes
+- [x] Close Issue #15 after CI passes
