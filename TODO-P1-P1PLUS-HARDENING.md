@@ -11,12 +11,12 @@ This checklist tracks follow-up hardening work for assertion-to-test-to-verifica
 
 ## Assertion Test Linkage
 
-- [ ] Add related assertion IDs to test records
-- [ ] Add `--assertion-id` to `doctor-link record`
-- [ ] Support multiple assertion IDs per test record
-- [ ] Preserve assertion linkage in doctor-report.json
-- [ ] Preserve assertion linkage in evidence/test-results
-- [ ] Add tests for assertion-linked test records
+- [x] Add related assertion IDs to test records
+- [x] Add `--assertion-id` to `doctor-link record`
+- [x] Support multiple assertion IDs per test record
+- [x] Preserve assertion linkage in doctor-report.json
+- [x] Preserve assertion linkage in evidence/test-results
+- [x] Add tests for assertion-linked test records
 
 ## Verification Coverage
 
