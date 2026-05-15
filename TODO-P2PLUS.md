@@ -1,5 +1,9 @@
 # Doctor link P2+ Mainline Enhancement TODO
 
+Issue: #37
+Roadmap: docs/roadmap/p2plus.md
+ADR: docs/adr/0009-p2plus-mainline-enhancement.md
+
 P2+ is not a separate long-term phase. It is a mainline enhancement task group after P2.
 
 Goal: improve the local read-only diagnostic workbench and prepare stronger AI Coding handoff, while keeping Doctor link as a diagnostic context layer.
@@ -7,7 +11,7 @@ Goal: improve the local read-only diagnostic workbench and prepare stronger AI C
 ## Planning
 
 - [x] Add P2+ TODO
-- [ ] Create P2+ GitHub Issue
+- [x] Create P2+ GitHub Issue
 - [x] Add P2+ roadmap document
 - [x] Add ADR for P2+ mainline enhancement boundary
 - [ ] Update main TODO
