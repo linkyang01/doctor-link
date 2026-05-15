@@ -20,6 +20,7 @@ class TestRecord:
     expected_behavior: str | None = None
     actual_behavior: str | None = None
     evidence_ids: list[str] = field(default_factory=list)
+    related_assertion_ids: list[str] = field(default_factory=list)
     user_note: str | None = None
     related_file: str | None = None
     created_at: str = field(default_factory=utc_now_iso)
@@ -34,6 +35,7 @@ def create_test_record(
     expected_behavior: str | None = None,
     actual_behavior: str | None = None,
     evidence_ids: list[str] | None = None,
+    related_assertion_ids: list[str] | None = None,
     user_note: str | None = None,
     related_file: str | None = None,
 ) -> TestRecord:
@@ -46,6 +48,7 @@ def create_test_record(
         expected_behavior=expected_behavior,
         actual_behavior=actual_behavior,
         evidence_ids=evidence_ids or [],
+        related_assertion_ids=_dedupe(related_assertion_ids or []),
         user_note=user_note,
         related_file=related_file,
     )
@@ -58,6 +61,7 @@ def record_test_result(
     expected_behavior: str | None = None,
     actual_behavior: str | None = None,
     evidence_ids: list[str] | None = None,
+    related_assertion_ids: list[str] | None = None,
     user_note: str | None = None,
     related_file: str | None = None,
 ) -> TestRecord:
@@ -72,6 +76,7 @@ def record_test_result(
         expected_behavior=expected_behavior,
         actual_behavior=actual_behavior,
         evidence_ids=evidence_ids,
+        related_assertion_ids=related_assertion_ids,
         user_note=user_note,
         related_file=related_file,
     )
@@ -97,7 +102,7 @@ def record_test_result(
         status=record.status,
         evidence_ids=[evidence.evidence_id, *record.evidence_ids],
         is_failure_point=record.status in {"failed", "partial"},
-        user_note=record.user_note,
+        user_note=_timeline_note(record),
     )
 
     _update_report_json(package_dir, record, evidence, step)
@@ -121,9 +126,15 @@ def _update_report_json(package_dir: Path, record: TestRecord, evidence: Evidenc
     payload.setdefault("timeline", []).append(step.to_dict())
     ai_task = payload.setdefault("ai_task", {})
     ai_task.setdefault("evidence_ids", []).append(evidence.evidence_id)
+    if record.related_assertion_ids:
+        existing = ai_task.setdefault("related_assertion_ids", [])
+        for assertion_id in record.related_assertion_ids:
+            if assertion_id not in existing:
+                existing.append(assertion_id)
     if record.status in {"failed", "partial"}:
+        suffix = f" Related assertions: {_assertion_text(record)}." if record.related_assertion_ids else ""
         ai_task.setdefault("requested_work", []).append(
-            f"Investigate `{record.name}` using evidence `{evidence.evidence_id}`."
+            f"Investigate `{record.name}` using evidence `{evidence.evidence_id}`.{suffix}"
         )
         ai_task.setdefault("verification_steps", []).append(
             f"Rerun `{record.name}` and confirm the result is passed."
@@ -160,7 +171,6 @@ def _append_timeline_markdown(package_dir: Path, step: TimelineStep) -> None:
 
 
 def _append_ai_task(package_dir: Path, record: TestRecord, evidence: EvidenceItem) -> None:
-    instruction = "Treat this as diagnostic evidence and verify the fix by rerunning the same test."
     _append(
         package_dir / "ai-task.md",
         "\n".join(
@@ -170,9 +180,10 @@ def _append_ai_task(package_dir: Path, record: TestRecord, evidence: EvidenceIte
                 f"- Test: {record.name}",
                 f"- Status: `{record.status}`",
                 f"- Evidence: `{evidence.evidence_id}`",
+                f"- Related user assertions: {_assertion_markdown(record)}",
                 f"- Expected: {record.expected_behavior or 'N/A'}",
                 f"- Actual: {record.actual_behavior or 'N/A'}",
-                f"- Instruction: {instruction}",
+                "- Instruction: Treat this as diagnostic evidence and verify the fix by rerunning the same test.",
                 "",
             ]
         ),
@@ -182,7 +193,7 @@ def _append_ai_task(package_dir: Path, record: TestRecord, evidence: EvidenceIte
 def _append_summary(package_dir: Path, record: TestRecord) -> None:
     _append(
         package_dir / "summary.md",
-        f"\n## Test result recorded\n\n- Test: {record.name}\n- Status: `{record.status}`\n- Expected: {record.expected_behavior or 'N/A'}\n- Actual: {record.actual_behavior or 'N/A'}\n",
+        f"\n## Test result recorded\n\n- Test: {record.name}\n- Status: `{record.status}`\n- Related user assertions: {_assertion_markdown(record)}\n- Expected: {record.expected_behavior or 'N/A'}\n- Actual: {record.actual_behavior or 'N/A'}\n",
     )
 
 
@@ -191,6 +202,7 @@ def _record_summary(record: TestRecord) -> str:
         [
             f"Test: {record.name}",
             f"Status: {record.status}",
+            f"Related user assertions: {_assertion_text(record)}",
             f"Expected: {record.expected_behavior or 'N/A'}",
             f"Actual: {record.actual_behavior or 'N/A'}",
             f"Related file: {record.related_file or 'N/A'}",
@@ -219,3 +231,29 @@ def _append(path: Path, text: str) -> None:
 
 def _json(payload: Any) -> str:
     return json.dumps(payload, ensure_ascii=False, indent=2)
+
+
+def _dedupe(values: list[str]) -> list[str]:
+    result: list[str] = []
+    for value in values:
+        normalized = value.strip()
+        if normalized and normalized not in result:
+            result.append(normalized)
+    return result
+
+
+def _assertion_text(record: TestRecord) -> str:
+    return ", ".join(record.related_assertion_ids) if record.related_assertion_ids else "N/A"
+
+
+def _assertion_markdown(record: TestRecord) -> str:
+    if not record.related_assertion_ids:
+        return "N/A"
+    return ", ".join(f"`{item}`" for item in record.related_assertion_ids)
+
+
+def _timeline_note(record: TestRecord) -> str | None:
+    if not record.related_assertion_ids:
+        return record.user_note
+    note = f"Related user assertions: {_assertion_text(record)}"
+    return f"{record.user_note} | {note}" if record.user_note else note
