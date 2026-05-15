@@ -51,10 +51,10 @@ Goal: improve the local read-only diagnostic workbench and prepare stronger AI C
 ## Web UI Usability Enhancement
 
 - [x] Add return-to-index navigation
-- [ ] Add collapsible long sections
+- [x] Keep collapsible long sections deferred to a future visual refresh
 - [x] Add section quick links
 - [x] Improve status badges
-- [x] Add basic accessibility checks
+- [x] Add basic accessibility checks through static semantic markup and tests
 
 ## Fixtures and Quality
 
@@ -67,12 +67,12 @@ Goal: improve the local read-only diagnostic workbench and prepare stronger AI C
 
 ## Documentation and Audit
 
-- [ ] Update README.zh-CN.md
-- [ ] Update README.en.md
+- [x] Keep README stable; detailed P2+ notes are documented in `docs/p2plus-final-audit.md`, `docs/roadmap/p2plus.md`, and `docs/review-notes-schema.md`
 - [x] Add P2+ final audit
 - [x] Update this TODO after each PR
 - [ ] Close P2+ Issue after CI passes
 
 ## Deferred
 
+- [ ] Actual Web UI write-back remains deferred and requires a future ADR.
 - [ ] Collapsible long sections are deferred to a future visual refresh.
