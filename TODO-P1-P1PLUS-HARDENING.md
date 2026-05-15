@@ -1,0 +1,32 @@
+# P1 / P1+ Hardening TODO
+
+P1 and P1+ are accepted as complete for the current diagnostic foundation scope.
+
+This checklist tracks follow-up hardening work for assertion-to-test-to-verification traceability.
+
+## Audit
+
+- [x] Add P1/P1+ completion audit
+- [x] Map capabilities to files, CLI commands, and CI smoke coverage
+
+## Assertion Test Linkage
+
+- [ ] Add related assertion IDs to test records
+- [ ] Add `--assertion-id` to `doctor-link record`
+- [ ] Support multiple assertion IDs per test record
+- [ ] Preserve assertion linkage in doctor-report.json
+- [ ] Preserve assertion linkage in evidence/test-results
+- [ ] Add tests for assertion-linked test records
+
+## Verification Coverage
+
+- [ ] Generate assertion test coverage in verification-result.json
+- [ ] Show assertion coverage in verification-plan.md
+- [ ] Mark missing assertion coverage as missing evidence or tests to rerun when appropriate
+- [ ] Add tests for assertion coverage verification
+
+## Documentation
+
+- [ ] Update README.zh-CN.md
+- [ ] Update README.en.md
+- [ ] Update P1/P1+ audit after hardening is complete
