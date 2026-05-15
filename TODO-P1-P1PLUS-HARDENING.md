@@ -20,10 +20,10 @@ This checklist tracks follow-up hardening work for assertion-to-test-to-verifica
 
 ## Verification Coverage
 
-- [ ] Generate assertion test coverage in verification-result.json
-- [ ] Show assertion coverage in verification-plan.md
-- [ ] Mark missing assertion coverage as missing evidence or tests to rerun when appropriate
-- [ ] Add tests for assertion coverage verification
+- [x] Generate assertion test coverage in verification-result.json
+- [x] Show assertion coverage in verification-plan.md
+- [x] Mark missing assertion coverage as missing evidence or tests to rerun when appropriate
+- [x] Add tests for assertion coverage verification
 
 ## Documentation
 
