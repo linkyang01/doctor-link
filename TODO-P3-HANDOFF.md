@@ -23,10 +23,10 @@ This file tracks the first P3.2 implementation batch.
 - [x] Include verification-checklist in handoff package
 - [x] Add handoff core tests
 - [x] Add handoff CLI tests
+- [x] Add CI smoke command to `.github/workflows/ci.yml`
 
 ## Deferred to later P3 batches
 
-- [ ] Add CI smoke command to `.github/workflows/ci.yml`
 - [ ] Add richer tool-specific prompt formatting
 - [ ] Add Web UI link to generated handoff package
 - [ ] Roll completed P3.2 items into TODO-P3-P5.md during P3 closeout
