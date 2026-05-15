@@ -8,6 +8,11 @@ from typing import Any
 
 from doctor_link.core.web_comparison_reader import read_web_comparison
 from doctor_link.core.web_package_reader import DiagnosticPackageView, EvidencePreview
+from doctor_link.core.web_review_summary import (
+    build_evidence_reference_summaries,
+    build_test_record_status_map,
+    verification_status_reasons,
+)
 
 
 def write_package_detail_html(view: DiagnosticPackageView, output: Path) -> Path:
@@ -89,13 +94,17 @@ def _evidence(view: DiagnosticPackageView) -> str:
     if not view.evidence_previews:
         return "<section id=\"evidence\"><h2>Evidence</h2><p class=\"missing\">No evidence files found.</p></section>"
     groups: dict[str, list[EvidencePreview]] = {}
+    references = build_evidence_reference_summaries(view)
     for item in view.evidence_previews:
         groups.setdefault(item.evidence_type, []).append(item)
-    body = "".join(f"<h3>{html.escape(name)}</h3><div class=\"grid\">{''.join(_evidence_item(p) for p in previews)}</div>" for name, previews in sorted(groups.items()))
+    body = "".join(
+        f"<h3>{html.escape(name)}</h3><div class=\"grid\">{''.join(_evidence_item(p, references.get(p.path)) for p in previews)}</div>"
+        for name, previews in sorted(groups.items())
+    )
     return f"<section id=\"evidence\"><h2>Evidence</h2><p class=\"muted\">Text evidence is previewed locally. Unknown binary attachments are listed but not embedded.</p>{body}</section>"
 
 
-def _evidence_item(item: EvidencePreview) -> str:
+def _evidence_item(item: EvidencePreview, reference_summary: Any | None = None) -> str:
     ids = ", ".join(item.evidence_ids) if item.evidence_ids else "not linked"
     risk = "danger" if item.redaction_status == "no_redaction_report" and item.evidence_type in {"logs", "command-output"} else ""
     anchor = _evidence_anchor(item)
@@ -106,10 +115,11 @@ def _evidence_item(item: EvidencePreview) -> str:
     else:
         preview = f"<p class=\"missing\">{html.escape(item.warning or 'No inline preview.')}</p>"
     truncated = "<p class=\"muted\">Preview truncated.</p>" if item.truncated else ""
+    references = _evidence_reference_summary_block(reference_summary)
     return f"""
 <article id="{html.escape(anchor)}" class="mini-card evidence-card">{id_anchors}<h4>{html.escape(item.path)}</h4>
 <div class="badges"><span class="badge">{html.escape(item.preview_kind)}</span><span class="badge {risk}">redaction: {html.escape(item.redaction_status)}</span><a class="badge" href="#{html.escape(anchor)}">anchor</a></div>
-<p class="meta">{item.size_bytes} bytes · evidence IDs: {html.escape(ids)}</p>{preview}{truncated}</article>
+<p class="meta">{item.size_bytes} bytes · evidence IDs: {html.escape(ids)}</p>{references}{preview}{truncated}</article>
 """
 
 
@@ -137,6 +147,7 @@ def _assertion(item: Any) -> str:
 def _ai_task(view: DiagnosticPackageView) -> str:
     task = view.text("ai_task")
     boundary = view.text("investigation_boundary")
+    checklist = view.text("verification_checklist")
     anchor_map = _evidence_anchor_map(view)
     has_warning = "The human user has confirmed this as the problem" in task
     warning = "Human assertion warning present" if has_warning else "Human assertion warning not detected"
@@ -144,7 +155,13 @@ def _ai_task(view: DiagnosticPackageView) -> str:
     return f"""
 <section id="ai-task"><h2>AI Task <span class="badge {cls}">{html.escape(warning)}</span></h2>
 <h3>Task</h3><div class="markdown">{_linkify_evidence_text(task or 'Missing ai-task.md', anchor_map)}</div>
-<h3>Investigation Boundary</h3><div class="markdown">{_linkify_evidence_text(boundary or 'Missing investigation-boundary.md', anchor_map)}</div></section>
+<h3>Investigation Boundary</h3><div class="markdown">{_linkify_evidence_text(boundary or 'Missing investigation-boundary.md', anchor_map)}</div>
+<h3>AI Handoff Blocks</h3>
+<p class="muted">Copy these blocks into AI Coding tools when handing off the package.</p>
+<h4>Task Block</h4><pre>{html.escape(task or 'Missing ai-task.md')}</pre>
+<h4>Boundary Block</h4><pre>{html.escape(boundary or 'Missing investigation-boundary.md')}</pre>
+<h4>Verification Checklist Block</h4><pre>{html.escape(checklist or 'Missing fix-verification-checklist.md')}</pre>
+</section>
 """
 
 
@@ -155,6 +172,7 @@ def _verification(view: DiagnosticPackageView) -> str:
     missing = _list(result.get("missing_evidence"))
     rerun = _list(result.get("tests_to_rerun"))
     commands = _list(result.get("next_commands"))
+    reasons = verification_status_reasons(view)
     anchor_map = _evidence_anchor_map(view)
     cls = _status_class(status)
     comparison_status = str(result.get("report_comparison_status") or _nested(report, ["verification_result", "report_comparison_status"]) or "unknown")
@@ -164,8 +182,9 @@ def _verification(view: DiagnosticPackageView) -> str:
 <section id="verification"><h2>Verification Workbench <span class="badge {cls}">{html.escape(status)}</span></h2>
 <p class="muted">The UI must not claim a fix is complete when evidence is missing.</p>
 <div class="stats"><div><strong>{len(missing)}</strong><span>Missing evidence</span></div><div><strong>{len(rerun)}</strong><span>Tests to rerun</span></div><div><strong>{len(commands)}</strong><span>Next commands</span></div><div><strong>{html.escape(comparison_status)}</strong><span>Report comparison</span></div><div><strong>{html.escape(vly_status)}</strong><span>Vly Core Proof</span></div><div><strong>{_coverage_summary(coverage)}</strong><span>Assertion coverage</span></div></div>
-{_list_block('Missing Evidence', missing, anchor_map)}{_list_block('Tests To Rerun', rerun, anchor_map)}{_list_block('Suggested Next Commands', commands, anchor_map)}
-{_verification_signal_panel(comparison_status, vly_status, coverage)}
+{_list_block('Verification Status Reasons', reasons, anchor_map)}
+{_list_block('Missing Evidence', missing, anchor_map)}{_list_block('Tests To Rerun', rerun, anchor_map)}{_command_block('Suggested Next Commands', commands)}
+{_verification_signal_panel(comparison_status, vly_status, coverage, build_test_record_status_map(view))}
 <h3>Checklist</h3><div class="markdown">{_linkify_evidence_text(view.text('verification_checklist') or 'Missing fix-verification-checklist.md', anchor_map)}</div>
 <h3>Plan</h3><div class="markdown">{_linkify_evidence_text(view.text('verification_plan') or 'Missing verification-plan.md', anchor_map)}</div>
 <h3>Raw Result</h3><pre>{_linkify_evidence_text(json.dumps(result, ensure_ascii=False, indent=2) if result else 'Missing verification-result.json', anchor_map)}</pre></section>
@@ -224,7 +243,7 @@ def _raw_files(view: DiagnosticPackageView) -> str:
 
 
 def _page(title: str, subtitle: str, main: str) -> str:
-    nav = """<strong>Package</strong><a href="#overview">Overview</a><a href="#timeline">Timeline</a><a href="#evidence">Evidence</a><a href="#assertions">Assertions</a><a href="#ai-task">AI Task</a><a href="#verification">Verification</a><a href="#comparison">Comparison</a><a href="#redaction">Redaction</a><a href="#manifest">Manifest</a><a href="#raw">Raw Files</a>"""
+    nav = """<strong>Package</strong><a href="../index.html">Back to index</a><a href="#overview">Overview</a><a href="#timeline">Timeline</a><a href="#evidence">Evidence</a><a href="#assertions">Assertions</a><a href="#ai-task">AI Task</a><a href="#verification">Verification</a><a href="#comparison">Comparison</a><a href="#redaction">Redaction</a><a href="#manifest">Manifest</a><a href="#raw">Raw Files</a>"""
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{html.escape(title)}</title><style>
 :root{{--bg:#f4f7fb;--panel:#fff;--text:#142033;--muted:#667085;--line:#d8e0ea;--accent:#315f9f;--accent-soft:#e7eef8;--warning:#8a5a00;--warning-bg:#fff6df;--danger:#8f1d1d;--danger-bg:#ffe8e8;--success:#17633a;--success-bg:#e6f6ee;--code-bg:#0f172a;--code-text:#e5e7eb}}*{{box-sizing:border-box}}body{{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);line-height:1.55}}header{{padding:28px 36px;background:linear-gradient(135deg,#1f4f86,#4e79ad);color:#fff}}header h1{{margin:0 0 8px;font-size:28px}}header p{{margin:0;opacity:.9}}.layout{{display:grid;grid-template-columns:280px 1fr;gap:24px;padding:24px}}nav{{position:sticky;top:24px;align-self:start;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}}nav a{{display:block;padding:8px 10px;color:var(--accent);text-decoration:none;border-radius:8px}}nav a:hover{{background:var(--accent-soft)}}section,.mini-card{{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:18px;box-shadow:0 6px 18px rgba(15,23,42,.05)}}h2{{margin:0 0 10px;font-size:20px}}h3{{margin:18px 0 8px;font-size:17px}}h4{{margin:0 0 8px;font-size:14px}}.meta,.muted{{color:var(--muted);font-size:13px}}.missing{{color:var(--muted);font-style:italic}}.warnings{{background:var(--warning-bg);border-color:#f4d58d;color:var(--warning)}}pre{{overflow:auto;background:var(--code-bg);color:var(--code-text);border-radius:10px;padding:14px;white-space:pre-wrap;word-break:break-word;max-height:420px}}.markdown{{white-space:pre-wrap}}.badge{{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:12px;text-decoration:none}}.badge.danger,.mini-card.danger{{background:var(--danger-bg);color:var(--danger)}}.badge.success,.mini-card.success{{background:var(--success-bg);color:var(--success)}}.grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}}.stats,.kv{{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin:14px 0}}.stats div,.kv div{{background:var(--accent-soft);border-radius:10px;padding:10px}}.stats strong,.kv strong{{display:block}}.stats span,.kv span{{color:var(--muted);font-size:12px}}.badges{{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}}.evidence-link{{color:var(--accent);font-weight:600}}@media(max-width:900px){{.layout{{grid-template-columns:1fr}}nav{{position:static}}}}
 </style></head><body><header><h1>Doctor link Diagnostic Package Workbench</h1><p>{html.escape(subtitle)}</p></header><div class="layout"><nav>{nav}</nav><main>{main}</main></div></body></html>"""
@@ -239,6 +258,28 @@ def _list_block(title: str, values: list[Any], anchor_map: dict[str, str] | None
         return f"<h3>{html.escape(title)}</h3><ul><li>None</li></ul>"
     items = "".join(f"<li>{_linkify_evidence_text(str(item), anchor_map or {})}</li>" for item in values)
     return f"<h3>{html.escape(title)}</h3><ul>{items}</ul>"
+
+
+def _command_block(title: str, values: list[Any]) -> str:
+    if not values:
+        return f"<h3>{html.escape(title)}</h3><pre>None</pre>"
+    return f"<h3>{html.escape(title)}</h3><pre>{html.escape(chr(10).join(str(item) for item in values))}</pre>"
+
+
+def _evidence_reference_summary_block(summary: Any | None) -> str:
+    if summary is None or summary.total_refs == 0:
+        return "<p class=\"meta\">Referenced by: none detected</p>"
+    parts = []
+    if summary.timeline_refs:
+        parts.append(f"timeline {len(summary.timeline_refs)}")
+    if summary.assertion_refs:
+        parts.append(f"assertions {len(summary.assertion_refs)}")
+    if summary.test_record_refs:
+        parts.append(f"tests {len(summary.test_record_refs)}")
+    if summary.verification_refs:
+        parts.append(f"verification {len(summary.verification_refs)}")
+    detail = "; ".join(parts)
+    return f"<p class=\"meta\">Referenced by: {html.escape(detail)}</p>"
 
 
 def _dict(value: Any) -> dict[str, Any]:
@@ -283,7 +324,7 @@ def _display_delta(value: int | None) -> str:
 
 
 def _status_class(status: str) -> str:
-    if status in {"missing", "missing_evidence", "not_verified", "failed", "error", "unknown", "invalid_json", "missing_coverage"}:
+    if status in {"missing", "missing_evidence", "not_verified", "failed", "error", "unknown", "invalid_json", "missing_coverage", "missing"}:
         return "danger"
     if status in {"candidate_verified", "ready", "passed", "success", "covered"}:
         return "success"
@@ -392,24 +433,26 @@ def _coverage_summary(coverage: list[dict[str, Any]]) -> str:
     return f"{covered}/{len(coverage)} covered"
 
 
-def _verification_signal_panel(comparison_status: str, vly_status: str, coverage: list[dict[str, Any]]) -> str:
+def _verification_signal_panel(comparison_status: str, vly_status: str, coverage: list[dict[str, Any]], test_statuses: dict[str, str] | None = None) -> str:
     return f"""
 <h3>Verification Signals</h3>
 <div class="badges"><span class="badge {_status_class(comparison_status)}">report comparison: {html.escape(comparison_status)}</span><span class="badge {_status_class(vly_status)}">vly core proof: {html.escape(vly_status)}</span></div>
-{_assertion_coverage_panel(coverage)}
+{_assertion_coverage_panel(coverage, test_statuses or {})}
 """
 
 
-def _assertion_coverage_panel(coverage: list[dict[str, Any]]) -> str:
+def _assertion_coverage_panel(coverage: list[dict[str, Any]], test_statuses: dict[str, str] | None = None) -> str:
     if not coverage:
         return "<h3>Assertion Test Coverage</h3><p class=\"missing\">No assertion coverage data found.</p>"
     rows = []
+    test_statuses = test_statuses or {}
     for item in coverage:
         status = str(item.get("status") or "unknown")
         assertion_id = str(item.get("assertion_id") or item.get("id") or "unknown")
         statement = str(item.get("statement") or item.get("user_statement") or "")
         tests = _list(item.get("covered_by_test_records") or item.get("test_records"))
+        tests_with_status = [f"{test} ({test_statuses.get(str(test), 'unknown')})" for test in tests]
         rows.append(
-            f"<article class=\"mini-card {_status_class(status)}\"><h4>{html.escape(assertion_id)} <span class=\"badge {_status_class(status)}\">{html.escape(status)}</span></h4><p>{html.escape(statement or 'No statement available.')}</p>{_list_block('Covered By Test Records', tests)}</article>"
+            f"<article class=\"mini-card {_status_class(status)}\"><h4>{html.escape(assertion_id)} <span class=\"badge {_status_class(status)}\">{html.escape(status)}</span></h4><p>{html.escape(statement or 'No statement available.')}</p>{_list_block('Covered By Test Records', tests_with_status)}</article>"
         )
     return f"<h3>Assertion Test Coverage</h3><div class=\"grid\">{''.join(rows)}</div>"
