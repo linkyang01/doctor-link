@@ -1,6 +1,6 @@
 {
   "status": "not_verified",
-  "missing_evidence": ["report_comparison"],
+  "missing_evidence": ["report_comparison", "ev-log-1"],
   "tests_to_rerun": ["Fixture regression test"],
   "next_commands": ["doctor-link record tests/fixtures/p2plus_sample_package --name Fixture --status passed --assertion-id assertion-1"],
   "report_comparison_status": "not_verified",
