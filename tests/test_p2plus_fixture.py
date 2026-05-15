@@ -14,7 +14,7 @@ def test_p2plus_fixture_can_be_read_and_rendered() -> None:
     view = read_package_view(FIXTURE)
     html = render_package_detail_html(view)
 
-    assert "P2+ Sample Diagnostic Package" in html
+    assert "P2+ Fixture" in html
     assert "The sample behavior is not acceptable" in html
     assert "Report Comparison" in html
     assert "not_verified" in html
