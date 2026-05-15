@@ -5,6 +5,7 @@ from pathlib import Path
 
 import click
 
+from doctor_link.core.ai_handoff import SUPPORTED_TOOLS, build_handoff_package
 from doctor_link.core.ai_task_generator import generate_ai_task
 from doctor_link.core.collector import collect_into_package
 from doctor_link.core.config_loader import load_config, merge_collect_cli, merge_package_cli, merge_verify_cli
@@ -245,6 +246,20 @@ def doctor_package(
     click.echo(f"Skipped files: {len(result.skipped_files)}")
     if not result.validation.is_valid:
         click.echo("Warning: diagnostic package is missing required files.")
+
+
+@main.command("handoff")
+@click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--tool", default="generic", show_default=True, type=click.Choice(sorted(SUPPORTED_TOOLS)), help="Target AI Coding tool profile.")
+@click.option("--out", "output", type=click.Path(path_type=Path), default=None, help="Optional output directory.")
+def handoff_command(package_dir: Path, tool: str, output: Path | None) -> None:
+    """Generate an AI Coding handoff package."""
+    result = build_handoff_package(package_dir=package_dir, tool=tool, output_dir=output)
+    click.echo(f"Generated AI handoff package: {result.output_dir}")
+    click.echo(f"Manifest: {result.manifest_path}")
+    click.echo(f"Instruction: {result.instruction_path}")
+    click.echo(f"Included files: {len(result.included_files)}")
+    click.echo(f"Missing files: {len(result.missing_files)}")
 
 
 @main.command("collect")
