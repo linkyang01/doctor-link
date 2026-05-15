@@ -85,7 +85,7 @@ def verification_status_reasons(view: DiagnosticPackageView) -> list[str]:
     return reasons
 
 
-def test_record_status_map(view: DiagnosticPackageView) -> dict[str, str]:
+def build_test_record_status_map(view: DiagnosticPackageView) -> dict[str, str]:
     report = _dict(view.json_data("doctor_report"))
     records = _list(report.get("test_records"))
     result: dict[str, str] = {}
