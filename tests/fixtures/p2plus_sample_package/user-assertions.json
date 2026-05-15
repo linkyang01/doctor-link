@@ -1,0 +1,9 @@
+[
+  {
+    "assertion_id": "assertion-1",
+    "user_statement": "The sample behavior is not acceptable",
+    "expected_behavior": "The sample should complete successfully",
+    "actual_behavior": "The sample fails",
+    "why_user_thinks_it_is_wrong": "The expected result is not produced"
+  }
+]
