@@ -1,0 +1,5 @@
+{
+  "total_replacements": 1,
+  "rules": ["sample-redaction"],
+  "files": ["evidence/logs/app.log"]
+}
