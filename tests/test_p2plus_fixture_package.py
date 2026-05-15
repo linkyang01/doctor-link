@@ -13,7 +13,7 @@ def test_p2plus_sample_fixture_renders_workbench() -> None:
 
     html = render_package_detail_html(view)
 
-    assert "P2+ Sample Diagnostic Package" in html
+    assert "P2+ Fixture" in html
     assert "User Assertions" in html
     assert "Verification Workbench" in html
     assert "Before / After Comparison" in html
