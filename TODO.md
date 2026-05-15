@@ -8,6 +8,7 @@
 - [x] P1：Evidence Collection Primitives
 - [x] P1+：CLI Evidence Pipeline
 - [x] P2：Local Read-only Diagnostic Workbench
+- [ ] P2+：Mainline Diagnostic Workbench Enhancements
 - [ ] P3：AI Coding Collaboration Layer
 - [ ] P4：Automated Diagnosis Pipeline
 - [ ] P5：Productization and Release Readiness
@@ -122,6 +123,22 @@
 - `docs/p2-final-audit.md`
 - `docs/release-notes/p2-draft.md`
 - `TODO-P2-HARDENING.md`
+
+## P2+：Mainline Diagnostic Workbench Enhancements
+
+状态：已纳入主线，正在规划与实施。
+
+说明：P2+ 不是独立长期阶段，而是 P2 完成后的主线增强任务组，重点增强本地诊断工作台、Evidence 审阅、Verification 工作台、AI Task Handoff、Web UI 可用性和样例诊断包。
+
+边界：本地 Web UI 默认保持只读。任何写回能力必须另写 ADR 并保持显式操作。
+
+- [x] 新增 P2+ Issue：Mainline Diagnostic Workbench Enhancements
+- [x] 新增 `TODO-P2PLUS.md`
+- [x] 新增 `docs/roadmap/p2plus.md`
+- [x] 新增 ADR：P2+ Mainline Enhancement
+- [ ] P2+ 完成后关闭 Issue #37
+
+详细执行清单见：`TODO-P2PLUS.md`。
 
 ## P2 Deferred Decision：Review Notes / Write-back Mode
 
