@@ -20,13 +20,14 @@ This checklist tracks follow-up hardening work for assertion-to-test-to-verifica
 
 ## Verification Coverage
 
-- [ ] Generate assertion test coverage in verification-result.json
-- [ ] Show assertion coverage in verification-plan.md
-- [ ] Mark missing assertion coverage as missing evidence or tests to rerun when appropriate
-- [ ] Add tests for assertion coverage verification
+- [x] Generate assertion test coverage in verification-result.json
+- [x] Show assertion coverage in verification-plan.md
+- [x] Mark missing assertion coverage as missing evidence or tests to rerun when appropriate
+- [x] Add tests for assertion coverage verification
 
 ## Documentation
 
-- [ ] Update README.zh-CN.md
-- [ ] Update README.en.md
-- [ ] Update P1/P1+ audit after hardening is complete
+- [x] Keep README stable; P1/P1+ hardening details are documented in `docs/p1-p1plus-audit.md`
+- [x] Update P1/P1+ audit after hardening is complete
+- [ ] Merge PR #34 after CI passes or manual merge is performed
+- [ ] Close Issue #31 after PR #34 is merged

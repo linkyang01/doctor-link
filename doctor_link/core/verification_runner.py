@@ -11,6 +11,17 @@ VerificationStatus = Literal["ready", "missing_evidence", "not_verified", "candi
 
 
 @dataclass
+class AssertionTestCoverage:
+    assertion_id: str
+    statement: str = ""
+    status: str = "unknown"
+    covered_by_test_records: list[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass
 class VerificationResult:
     package_dir: str
     generated_at: str = field(default_factory=utc_now_iso)
@@ -24,6 +35,7 @@ class VerificationResult:
     test_record_count: int = 0
     report_comparison_status: str | None = None
     vly_core_proof_status: str | None = None
+    assertion_test_coverage: list[dict[str, Any]] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
@@ -56,6 +68,9 @@ class VerificationResult:
             f"- Report comparison status: `{self.report_comparison_status or 'N/A'}`",
             f"- Vly Core Proof status: `{self.vly_core_proof_status or 'N/A'}`",
             "",
+            "## Assertion test coverage",
+            *_coverage_list(self.assertion_test_coverage),
+            "",
             "## Notes",
             *_list(self.notes),
             "",
@@ -84,6 +99,7 @@ def run_verification(package_dir: Path, write_back: bool = False) -> Verificatio
     evidence = report.get("evidence", []) or []
     report_comparison = report.get("report_comparison")
     vly_core_proof = report.get("vly_core_proof")
+    coverage = _build_assertion_coverage(user_assertions, test_records)
 
     result = VerificationResult(
         package_dir=str(package_dir),
@@ -92,10 +108,11 @@ def run_verification(package_dir: Path, write_back: bool = False) -> Verificatio
         test_record_count=len(test_records),
         report_comparison_status=_comparison_status(report_comparison),
         vly_core_proof_status=_vly_status(vly_core_proof),
+        assertion_test_coverage=[item.to_dict() for item in coverage],
     )
 
-    _assess_missing_evidence(result, evidence, checklist_present, test_records, report_comparison, vly_core_proof)
-    _assess_tests(result, test_records, user_assertions)
+    _assess_missing_evidence(result, evidence, checklist_present, test_records, report_comparison, vly_core_proof, coverage)
+    _assess_tests(result, test_records, user_assertions, coverage)
     _assess_status(result)
     _add_next_commands(result, package_dir)
     result.summary = _summary(result)
@@ -113,6 +130,7 @@ def _assess_missing_evidence(
     test_records: list[Any],
     report_comparison: Any,
     vly_core_proof: Any,
+    coverage: list[AssertionTestCoverage],
 ) -> None:
     if not checklist_present:
         result.missing_evidence.append("fix-verification-checklist.md")
@@ -122,17 +140,32 @@ def _assess_missing_evidence(
         result.missing_evidence.append("test_records")
     if report_comparison is None:
         result.missing_evidence.append("report_comparison")
+    missing_coverage = [item.assertion_id for item in coverage if item.status != "covered"]
+    if missing_coverage:
+        result.missing_evidence.append("assertion_test_coverage")
+        result.notes.append("Some user assertions do not have linked test records.")
     if vly_core_proof is None:
         result.notes.append("No Vly Core Proof readiness signal found. This may be acceptable for non-Vly packages.")
 
 
-def _assess_tests(result: VerificationResult, test_records: list[Any], user_assertions: list[Any]) -> None:
+def _assess_tests(
+    result: VerificationResult,
+    test_records: list[Any],
+    user_assertions: list[Any],
+    coverage: list[AssertionTestCoverage],
+) -> None:
     if not test_records:
         result.tests_to_rerun.append("Run the relevant reproduction or regression tests and record them with `doctor-link record`.")
-    for assertion in user_assertions:
-        statement = assertion.get("user_statement") if isinstance(assertion, dict) else None
-        if statement:
-            result.tests_to_rerun.append(f"Rerun a test that verifies user assertion: {statement}")
+    for item in coverage:
+        if item.status != "covered":
+            result.tests_to_rerun.append(
+                f"Record a test for user assertion `{item.assertion_id}` using `doctor-link record --assertion-id {item.assertion_id}`."
+            )
+    if not coverage:
+        for assertion in user_assertions:
+            statement = assertion.get("user_statement") if isinstance(assertion, dict) else None
+            if statement:
+                result.tests_to_rerun.append(f"Rerun a test that verifies user assertion: {statement}")
 
 
 def _assess_status(result: VerificationResult) -> None:
@@ -161,6 +194,13 @@ def _add_next_commands(result: VerificationResult, package_dir: Path) -> None:
         result.next_commands.append(
             f"doctor-link record {package_dir} --name \"Verification test\" --status passed --expected \"Expected behavior\" --actual \"Actual behavior\""
         )
+    if "assertion_test_coverage" in result.missing_evidence:
+        for item in result.assertion_test_coverage:
+            if item.get("status") != "covered":
+                assertion_id = item.get("assertion_id", "ASSERTION_ID")
+                result.next_commands.append(
+                    f"doctor-link record {package_dir} --name \"Assertion verification\" --status passed --assertion-id {assertion_id}"
+                )
     if "report_comparison" in result.missing_evidence:
         result.next_commands.append(
             f"doctor-link compare before-doctor-report.json {package_dir / 'doctor-report.json'} --package-dir {package_dir}"
@@ -227,7 +267,8 @@ def _summary(result: VerificationResult) -> str:
     return (
         f"Status {result.status}. Missing evidence: {len(result.missing_evidence)}. "
         f"Tests to rerun: {len(result.tests_to_rerun)}. "
-        f"Report comparison: {result.report_comparison_status or 'N/A'}."
+        f"Report comparison: {result.report_comparison_status or 'N/A'}. "
+        f"Assertion coverage: {_coverage_summary(result.assertion_test_coverage)}."
     )
 
 
@@ -238,3 +279,75 @@ def _append(path: Path, text: str) -> None:
 
 def _list(items: list[str]) -> list[str]:
     return [f"- {item}" for item in items] if items else ["- None"]
+
+
+def _coverage_list(items: list[dict[str, Any]]) -> list[str]:
+    if not items:
+        return ["- None"]
+    lines: list[str] = []
+    for item in items:
+        tests = item.get("covered_by_test_records") or []
+        test_text = ", ".join(str(test) for test in tests) if tests else "none"
+        lines.append(
+            f"- `{item.get('assertion_id', 'unknown')}`: `{item.get('status', 'unknown')}`; tests: {test_text}; statement: {item.get('statement', '')}"
+        )
+    return lines
+
+
+def _coverage_summary(items: list[dict[str, Any]]) -> str:
+    if not items:
+        return "N/A"
+    covered = sum(1 for item in items if item.get("status") == "covered")
+    return f"{covered}/{len(items)} covered"
+
+
+def _build_assertion_coverage(user_assertions: list[Any], test_records: list[Any]) -> list[AssertionTestCoverage]:
+    if not user_assertions:
+        return []
+    indexed_tests = _tests_by_assertion(test_records)
+    coverage: list[AssertionTestCoverage] = []
+    for index, assertion in enumerate(user_assertions, start=1):
+        assertion_id = _assertion_id(assertion, index)
+        statement = _assertion_statement(assertion)
+        linked_tests = indexed_tests.get(assertion_id, [])
+        status = "covered" if linked_tests else "missing"
+        coverage.append(
+            AssertionTestCoverage(
+                assertion_id=assertion_id,
+                statement=statement,
+                status=status,
+                covered_by_test_records=linked_tests,
+            )
+        )
+    return coverage
+
+
+def _tests_by_assertion(test_records: list[Any]) -> dict[str, list[str]]:
+    index: dict[str, list[str]] = {}
+    for record in test_records:
+        if not isinstance(record, dict):
+            continue
+        test_id = str(record.get("test_id") or record.get("id") or record.get("name") or "unknown-test")
+        related = record.get("related_assertion_ids") or []
+        if isinstance(related, str):
+            related = [related]
+        if not isinstance(related, list):
+            continue
+        for assertion_id in related:
+            assertion_key = str(assertion_id)
+            index.setdefault(assertion_key, [])
+            if test_id not in index[assertion_key]:
+                index[assertion_key].append(test_id)
+    return index
+
+
+def _assertion_id(assertion: Any, index: int) -> str:
+    if isinstance(assertion, dict):
+        return str(assertion.get("assertion_id") or assertion.get("id") or f"assertion-{index}")
+    return f"assertion-{index}"
+
+
+def _assertion_statement(assertion: Any) -> str:
+    if isinstance(assertion, dict):
+        return str(assertion.get("user_statement") or assertion.get("statement") or "")
+    return str(assertion)

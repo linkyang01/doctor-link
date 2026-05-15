@@ -88,11 +88,13 @@ def test_verify_write_back_updates_package_context(tmp_path: Path) -> None:
 def test_verify_reads_user_assertions_from_file(tmp_path: Path) -> None:
     package_dir = _build_package(tmp_path)
     (package_dir / "user-assertions.json").write_text(
-        json.dumps([{"user_statement": "Audio is missing"}], ensure_ascii=False, indent=2),
+        json.dumps([{"user_statement": "User reported playback gap"}], ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
 
     result = run_verification(package_dir)
 
     assert result.user_assertion_count == 1
-    assert any("Audio is missing" in item for item in result.tests_to_rerun)
+    assert result.assertion_test_coverage[0]["statement"] == "User reported playback gap"
+    assert result.assertion_test_coverage[0]["status"] == "missing"
+    assert "assertion_test_coverage" in result.missing_evidence
