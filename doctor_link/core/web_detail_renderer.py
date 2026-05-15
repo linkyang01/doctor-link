@@ -10,7 +10,7 @@ from doctor_link.core.web_comparison_reader import read_web_comparison
 from doctor_link.core.web_package_reader import DiagnosticPackageView, EvidencePreview
 from doctor_link.core.web_review_summary import (
     build_evidence_reference_summaries,
-    test_record_status_map,
+    build_test_record_status_map,
     verification_status_reasons,
 )
 
@@ -184,7 +184,7 @@ def _verification(view: DiagnosticPackageView) -> str:
 <div class="stats"><div><strong>{len(missing)}</strong><span>Missing evidence</span></div><div><strong>{len(rerun)}</strong><span>Tests to rerun</span></div><div><strong>{len(commands)}</strong><span>Next commands</span></div><div><strong>{html.escape(comparison_status)}</strong><span>Report comparison</span></div><div><strong>{html.escape(vly_status)}</strong><span>Vly Core Proof</span></div><div><strong>{_coverage_summary(coverage)}</strong><span>Assertion coverage</span></div></div>
 {_list_block('Verification Status Reasons', reasons, anchor_map)}
 {_list_block('Missing Evidence', missing, anchor_map)}{_list_block('Tests To Rerun', rerun, anchor_map)}{_command_block('Suggested Next Commands', commands)}
-{_verification_signal_panel(comparison_status, vly_status, coverage, test_record_status_map(view))}
+{_verification_signal_panel(comparison_status, vly_status, coverage, build_test_record_status_map(view))}
 <h3>Checklist</h3><div class="markdown">{_linkify_evidence_text(view.text('verification_checklist') or 'Missing fix-verification-checklist.md', anchor_map)}</div>
 <h3>Plan</h3><div class="markdown">{_linkify_evidence_text(view.text('verification_plan') or 'Missing verification-plan.md', anchor_map)}</div>
 <h3>Raw Result</h3><pre>{_linkify_evidence_text(json.dumps(result, ensure_ascii=False, indent=2) if result else 'Missing verification-result.json', anchor_map)}</pre></section>
