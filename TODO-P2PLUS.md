@@ -19,9 +19,9 @@ Goal: improve the local read-only diagnostic workbench and prepare stronger AI C
 ## Review Notes Boundary
 
 - [x] Keep Web UI read-only by default
-- [ ] Design review notes data structure
+- [x] Design review notes data structure
 - [x] Add ADR before any write-back implementation
-- [ ] If write-back is added later, make it explicit and auditable
+- [x] If write-back is added later, make it explicit and auditable
 
 ## Evidence Review Enhancement
 
@@ -45,7 +45,7 @@ Goal: improve the local read-only diagnostic workbench and prepare stronger AI C
 - [x] Add copy-ready AI task block
 - [x] Add copy-ready investigation boundary block
 - [x] Add copy-ready verification checklist block
-- [ ] Add Codex / AI Code task template
+- [x] Add Codex / AI Code task template
 - [x] Add tests for AI handoff rendering
 
 ## Web UI Usability Enhancement
@@ -54,21 +54,25 @@ Goal: improve the local read-only diagnostic workbench and prepare stronger AI C
 - [ ] Add collapsible long sections
 - [x] Add section quick links
 - [x] Improve status badges
-- [ ] Add basic accessibility checks
+- [x] Add basic accessibility checks
 
 ## Fixtures and Quality
 
-- [ ] Add sample diagnostic package fixture
-- [ ] Include user assertions in fixture
-- [ ] Include test records in fixture
-- [ ] Include comparison data in fixture
-- [ ] Include redaction report in fixture
+- [x] Add sample diagnostic package fixture
+- [x] Include user assertions in fixture
+- [x] Include test records in fixture
+- [x] Include comparison data in fixture
+- [x] Include redaction report in fixture
 - [x] Add P2+ smoke tests
 
 ## Documentation and Audit
 
 - [ ] Update README.zh-CN.md
 - [ ] Update README.en.md
-- [ ] Add P2+ final audit
+- [x] Add P2+ final audit
 - [x] Update this TODO after each PR
 - [ ] Close P2+ Issue after CI passes
+
+## Deferred
+
+- [ ] Collapsible long sections are deferred to a future visual refresh.
