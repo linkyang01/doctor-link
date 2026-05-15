@@ -139,6 +139,7 @@ def probe_command(file: Path, ffprobe_binary: str, output: Path | None, summary_
 @click.option("--expected", "expected_behavior", default=None, help="Expected behavior.")
 @click.option("--actual", "actual_behavior", default=None, help="Actual behavior.")
 @click.option("--evidence-id", "evidence_ids", multiple=True, help="Related evidence ID. Can be repeated.")
+@click.option("--assertion-id", "related_assertion_ids", multiple=True, help="Related user assertion ID. Can be repeated.")
 @click.option("--note", "user_note", default=None, help="Human note for this test result.")
 @click.option("--file", "related_file", default=None, help="Related file or test sample.")
 def record_command(
@@ -148,6 +149,7 @@ def record_command(
     expected_behavior: str | None,
     actual_behavior: str | None,
     evidence_ids: tuple[str, ...],
+    related_assertion_ids: tuple[str, ...],
     user_note: str | None,
     related_file: str | None,
 ) -> None:
@@ -159,6 +161,7 @@ def record_command(
         expected_behavior=expected_behavior,
         actual_behavior=actual_behavior,
         evidence_ids=list(evidence_ids),
+        related_assertion_ids=list(related_assertion_ids),
         user_note=user_note,
         related_file=related_file,
     )
