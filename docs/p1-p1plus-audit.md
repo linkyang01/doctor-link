@@ -4,7 +4,7 @@
 
 P1 and P1+ are accepted as complete for the current diagnostic foundation scope.
 
-This audit does not change code. It records what exists, how it is invoked, and how CI covers the workflow.
+This audit records what exists, how it is invoked, how CI covers the workflow, and what the follow-up hardening added.
 
 ## P1 Scope
 
@@ -54,18 +54,61 @@ doctor-link view
 
 This validates that the main diagnostic package pipeline can run end-to-end in CI.
 
+## Hardening Added
+
+The P1/P1+ hardening pass adds assertion-to-test-to-verification traceability.
+
+### Assertion-linked test records
+
+`doctor-link record` now supports one or more related user assertion IDs:
+
+```bash
+doctor-link record <package_dir> \
+  --name "Regression check" \
+  --status passed \
+  --assertion-id assertion-a \
+  --assertion-id assertion-b
+```
+
+The linkage is stored in:
+
+- `evidence/test-results/<test_id>.json`
+- `doctor-report.json`
+- `summary.md`
+- `ai-task.md`
+- `timeline.md`
+- `evidence-list.md`
+
+### Assertion coverage in verification
+
+`doctor-link verify` now generates `assertion_test_coverage` when user assertions are present.
+
+Coverage status:
+
+- `covered`: at least one test record references the assertion;
+- `missing`: no test record references the assertion.
+
+The coverage is written to:
+
+- `verification-result.json`
+- `verification-plan.md`
+- `doctor-report.json` when `--write-back` is used.
+
+Missing assertion coverage is treated as a verification blocker and produces suggested `doctor-link record --assertion-id` commands.
+
+## Tests Added During Hardening
+
+- `tests/test_test_recorder_assertions.py`
+- `tests/test_verification_assertion_coverage.py`
+
+Existing verification tests were aligned to assert the new coverage behavior.
+
 ## Completion Decision
 
 P1 is complete for evidence primitives.
 
-P1+ is complete for the CLI evidence pipeline.
+P1+ is complete for the CLI evidence pipeline and now has assertion-to-test-to-verification traceability.
 
-## Known Follow-up Work
+## Operational Note
 
-The next hardening step is not a P1/P1+ blocker, but it will improve the verification loop:
-
-- allow test records to reference user assertions directly;
-- allow verification to summarize assertion test coverage;
-- document the assertion-to-test-to-verification loop.
-
-These follow-up items are tracked separately after this audit.
+PR #34 passed CI and contains the hardening implementation. If repository tooling cannot merge it automatically, merge PR #34 manually with Squash and merge, then continue final audit closure.
