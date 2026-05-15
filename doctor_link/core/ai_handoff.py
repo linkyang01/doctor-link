@@ -102,6 +102,9 @@ def _render_instruction(package_dir: Path, profile: HandoffProfile, included: li
     checklist = _read(package_dir / "fix-verification-checklist.md", "Missing fix-verification-checklist.md")
     evidence = _read(package_dir / "evidence-list.md", "Missing evidence-list.md")
     assertions = _read(package_dir / "user-assertions.json", "Missing user-assertions.json")
+    included_lines = [f"- {item}" for item in included] if included else ["- None"]
+    missing_lines = [f"- {item}" for item in missing] if missing else ["- None"]
+    note_lines = [f"- {note}" for note in profile.notes]
     lines = [
         f"# Doctor link Handoff for {profile.display_name}",
         "",
@@ -109,15 +112,15 @@ def _render_instruction(package_dir: Path, profile: HandoffProfile, included: li
         "The human user has confirmed one or more issues. Do not dismiss user-confirmed problems as normal behavior without evidence.",
         "",
         "## How to use",
-        *[f"- {note}" for note in profile.notes],
+        *note_lines,
         "- Use the copied package files as diagnostic context.",
         "- Do not claim the fix is complete until verification evidence supports it.",
         "",
         "## Included files",
-        *[f"- {item}" for item in included] if included else ["- None"],
+        *included_lines,
         "",
         "## Missing files",
-        *[f"- {item}" for item in missing] if missing else ["- None"],
+        *missing_lines,
         "",
         "## AI task",
         ai_task,
