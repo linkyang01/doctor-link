@@ -62,6 +62,9 @@ jobs:
           doctor-link record "$PACKAGE_DIR" --name "CI playback smoke" --status partial --expected "Sample should be playable" --actual "Placeholder media cannot be probed as playable" --file VlyTestLibrary/01-BasicFormats/sample.mp4 --note "CI smoke record"
           doctor-link compare DoctorReports/before-smoke.json "$PACKAGE_DIR/doctor-report.json" --out DoctorReports/comparison-smoke --package-dir "$PACKAGE_DIR"
           doctor-link verify "$PACKAGE_DIR" --write-back
+          doctor-link handoff "$PACKAGE_DIR" --tool codex --out DoctorReports/handoff-smoke
+          test -f DoctorReports/handoff-smoke/handoff-manifest.json
+          test -f DoctorReports/handoff-smoke/CODEX_TASK.md
           doctor-link doctor-package "$PACKAGE_DIR" --out DoctorReports/doctor-package-smoke.zip --exclude-attachments --max-file-size 1000000
           doctor-link doctor-package "$PACKAGE_DIR"
           doctor-link view "$PACKAGE_DIR" --build-only
