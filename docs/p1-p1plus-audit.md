@@ -108,7 +108,3 @@ Existing verification tests were aligned to assert the new coverage behavior.
 P1 is complete for evidence primitives.
 
 P1+ is complete for the CLI evidence pipeline and now has assertion-to-test-to-verification traceability.
-
-## Operational Note
-
-PR #34 passed CI and contains the hardening implementation. If repository tooling cannot merge it automatically, merge PR #34 manually with Squash and merge, then continue final audit closure.
