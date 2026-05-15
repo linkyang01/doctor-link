@@ -27,6 +27,7 @@ This checklist tracks follow-up hardening work for assertion-to-test-to-verifica
 
 ## Documentation
 
-- [ ] Update README.zh-CN.md
-- [ ] Update README.en.md
-- [ ] Update P1/P1+ audit after hardening is complete
+- [x] Keep README stable; P1/P1+ hardening details are documented in `docs/p1-p1plus-audit.md`
+- [x] Update P1/P1+ audit after hardening is complete
+- [ ] Merge PR #34 after CI passes or manual merge is performed
+- [ ] Close Issue #31 after PR #34 is merged
