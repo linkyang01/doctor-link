@@ -9,7 +9,7 @@ from doctor_link.core.test_recorder import record_test_result
 from doctor_link.core.web_package_reader import read_package_view
 from doctor_link.core.web_review_summary import (
     build_evidence_reference_summaries,
-    test_record_status_map,
+    build_test_record_status_map,
     verification_status_reasons,
 )
 
@@ -75,7 +75,7 @@ def test_verification_status_reasons_and_test_status_map(tmp_path: Path) -> None
 
     view = read_package_view(package_dir)
     reasons = verification_status_reasons(view)
-    statuses = test_record_status_map(view)
+    statuses = build_test_record_status_map(view)
 
     assert any("missing evidence" in reason for reason in reasons)
     assert any("test" in reason for reason in reasons)
