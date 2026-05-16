@@ -86,14 +86,28 @@ def build_handoff_package(package_dir: Path, tool: str = "generic", output_dir: 
     }
     manifest_path = out / "handoff-manifest.json"
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
-    return HandoffPackage(
-        tool=tool_key,
-        output_dir=str(out),
-        manifest_path=str(manifest_path),
-        instruction_path=str(instruction_path),
-        included_files=included,
-        missing_files=missing,
-    )
+    return HandoffPackage(tool_key, str(out), str(manifest_path), str(instruction_path), included, missing)
+
+
+def add_ai_result(package_dir: Path, summary: str, claimed_fix: str = "", files_changed: list[str] | None = None, evidence_used: list[str] | None = None, related_assertion_ids: list[str] | None = None, verification_steps: list[str] | None = None, risks: list[str] | None = None, assumptions: list[str] | None = None) -> dict[str, Any]:
+    items = _load_list(package_dir / "ai-repair-result.json")
+    record = {
+        "result_id": f"ai_result_{len(items) + 1:03d}",
+        "summary": summary,
+        "claimed_fix": claimed_fix,
+        "files_changed": files_changed or [],
+        "evidence_used": evidence_used or [],
+        "related_assertion_ids": related_assertion_ids or [],
+        "verification_steps": verification_steps or [],
+        "risks": risks or [],
+        "assumptions": assumptions or [],
+        "verified": False,
+        "notice": "Run verification before closing.",
+    }
+    items.append(record)
+    (package_dir / "ai-repair-result.json").write_text(json.dumps(items, ensure_ascii=False, indent=2), encoding="utf-8")
+    (package_dir / "ai-repair-result.md").write_text(_md("AI Repair Results", items), encoding="utf-8")
+    return record
 
 
 def _render_instruction(package_dir: Path, profile: HandoffProfile, included: list[str], missing: list[str]) -> str:
@@ -105,39 +119,26 @@ def _render_instruction(package_dir: Path, profile: HandoffProfile, included: li
     included_lines = [f"- {item}" for item in included] if included else ["- None"]
     missing_lines = [f"- {item}" for item in missing] if missing else ["- None"]
     note_lines = [f"- {note}" for note in profile.notes]
-    lines = [
-        f"# Doctor link Handoff for {profile.display_name}",
-        "",
-        "## Required rule",
-        "The human user has confirmed one or more issues. Do not dismiss user-confirmed problems as normal behavior without evidence.",
-        "",
-        "## How to use",
-        *note_lines,
-        "- Use the copied package files as diagnostic context.",
-        "- Do not claim the fix is complete until verification evidence supports it.",
-        "",
-        "## Included files",
-        *included_lines,
-        "",
-        "## Missing files",
-        *missing_lines,
-        "",
-        "## AI task",
-        ai_task,
-        "",
-        "## Investigation boundary",
-        boundary,
-        "",
-        "## Verification checklist",
-        checklist,
-        "",
-        "## Evidence list",
-        evidence,
-        "",
-        "## User assertions",
-        assertions,
-        "",
-    ]
+    lines = [f"# Doctor link Handoff for {profile.display_name}", "", "## Required rule", "The human user has confirmed one or more issues. Do not dismiss user-confirmed problems as normal behavior without evidence.", "", "## How to use", *note_lines, "- Use the copied package files as diagnostic context.", "- Do not claim the fix is complete until verification evidence supports it.", "", "## Included files", *included_lines, "", "## Missing files", *missing_lines, "", "## AI task", ai_task, "", "## Investigation boundary", boundary, "", "## Verification checklist", checklist, "", "## Evidence list", evidence, "", "## User assertions", assertions, ""]
+    return "\n".join(lines)
+
+
+def _load_list(path: Path) -> list[dict[str, Any]]:
+    if not path.exists():
+        return []
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if isinstance(data, list):
+        return [item for item in data if isinstance(item, dict)]
+    return [data] if isinstance(data, dict) else []
+
+
+def _md(title: str, items: list[dict[str, Any]]) -> str:
+    lines = [f"# {title}", ""]
+    for item in items:
+        lines.append(f"## {item.get('result_id', 'record')}")
+        for key, value in item.items():
+            lines.append(f"- {key}: {value}")
+        lines.append("")
     return "\n".join(lines)
 
 
