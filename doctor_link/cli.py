@@ -5,7 +5,14 @@ from pathlib import Path
 
 import click
 
-from doctor_link.core.ai_handoff import SUPPORTED_TOOLS, build_handoff_package
+from doctor_link.core.ai_handoff import (
+    SUPPORTED_TOOLS,
+    add_ai_result,
+    add_history_round,
+    build_assertion_compliance,
+    build_handoff_package,
+    build_risk_review,
+)
 from doctor_link.core.ai_task_generator import generate_ai_task
 from doctor_link.core.collector import collect_into_package
 from doctor_link.core.config_loader import load_config, merge_collect_cli, merge_package_cli, merge_verify_cli
@@ -262,6 +269,56 @@ def handoff_command(package_dir: Path, tool: str, output: Path | None) -> None:
     click.echo(f"Missing files: {len(result.missing_files)}")
 
 
+@main.command("ai-result")
+@click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--summary", required=True, help="AI repair summary.")
+@click.option("--claimed-fix", default="", help="Claimed fix text.")
+@click.option("--file", "files_changed", multiple=True, help="Changed file. Can be repeated.")
+@click.option("--evidence-id", "evidence_used", multiple=True, help="Evidence ID used by the AI result.")
+@click.option("--assertion-id", "related_assertion_ids", multiple=True, help="Related user assertion ID.")
+@click.option("--verification-step", "verification_steps", multiple=True, help="Required verification step.")
+@click.option("--risk", "risks", multiple=True, help="Known risk.")
+@click.option("--assumption", "assumptions", multiple=True, help="Assumption made by the AI result.")
+def ai_result_command(package_dir: Path, summary: str, claimed_fix: str, files_changed: tuple[str, ...], evidence_used: tuple[str, ...], related_assertion_ids: tuple[str, ...], verification_steps: tuple[str, ...], risks: tuple[str, ...], assumptions: tuple[str, ...]) -> None:
+    """Record an AI repair result into a diagnostic package."""
+    result = add_ai_result(package_dir, summary, claimed_fix, list(files_changed), list(evidence_used), list(related_assertion_ids), list(verification_steps), list(risks), list(assumptions))
+    click.echo(f"Recorded AI result: {result['result_id']}")
+    click.echo("Verification is still required before closing.")
+
+
+@main.command("diagnosis-history")
+@click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--ai-pass", default="", help="AI pass summary.")
+@click.option("--user-correction", default="", help="Human correction.")
+@click.option("--evidence-id", "evidence_added", multiple=True, help="Evidence added in this round.")
+@click.option("--verification-attempt", default="", help="Verification attempt summary.")
+def diagnosis_history_command(package_dir: Path, ai_pass: str, user_correction: str, evidence_added: tuple[str, ...], verification_attempt: str) -> None:
+    """Record a diagnosis round."""
+    result = add_history_round(package_dir, ai_pass, user_correction, list(evidence_added), verification_attempt)
+    click.echo(f"Recorded diagnosis round: {result['round_id']}")
+
+
+@main.command("assertion-check")
+@click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
+def assertion_check_command(package_dir: Path) -> None:
+    """Check whether user assertions are covered by AI result records."""
+    result = build_assertion_compliance(package_dir)
+    click.echo(f"Assertion compliance status: {result['status']}")
+    click.echo(f"Missing assertions: {len(result['missing_assertion_ids'])}")
+
+
+@main.command("risk-review")
+@click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--file", "files_changed", multiple=True, help="Changed file. Can be repeated.")
+@click.option("--boundary", "boundary", multiple=True, help="Allowed path prefix. Can be repeated.")
+@click.option("--risk-level", default="unknown", type=click.Choice(["low", "medium", "high", "unknown"]), help="Initial risk level.")
+def risk_review_command(package_dir: Path, files_changed: tuple[str, ...], boundary: tuple[str, ...], risk_level: str) -> None:
+    """Generate a repair risk review."""
+    result = build_risk_review(package_dir, list(files_changed), list(boundary), risk_level)
+    click.echo(f"Repair risk level: {result['risk_level']}")
+    click.echo(f"Outside boundary files: {len(result['outside_boundary'])}")
+
+
 @main.command("collect")
 @click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
 @click.option("--project-root", type=click.Path(file_okay=False, path_type=Path), default=None, help="Project root to collect environment evidence for.")
@@ -293,35 +350,8 @@ def collect_command(
 ) -> None:
     """Collect environment, logs, commands, probes, and attachments into a diagnostic package."""
     config = load_config(package_dir)
-    collect_config = merge_collect_cli(
-        config.collect,
-        project_root=project_root,
-        log_patterns=log_patterns,
-        commands=commands,
-        probes=probes,
-        attachments=attachments,
-        no_redact=no_redact,
-        redact_email=redact_email,
-        redact_phone=redact_phone,
-        custom_patterns=custom_patterns,
-    )
-    result = collect_into_package(
-        package_dir=package_dir,
-        project_root=Path(collect_config.project_root) if collect_config.project_root else None,
-        log_patterns=collect_config.logs,
-        commands=collect_config.commands,
-        probes=[Path(item) for item in collect_config.probes],
-        attachments=[Path(item) for item in collect_config.attachments],
-        note=note,
-        ffprobe_binary=ffprobe_binary,
-        command_timeout_seconds=command_timeout_seconds,
-        redact=collect_config.redact,
-        redaction_options=RedactionOptions(
-            redact_email=collect_config.redact_email,
-            redact_phone=collect_config.redact_phone,
-            custom_patterns=collect_config.redact_patterns,
-        ),
-    )
+    collect_config = merge_collect_cli(config.collect, project_root=project_root, log_patterns=log_patterns, commands=commands, probes=probes, attachments=attachments, no_redact=no_redact, redact_email=redact_email, redact_phone=redact_phone, custom_patterns=custom_patterns)
+    result = collect_into_package(package_dir=package_dir, project_root=Path(collect_config.project_root) if collect_config.project_root else None, log_patterns=collect_config.logs, commands=collect_config.commands, probes=[Path(item) for item in collect_config.probes], attachments=[Path(item) for item in collect_config.attachments], note=note, ffprobe_binary=ffprobe_binary, command_timeout_seconds=command_timeout_seconds, redact=collect_config.redact, redaction_options=RedactionOptions(redact_email=collect_config.redact_email, redact_phone=collect_config.redact_phone, custom_patterns=collect_config.redact_patterns))
     click.echo(f"Collected evidence items: {len(result.evidence)}")
     click.echo(f"Added timeline steps: {len(result.timeline_steps)}")
     click.echo(f"Warnings: {len(result.warnings)}")
@@ -368,27 +398,9 @@ def view_command(package_dir: Path, host: str, port: int, no_open_browser: bool,
 @click.option("--severity", default="error", show_default=True, help="Assertion severity.")
 @click.option("--file", "related_file", default=None, help="Related file or artifact.")
 @click.option("--next-ai", "next_ai_instruction", default=None, help="Instruction for the next AI debugging pass.")
-def assert_problem(
-    package_dir: Path,
-    statement: str,
-    expected_behavior: str | None,
-    actual_behavior: str | None,
-    why_user_thinks_it_is_wrong: str | None,
-    severity: str,
-    related_file: str | None,
-    next_ai_instruction: str | None,
-) -> None:
+def assert_problem(package_dir: Path, statement: str, expected_behavior: str | None, actual_behavior: str | None, why_user_thinks_it_is_wrong: str | None, severity: str, related_file: str | None, next_ai_instruction: str | None) -> None:
     """Add a human-confirmed problem to a diagnostic package."""
-    assertion = add_user_assertion(
-        package_dir=package_dir,
-        user_statement=statement,
-        expected_behavior=expected_behavior,
-        actual_behavior=actual_behavior,
-        why_user_thinks_it_is_wrong=why_user_thinks_it_is_wrong,
-        severity=severity,
-        related_file=related_file,
-        next_ai_instruction=next_ai_instruction,
-    )
+    assertion = add_user_assertion(package_dir=package_dir, user_statement=statement, expected_behavior=expected_behavior, actual_behavior=actual_behavior, why_user_thinks_it_is_wrong=why_user_thinks_it_is_wrong, severity=severity, related_file=related_file, next_ai_instruction=next_ai_instruction)
     click.echo(f"Added user assertion: {assertion.assertion_id}")
 
 
