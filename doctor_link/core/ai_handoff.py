@@ -107,7 +107,42 @@ def add_ai_result(package_dir: Path, summary: str, claimed_fix: str = "", files_
     items.append(record)
     (package_dir / "ai-repair-result.json").write_text(json.dumps(items, ensure_ascii=False, indent=2), encoding="utf-8")
     (package_dir / "ai-repair-result.md").write_text(_md("AI Repair Results", items), encoding="utf-8")
+    _report_update(package_dir, "ai_repair_results", items)
     return record
+
+
+def add_history_round(package_dir: Path, ai_pass: str = "", user_correction: str = "", evidence_added: list[str] | None = None, verification_attempt: str = "") -> dict[str, Any]:
+    items = _load_list(package_dir / "diagnosis-history.json")
+    record = {"round_id": f"round_{len(items) + 1:03d}", "ai_pass": ai_pass, "user_correction": user_correction, "evidence_added": evidence_added or [], "verification_attempt": verification_attempt}
+    items.append(record)
+    (package_dir / "diagnosis-history.json").write_text(json.dumps(items, ensure_ascii=False, indent=2), encoding="utf-8")
+    (package_dir / "diagnosis-history.md").write_text(_md("Diagnosis History", items), encoding="utf-8")
+    _report_update(package_dir, "diagnosis_history", items)
+    return record
+
+
+def build_assertion_compliance(package_dir: Path) -> dict[str, Any]:
+    assertions = _load_any(package_dir / "user-assertions.json", [])
+    results = _load_list(package_dir / "ai-repair-result.json")
+    ids = [_assertion_id(item, i) for i, item in enumerate(assertions if isinstance(assertions, list) else [], start=1)]
+    covered = sorted({str(value) for item in results for value in (item.get("related_assertion_ids") or [])})
+    missing = [value for value in ids if value not in covered]
+    report = {"status": "needs_attention" if missing else "covered", "assertion_ids": ids, "covered_assertion_ids": covered, "missing_assertion_ids": missing}
+    (package_dir / "assertion-compliance-report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    (package_dir / "assertion-compliance-report.md").write_text(_md("Assertion Compliance Report", [report]), encoding="utf-8")
+    _report_update(package_dir, "assertion_compliance", report)
+    return report
+
+
+def build_risk_review(package_dir: Path, files_changed: list[str] | None = None, boundary: list[str] | None = None, risk_level: str = "unknown") -> dict[str, Any]:
+    files = files_changed or []
+    allowed = boundary or []
+    outside = [item for item in files if allowed and not any(item.startswith(prefix) for prefix in allowed)]
+    report = {"risk_level": "high" if outside else risk_level, "files_changed": files, "boundary": allowed, "outside_boundary": outside}
+    (package_dir / "repair-risk-review.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    (package_dir / "repair-risk-review.md").write_text(_md("Repair Risk Review", [report]), encoding="utf-8")
+    _report_update(package_dir, "repair_risk_review", report)
+    return report
 
 
 def _render_instruction(package_dir: Path, profile: HandoffProfile, included: list[str], missing: list[str]) -> str:
@@ -123,10 +158,14 @@ def _render_instruction(package_dir: Path, profile: HandoffProfile, included: li
     return "\n".join(lines)
 
 
-def _load_list(path: Path) -> list[dict[str, Any]]:
+def _load_any(path: Path, default: Any) -> Any:
     if not path.exists():
-        return []
-    data = json.loads(path.read_text(encoding="utf-8"))
+        return default
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _load_list(path: Path) -> list[dict[str, Any]]:
+    data = _load_any(path, [])
     if isinstance(data, list):
         return [item for item in data if isinstance(item, dict)]
     return [data] if isinstance(data, dict) else []
@@ -135,11 +174,26 @@ def _load_list(path: Path) -> list[dict[str, Any]]:
 def _md(title: str, items: list[dict[str, Any]]) -> str:
     lines = [f"# {title}", ""]
     for item in items:
-        lines.append(f"## {item.get('result_id', 'record')}")
+        lines.append(f"## {item.get('result_id') or item.get('round_id') or 'record'}")
         for key, value in item.items():
             lines.append(f"- {key}: {value}")
         lines.append("")
     return "\n".join(lines)
+
+
+def _report_update(package_dir: Path, key: str, value: Any) -> None:
+    path = package_dir / "doctor-report.json"
+    if path.exists():
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if isinstance(data, dict):
+            data[key] = value
+            path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _assertion_id(item: Any, index: int) -> str:
+    if isinstance(item, dict):
+        return str(item.get("assertion_id") or item.get("id") or f"assertion-{index}")
+    return f"assertion-{index}"
 
 
 def _read(path: Path, fallback: str) -> str:
