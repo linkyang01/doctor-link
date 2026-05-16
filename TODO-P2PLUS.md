@@ -70,7 +70,7 @@ Goal: improve the local read-only diagnostic workbench and prepare stronger AI C
 - [x] Keep README stable; detailed P2+ notes are documented in `docs/p2plus-final-audit.md`, `docs/roadmap/p2plus.md`, and `docs/review-notes-schema.md`
 - [x] Add P2+ final audit
 - [x] Update this TODO after each PR
-- [ ] Close P2+ Issue after CI passes
+- [x] Close P2+ Issue after CI passes
 
 ## Deferred
 
