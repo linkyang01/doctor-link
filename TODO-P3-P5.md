@@ -1,20 +1,20 @@
 # Doctor link P3-P5 TODO
 
-This file tracks phase-level status for P3, P4, and P5. Detailed implementation history is recorded in PRs, issues, and audit documents.
+This file tracks phase-level status for P3, P4, and P5. Detailed implementation history is recorded in dedicated TODO files, issues, ADRs, roadmap documents, and audit documents.
 
 Related files:
 
 - Roadmap: `docs/roadmap/p3-p5.md`
 - ADR: `docs/adr/0005-p3-p5-roadmap.md`
 - P3 final audit: `docs/p3-final-audit.md`
+- P4 roadmap: `docs/roadmap/p4.md`
+- P4 detailed TODO: `TODO-P4.md`
 
 ## P3: AI Coding Collaboration Layer
 
 Status: complete.
 
 Issue: #18
-
-Completed scope:
 
 - [x] P3.1 AI task template system
 - [x] P3.2 AI tool handoff packages
@@ -24,49 +24,24 @@ Completed scope:
 - [x] P3.6 repair risk review
 - [x] P3.7 P3 quality and closure
 
-Completed commands:
-
-- [x] `doctor-link handoff`
-- [x] `doctor-link ai-result`
-- [x] `doctor-link diagnosis-history`
-- [x] `doctor-link assertion-check`
-- [x] `doctor-link risk-review`
-
-Completed outputs:
-
-- [x] `ai-repair-result.json`
-- [x] `ai-repair-result.md`
-- [x] `diagnosis-history.json`
-- [x] `diagnosis-history.md`
-- [x] `assertion-compliance-report.json`
-- [x] `assertion-compliance-report.md`
-- [x] `repair-risk-review.json`
-- [x] `repair-risk-review.md`
-
-Quality:
-
-- [x] P3 unit tests
-- [x] P3 CLI tests
-- [x] CI validation
-- [x] P3 final audit
-- [x] Close Issue #18 after final audit PR merges
-
 ## P4: Automated Diagnosis Pipeline
 
-Status: not started.
+Status: planned, not yet implemented.
 
 Issue: #19
 
+P4 is now split into the detailed execution tracker `TODO-P4.md` and roadmap `docs/roadmap/p4.md`.
+
 Planned scope:
 
-- [ ] Project diagnosis strategy
-- [ ] Reproduction script management
-- [ ] Test matrix automation
-- [ ] Before / after package workflow
-- [ ] Automated comparison and verification
-- [ ] GitHub Actions and PR integration
-- [ ] Project health summary
-- [ ] P4 quality and closure
+- [ ] P4.1 Project diagnostic strategy
+- [ ] P4.2 Reproduction script management
+- [ ] P4.3 Test matrix automation
+- [ ] P4.4 Before / after package workflow
+- [ ] P4.5 Automated comparison and verification
+- [ ] P4.6 GitHub Actions and PR integration
+- [ ] P4.7 Project health summary
+- [ ] P4.8 P4 quality and closure
 
 ## P5: Productization and Release Readiness
 
