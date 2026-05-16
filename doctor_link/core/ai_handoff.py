@@ -43,7 +43,7 @@ PROFILES: dict[str, HandoffProfile] = {
     "cursor": HandoffProfile("cursor", "Cursor", "CURSOR_TASK.md", ["Attach or reference the copied package files in Cursor chat."]),
     "continue": HandoffProfile("continue", "Continue", "CONTINUE_TASK.md", ["Use the task with Continue and cite package evidence."]),
     "aider": HandoffProfile("aider", "Aider", "AIDER_TASK.md", ["Use the task as repair context before editing files."]),
-    "openhands": HandoffProfile("openhands", "OpenHands", ["Use the task as the agent objective and keep boundaries explicit."]),
+    "openhands": HandoffProfile("openhands", "OpenHands", "OPENHANDS_TASK.md", ["Use the task as the agent objective and keep boundaries explicit."]),
     "generic": HandoffProfile("generic", "Generic Markdown/JSON", "AI_HANDOFF_TASK.md", ["Use this package with any AI Coding tool."]),
 }
 
@@ -145,7 +145,3 @@ def _read(path: Path, fallback: str) -> str:
     if not path.exists():
         return fallback
     return path.read_text(encoding="utf-8")
-
-
-def p3_marker() -> str:
-    return "p3"
