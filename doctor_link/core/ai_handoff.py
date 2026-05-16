@@ -43,7 +43,7 @@ PROFILES: dict[str, HandoffProfile] = {
     "cursor": HandoffProfile("cursor", "Cursor", "CURSOR_TASK.md", ["Attach or reference the copied package files in Cursor chat."]),
     "continue": HandoffProfile("continue", "Continue", "CONTINUE_TASK.md", ["Use the task with Continue and cite package evidence."]),
     "aider": HandoffProfile("aider", "Aider", "AIDER_TASK.md", ["Use the task as repair context before editing files."]),
-    "openhands": HandoffProfile("openhands", "OpenHands", ["Use the task as the agent objective and keep boundaries explicit."]),
+    "openhands": HandoffProfile("openhands", "OpenHands", "OPENHANDS_TASK.md", ["Use the task as the agent objective and keep boundaries explicit."]),
     "generic": HandoffProfile("generic", "Generic Markdown/JSON", "AI_HANDOFF_TASK.md", ["Use this package with any AI Coding tool."]),
 }
 
@@ -86,14 +86,63 @@ def build_handoff_package(package_dir: Path, tool: str = "generic", output_dir: 
     }
     manifest_path = out / "handoff-manifest.json"
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
-    return HandoffPackage(
-        tool=tool_key,
-        output_dir=str(out),
-        manifest_path=str(manifest_path),
-        instruction_path=str(instruction_path),
-        included_files=included,
-        missing_files=missing,
-    )
+    return HandoffPackage(tool_key, str(out), str(manifest_path), str(instruction_path), included, missing)
+
+
+def add_ai_result(package_dir: Path, summary: str, claimed_fix: str = "", files_changed: list[str] | None = None, evidence_used: list[str] | None = None, related_assertion_ids: list[str] | None = None, verification_steps: list[str] | None = None, risks: list[str] | None = None, assumptions: list[str] | None = None) -> dict[str, Any]:
+    items = _load_list(package_dir / "ai-repair-result.json")
+    record = {
+        "result_id": f"ai_result_{len(items) + 1:03d}",
+        "summary": summary,
+        "claimed_fix": claimed_fix,
+        "files_changed": files_changed or [],
+        "evidence_used": evidence_used or [],
+        "related_assertion_ids": related_assertion_ids or [],
+        "verification_steps": verification_steps or [],
+        "risks": risks or [],
+        "assumptions": assumptions or [],
+        "verified": False,
+        "notice": "Run verification before closing.",
+    }
+    items.append(record)
+    (package_dir / "ai-repair-result.json").write_text(json.dumps(items, ensure_ascii=False, indent=2), encoding="utf-8")
+    (package_dir / "ai-repair-result.md").write_text(_md("AI Repair Results", items), encoding="utf-8")
+    _report_update(package_dir, "ai_repair_results", items)
+    return record
+
+
+def add_history_round(package_dir: Path, ai_pass: str = "", user_correction: str = "", evidence_added: list[str] | None = None, verification_attempt: str = "") -> dict[str, Any]:
+    items = _load_list(package_dir / "diagnosis-history.json")
+    record = {"round_id": f"round_{len(items) + 1:03d}", "ai_pass": ai_pass, "user_correction": user_correction, "evidence_added": evidence_added or [], "verification_attempt": verification_attempt}
+    items.append(record)
+    (package_dir / "diagnosis-history.json").write_text(json.dumps(items, ensure_ascii=False, indent=2), encoding="utf-8")
+    (package_dir / "diagnosis-history.md").write_text(_md("Diagnosis History", items), encoding="utf-8")
+    _report_update(package_dir, "diagnosis_history", items)
+    return record
+
+
+def build_assertion_compliance(package_dir: Path) -> dict[str, Any]:
+    assertions = _load_any(package_dir / "user-assertions.json", [])
+    results = _load_list(package_dir / "ai-repair-result.json")
+    ids = [_assertion_id(item, i) for i, item in enumerate(assertions if isinstance(assertions, list) else [], start=1)]
+    covered = sorted({str(value) for item in results for value in (item.get("related_assertion_ids") or [])})
+    missing = [value for value in ids if value not in covered]
+    report = {"status": "needs_attention" if missing else "covered", "assertion_ids": ids, "covered_assertion_ids": covered, "missing_assertion_ids": missing}
+    (package_dir / "assertion-compliance-report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    (package_dir / "assertion-compliance-report.md").write_text(_md("Assertion Compliance Report", [report]), encoding="utf-8")
+    _report_update(package_dir, "assertion_compliance", report)
+    return report
+
+
+def build_risk_review(package_dir: Path, files_changed: list[str] | None = None, boundary: list[str] | None = None, risk_level: str = "unknown") -> dict[str, Any]:
+    files = files_changed or []
+    allowed = boundary or []
+    outside = [item for item in files if allowed and not any(item.startswith(prefix) for prefix in allowed)]
+    report = {"risk_level": "high" if outside else risk_level, "files_changed": files, "boundary": allowed, "outside_boundary": outside}
+    (package_dir / "repair-risk-review.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    (package_dir / "repair-risk-review.md").write_text(_md("Repair Risk Review", [report]), encoding="utf-8")
+    _report_update(package_dir, "repair_risk_review", report)
+    return report
 
 
 def _render_instruction(package_dir: Path, profile: HandoffProfile, included: list[str], missing: list[str]) -> str:
@@ -105,47 +154,49 @@ def _render_instruction(package_dir: Path, profile: HandoffProfile, included: li
     included_lines = [f"- {item}" for item in included] if included else ["- None"]
     missing_lines = [f"- {item}" for item in missing] if missing else ["- None"]
     note_lines = [f"- {note}" for note in profile.notes]
-    lines = [
-        f"# Doctor link Handoff for {profile.display_name}",
-        "",
-        "## Required rule",
-        "The human user has confirmed one or more issues. Do not dismiss user-confirmed problems as normal behavior without evidence.",
-        "",
-        "## How to use",
-        *note_lines,
-        "- Use the copied package files as diagnostic context.",
-        "- Do not claim the fix is complete until verification evidence supports it.",
-        "",
-        "## Included files",
-        *included_lines,
-        "",
-        "## Missing files",
-        *missing_lines,
-        "",
-        "## AI task",
-        ai_task,
-        "",
-        "## Investigation boundary",
-        boundary,
-        "",
-        "## Verification checklist",
-        checklist,
-        "",
-        "## Evidence list",
-        evidence,
-        "",
-        "## User assertions",
-        assertions,
-        "",
-    ]
+    lines = [f"# Doctor link Handoff for {profile.display_name}", "", "## Required rule", "The human user has confirmed one or more issues. Do not dismiss user-confirmed problems as normal behavior without evidence.", "", "## How to use", *note_lines, "- Use the copied package files as diagnostic context.", "- Do not claim the fix is complete until verification evidence supports it.", "", "## Included files", *included_lines, "", "## Missing files", *missing_lines, "", "## AI task", ai_task, "", "## Investigation boundary", boundary, "", "## Verification checklist", checklist, "", "## Evidence list", evidence, "", "## User assertions", assertions, ""]
     return "\n".join(lines)
+
+
+def _load_any(path: Path, default: Any) -> Any:
+    if not path.exists():
+        return default
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _load_list(path: Path) -> list[dict[str, Any]]:
+    data = _load_any(path, [])
+    if isinstance(data, list):
+        return [item for item in data if isinstance(item, dict)]
+    return [data] if isinstance(data, dict) else []
+
+
+def _md(title: str, items: list[dict[str, Any]]) -> str:
+    lines = [f"# {title}", ""]
+    for item in items:
+        lines.append(f"## {item.get('result_id') or item.get('round_id') or 'record'}")
+        for key, value in item.items():
+            lines.append(f"- {key}: {value}")
+        lines.append("")
+    return "\n".join(lines)
+
+
+def _report_update(package_dir: Path, key: str, value: Any) -> None:
+    path = package_dir / "doctor-report.json"
+    if path.exists():
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if isinstance(data, dict):
+            data[key] = value
+            path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _assertion_id(item: Any, index: int) -> str:
+    if isinstance(item, dict):
+        return str(item.get("assertion_id") or item.get("id") or f"assertion-{index}")
+    return f"assertion-{index}"
 
 
 def _read(path: Path, fallback: str) -> str:
     if not path.exists():
         return fallback
     return path.read_text(encoding="utf-8")
-
-
-def p3_marker() -> str:
-    return "p3"

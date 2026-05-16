@@ -46,3 +46,78 @@ def test_handoff_cli_rejects_unknown_tool(tmp_path: Path) -> None:
 
     assert result.exit_code != 0
     assert "Invalid value" in result.output
+
+
+def test_p3_collaboration_cli_commands(tmp_path: Path) -> None:
+    package_dir = _package(tmp_path)
+    (package_dir / "user-assertions.json").write_text(
+        json.dumps([{"assertion_id": "assertion-1", "user_statement": "human issue"}]),
+        encoding="utf-8",
+    )
+    runner = CliRunner()
+
+    ai_result = runner.invoke(
+        main,
+        [
+            "ai-result",
+            str(package_dir),
+            "--summary",
+            "changed parser",
+            "--claimed-fix",
+            "fixed parser branch",
+            "--file",
+            "doctor_link/parser.py",
+            "--evidence-id",
+            "ev-1",
+            "--assertion-id",
+            "assertion-1",
+            "--verification-step",
+            "pytest",
+            "--risk",
+            "parser regression",
+            "--assumption",
+            "fixture is representative",
+        ],
+    )
+    history = runner.invoke(
+        main,
+        [
+            "diagnosis-history",
+            str(package_dir),
+            "--ai-pass",
+            "pass 1",
+            "--user-correction",
+            "still wrong",
+            "--evidence-id",
+            "ev-2",
+            "--verification-attempt",
+            "pytest failed",
+        ],
+    )
+    compliance = runner.invoke(main, ["assertion-check", str(package_dir)])
+    risk = runner.invoke(
+        main,
+        [
+            "risk-review",
+            str(package_dir),
+            "--file",
+            "doctor_link/parser.py",
+            "--file",
+            "README.md",
+            "--boundary",
+            "doctor_link/",
+        ],
+    )
+
+    assert ai_result.exit_code == 0, ai_result.output
+    assert history.exit_code == 0, history.output
+    assert compliance.exit_code == 0, compliance.output
+    assert risk.exit_code == 0, risk.output
+    assert "Recorded AI result" in ai_result.output
+    assert "Recorded diagnosis round" in history.output
+    assert "Assertion compliance status" in compliance.output
+    assert "Repair risk level" in risk.output
+    assert (package_dir / "ai-repair-result.json").exists()
+    assert (package_dir / "diagnosis-history.json").exists()
+    assert (package_dir / "assertion-compliance-report.json").exists()
+    assert (package_dir / "repair-risk-review.json").exists()
