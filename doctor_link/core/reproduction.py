@@ -8,7 +8,7 @@ from typing import Any
 
 import yaml
 
-from doctor_link.core.models import EvidenceItem, TimelineStep, utc_now_iso
+from doctor_link.core.models import EvidenceItem, TimelineStep
 
 
 @dataclass
@@ -117,9 +117,12 @@ def write_reproduction_evidence(package_dir: Path, entry: ReproductionEntry, res
     evidence_dir.mkdir(parents=True, exist_ok=True)
     evidence_id = f"reproduction-{entry.reproduction_id}"
     output_path = evidence_dir / f"{entry.reproduction_id}.json"
+    relative_path = str(output_path.relative_to(package_dir))
     output_path.write_text(json.dumps({"entry": entry.to_dict(), "result": result.to_dict()}, ensure_ascii=False, indent=2), encoding="utf-8")
-    _append_evidence(package_dir, EvidenceItem(evidence_id=evidence_id, kind="reproduction", path=str(output_path.relative_to(package_dir)), summary=f"Reproduction {entry.reproduction_id}: {result.status}"))
-    _append_timeline(package_dir, TimelineStep(step_id=evidence_id, title=f"Run reproduction {entry.reproduction_id}", description=f"Status: {result.status}", created_at=utc_now_iso(), evidence_ids=[evidence_id]))
+    evidence = EvidenceItem(evidence_id=evidence_id, kind="reproduction", title=f"Reproduction {entry.reproduction_id}", source="doctor-link reproduce", path=relative_path, content=f"Status: {result.status}")
+    _append_evidence(package_dir, evidence)
+    step = TimelineStep(step_id=evidence_id, action="run_reproduction", target=entry.reproduction_id, actual_result=f"Status: {result.status}", status=result.status, evidence_ids=[evidence_id])
+    _append_timeline(package_dir, step)
     return evidence_id
 
 
@@ -140,10 +143,10 @@ def default_reproduce_yaml() -> str:
 def _append_evidence(package_dir: Path, item: EvidenceItem) -> None:
     path = package_dir / "evidence-list.md"
     existing = path.read_text(encoding="utf-8") if path.exists() else "# Evidence List\n\n"
-    path.write_text(existing.rstrip() + f"\n- `{item.evidence_id}` ({item.kind}): {item.summary} — {item.path}\n", encoding="utf-8")
+    path.write_text(existing.rstrip() + f"\n- `{item.evidence_id}` ({item.kind}): {item.title} — {item.path}\n", encoding="utf-8")
 
 
 def _append_timeline(package_dir: Path, step: TimelineStep) -> None:
     path = package_dir / "timeline.md"
     existing = path.read_text(encoding="utf-8") if path.exists() else "# Timeline\n\n"
-    path.write_text(existing.rstrip() + f"\n- `{step.step_id}` {step.title}: {step.description}\n", encoding="utf-8")
+    path.write_text(existing.rstrip() + f"\n- `{step.step_id}` {step.action}: {step.actual_result}\n", encoding="utf-8")
