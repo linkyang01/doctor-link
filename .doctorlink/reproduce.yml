@@ -1,0 +1,15 @@
+reproductions:
+  - id: repro-help
+    title: CLI help should run
+    kind: command
+    command: doctor-link --help
+    expected: Command exits successfully
+  - id: repro-pytest
+    title: Test suite should run
+    kind: test
+    command: pytest -q
+    expected: Test suite passes
+  - id: repro-manual
+    title: Manual reproduction placeholder
+    kind: manual
+    description: Describe manual steps here
