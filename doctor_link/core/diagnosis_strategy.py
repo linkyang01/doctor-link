@@ -73,7 +73,15 @@ def load_diagnosis_strategy(start_dir: Path | None = None) -> StrategyValidation
     return StrategyValidationResult(path=str(path), is_valid=not errors, errors=errors, warnings=warnings, strategy=strategy)
 
 
-def validate_diagnosis_strategy(strategy: DiagnosisStrategy) -> tuple[list[str], list[str]]:
+def validate_diagnosis_strategy(strategy: DiagnosisStrategy | dict[str, Any]) -> StrategyValidationResult | tuple[list[str], list[str]]:
+    if isinstance(strategy, dict):
+        parsed = _strategy_from_raw(strategy)
+        errors, warnings = _validate_strategy(parsed)
+        return StrategyValidationResult(path="diagnosis.yml", is_valid=not errors, errors=errors, warnings=warnings, strategy=parsed)
+    return _validate_strategy(strategy)
+
+
+def _validate_strategy(strategy: DiagnosisStrategy) -> tuple[list[str], list[str]]:
     errors: list[str] = []
     warnings: list[str] = []
     if not strategy.project_type:
@@ -83,9 +91,9 @@ def validate_diagnosis_strategy(strategy: DiagnosisStrategy) -> tuple[list[str],
         if not isinstance(value, list):
             errors.append(f"{field_name} must be a list.")
     if not strategy.default_commands:
-        warnings.append("No default commands configured.")
+        warnings.append("No default_commands configured")
     if not strategy.verification_rules:
-        warnings.append("No verification rules configured.")
+        warnings.append("No verification_rules configured")
     return errors, warnings
 
 
