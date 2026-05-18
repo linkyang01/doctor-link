@@ -21,18 +21,18 @@ P4 should be implemented in small CI-safe PRs:
 
 ## P4.1 Strategy foundation
 
-- [ ] Define `.doctorlink/diagnosis.yml`
-- [ ] Add strategy loader
-- [ ] Add strategy validation result model
-- [ ] Support project type
-- [ ] Support default commands
-- [ ] Support evidence rules
-- [ ] Support verification rules
-- [ ] Support excluded paths
-- [ ] Add `doctor-link strategy validate` command
-- [ ] Add unit tests
-- [ ] Add CLI tests
-- [ ] Update docs
+- [x] Define `.doctorlink/diagnosis.yml`
+- [x] Add strategy loader
+- [x] Add strategy validation result model
+- [x] Support project type
+- [x] Support default commands
+- [x] Support evidence rules
+- [x] Support verification rules
+- [x] Support excluded paths
+- [x] Add `doctor-link strategy validate` command
+- [x] Add unit tests
+- [x] Add CLI tests
+- [x] Update docs
 
 ## P4.2 Reproduction management
 
