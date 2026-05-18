@@ -219,35 +219,12 @@ def compare_reports(before_report: Path, after_report: Path, output: Path, packa
 @click.option("--exclude-logs", is_flag=True, help="Exclude evidence/logs from the zip.")
 @click.option("--exclude-screenshots", is_flag=True, help="Exclude evidence/screenshots from the zip.")
 @click.option("--max-file-size", type=int, default=None, help="Skip files larger than this size in bytes.")
-def doctor_package(
-    package_dir: Path,
-    output: Path | None,
-    exclude_attachments: bool,
-    exclude_logs: bool,
-    exclude_screenshots: bool,
-    max_file_size: int | None,
-) -> None:
+def doctor_package(package_dir: Path, output: Path | None, exclude_attachments: bool, exclude_logs: bool, exclude_screenshots: bool, max_file_size: int | None) -> None:
     """Export a diagnostic package as a zip handoff package."""
     config = load_config(package_dir)
-    package_config = merge_package_cli(
-        config.package,
-        output=output,
-        exclude_attachments=exclude_attachments,
-        exclude_logs=exclude_logs,
-        exclude_screenshots=exclude_screenshots,
-        max_file_size=max_file_size,
-    )
+    package_config = merge_package_cli(config.package, output=output, exclude_attachments=exclude_attachments, exclude_logs=exclude_logs, exclude_screenshots=exclude_screenshots, max_file_size=max_file_size)
     output_zip = output or Path(package_config.output_dir) / f"{package_dir.name}.zip"
-    result = export_package(
-        package_dir=package_dir,
-        output_zip=output_zip,
-        options=PackageExportOptions(
-            exclude_attachments=package_config.exclude_attachments,
-            exclude_logs=package_config.exclude_logs,
-            exclude_screenshots=package_config.exclude_screenshots,
-            max_file_size=package_config.max_file_size,
-        ),
-    )
+    result = export_package(package_dir=package_dir, output_zip=output_zip, options=PackageExportOptions(exclude_attachments=package_config.exclude_attachments, exclude_logs=package_config.exclude_logs, exclude_screenshots=package_config.exclude_screenshots, max_file_size=package_config.max_file_size))
     click.echo(f"Generated diagnostic package zip: {result.output_zip}")
     click.echo(f"Included files: {len(result.included_files)}")
     click.echo(f"Skipped files: {len(result.skipped_files)}")
@@ -333,21 +310,7 @@ def risk_review_command(package_dir: Path, files_changed: tuple[str, ...], bound
 @click.option("--redact-email", is_flag=True, help="Also redact email addresses from collected text evidence.")
 @click.option("--redact-phone", is_flag=True, help="Also redact phone numbers from collected text evidence.")
 @click.option("--redact-pattern", "custom_patterns", multiple=True, help="Custom regular expression to redact. Can be repeated.")
-def collect_command(
-    package_dir: Path,
-    project_root: Path | None,
-    log_patterns: tuple[str, ...],
-    commands: tuple[str, ...],
-    probes: tuple[Path, ...],
-    attachments: tuple[Path, ...],
-    note: str | None,
-    ffprobe_binary: str,
-    command_timeout_seconds: int,
-    no_redact: bool,
-    redact_email: bool,
-    redact_phone: bool,
-    custom_patterns: tuple[str, ...],
-) -> None:
+def collect_command(package_dir: Path, project_root: Path | None, log_patterns: tuple[str, ...], commands: tuple[str, ...], probes: tuple[Path, ...], attachments: tuple[Path, ...], note: str | None, ffprobe_binary: str, command_timeout_seconds: int, no_redact: bool, redact_email: bool, redact_phone: bool, custom_patterns: tuple[str, ...]) -> None:
     """Collect environment, logs, commands, probes, and attachments into a diagnostic package."""
     config = load_config(package_dir)
     collect_config = merge_collect_cli(config.collect, project_root=project_root, log_patterns=log_patterns, commands=commands, probes=probes, attachments=attachments, no_redact=no_redact, redact_email=redact_email, redact_phone=redact_phone, custom_patterns=custom_patterns)
@@ -402,6 +365,27 @@ def assert_problem(package_dir: Path, statement: str, expected_behavior: str | N
     """Add a human-confirmed problem to a diagnostic package."""
     assertion = add_user_assertion(package_dir=package_dir, user_statement=statement, expected_behavior=expected_behavior, actual_behavior=actual_behavior, why_user_thinks_it_is_wrong=why_user_thinks_it_is_wrong, severity=severity, related_file=related_file, next_ai_instruction=next_ai_instruction)
     click.echo(f"Added user assertion: {assertion.assertion_id}")
+
+
+@main.group("strategy")
+def strategy_group() -> None:
+    """Manage project diagnosis strategy."""
+
+
+@strategy_group.command("validate")
+@click.argument("project_root", type=click.Path(file_okay=False, path_type=Path), default=Path("."), required=False)
+@click.option("--json", "json_output", is_flag=True, help="Print JSON output.")
+def strategy_validate(project_root: Path, json_output: bool) -> None:
+    """Validate .doctorlink/diagnosis.yml."""
+    from doctor_link.core.diagnosis_strategy import load_diagnosis_strategy
+
+    result = load_diagnosis_strategy(project_root)
+    if json_output:
+        click.echo(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+    else:
+        click.echo(result.to_markdown())
+    if not result.is_valid:
+        raise click.ClickException("Diagnosis strategy validation failed.")
 
 
 if __name__ == "__main__":
