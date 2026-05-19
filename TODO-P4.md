@@ -59,13 +59,13 @@ P4 should be implemented in small CI-safe PRs:
 
 ## P4.4 Before / after package workflow
 
-- [ ] Define before / after workflow metadata
-- [ ] Add `doctor-link diagnose before`
-- [ ] Add `doctor-link diagnose after`
-- [ ] Ensure packages are linkable by metadata
-- [ ] Preserve before report path for comparison
-- [ ] Add tests
-- [ ] Update docs
+- [x] Define before / after workflow metadata
+- [x] Add `doctor-link diagnose before`
+- [x] Add `doctor-link diagnose after`
+- [x] Ensure packages are linkable by metadata
+- [x] Preserve before report path for comparison
+- [x] Add tests
+- [x] Update docs
 
 ## P4.5 Automated comparison and verification
 
