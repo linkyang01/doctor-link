@@ -149,4 +149,5 @@ def _append_evidence(package_dir: Path, item: EvidenceItem) -> None:
 def _append_timeline(package_dir: Path, step: TimelineStep) -> None:
     path = package_dir / "timeline.md"
     existing = path.read_text(encoding="utf-8") if path.exists() else "# Timeline\n\n"
-    path.write_text(existing.rstrip() + f"\n- `{step.step_id}` {step.action}: {step.actual_result}\n", encoding="utf-8")
+    label = step.target or step.step_id
+    path.write_text(existing.rstrip() + f"\n- `{step.step_id}` Run reproduction {label}: {step.actual_result}\n", encoding="utf-8")
