@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [project.scripts]
-doctor-link = "doctor_link.cli:main"
+doctor-link = "doctor_link.p4_cli:main"
 
 [tool.setuptools.packages.find]
 include = ["doctor_link*"]

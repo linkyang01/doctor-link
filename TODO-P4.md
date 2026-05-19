@@ -36,16 +36,16 @@ P4 should be implemented in small CI-safe PRs:
 
 ## P4.2 Reproduction management
 
-- [ ] Define reproduction metadata model
-- [ ] Add `.doctorlink/reproduce.yml` example
-- [ ] Support manual reproduction entries
-- [ ] Support command reproduction entries
-- [ ] Support test reproduction entries
-- [ ] Add `doctor-link reproduce list`
-- [ ] Add `doctor-link reproduce run <id>`
-- [ ] Capture reproduction output into diagnostic evidence
-- [ ] Add tests
-- [ ] Update docs
+- [x] Define reproduction metadata model
+- [x] Add `.doctorlink/reproduce.yml` example
+- [x] Support manual reproduction entries
+- [x] Support command reproduction entries
+- [x] Support test reproduction entries
+- [x] Add `doctor-link reproduce list`
+- [x] Add `doctor-link reproduce run <id>`
+- [x] Capture reproduction output into diagnostic evidence
+- [x] Add tests
+- [x] Update docs
 
 ## P4.3 Test matrix automation
 
