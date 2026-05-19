@@ -6,6 +6,7 @@ from pathlib import Path
 import click
 
 from doctor_link.cli import main
+from doctor_link.core.diagnosis_workflow import create_after_package, create_before_package
 from doctor_link.core.reproduction import load_reproduction_catalog, run_reproduction
 from doctor_link.core.test_matrix_runner import load_test_matrix, run_test_matrix
 
@@ -87,6 +88,35 @@ def test_run(project_root: Path, job_id: str | None, package_dir: Path | None, t
         click.echo(f"Status: {result.status}")
         if result.evidence_id:
             click.echo(f"Evidence: {result.evidence_id}")
+
+
+@main.group("diagnose")
+def diagnose_group() -> None:
+    """Run before / after diagnosis workflow commands."""
+
+
+@diagnose_group.command("before")
+@click.option("--project", required=True, help="Project name.")
+@click.option("--summary", required=True, help="Before-state diagnostic summary.")
+@click.option("--out", "output", type=click.Path(file_okay=False, path_type=Path), default=Path("DoctorReports"), help="Output directory.")
+def diagnose_before(project: str, summary: str, output: Path) -> None:
+    """Create a before diagnostic package."""
+    package_dir = create_before_package(project=project, summary=summary, output_dir=output)
+    click.echo(f"Created before package: {package_dir}")
+    click.echo(f"Before report: {package_dir / 'doctor-report.json'}")
+
+
+@diagnose_group.command("after")
+@click.option("--project", required=True, help="Project name.")
+@click.option("--summary", required=True, help="After-state diagnostic summary.")
+@click.option("--before-package", type=click.Path(exists=True, file_okay=False, path_type=Path), required=True, help="Before diagnostic package.")
+@click.option("--out", "output", type=click.Path(file_okay=False, path_type=Path), default=Path("DoctorReports"), help="Output directory.")
+def diagnose_after(project: str, summary: str, before_package: Path, output: Path) -> None:
+    """Create an after diagnostic package linked to a before package."""
+    package_dir = create_after_package(project=project, summary=summary, output_dir=output, before_package=before_package)
+    click.echo(f"Created after package: {package_dir}")
+    click.echo(f"Before report: {before_package / 'doctor-report.json'}")
+    click.echo(f"After report: {package_dir / 'doctor-report.json'}")
 
 
 if __name__ == "__main__":
