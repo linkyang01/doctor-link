@@ -69,12 +69,12 @@ P4 should be implemented in small CI-safe PRs:
 
 ## P4.5 Automated comparison and verification
 
-- [ ] Add `doctor-link diagnose compare`
-- [ ] Add `doctor-link diagnose verify`
-- [ ] Generate pipeline summary report
-- [ ] Do not mark success when verification evidence is missing
-- [ ] Add tests
-- [ ] Update docs
+- [x] Add `doctor-link diagnose compare`
+- [x] Add `doctor-link diagnose verify`
+- [x] Generate pipeline summary report
+- [x] Do not mark success when verification evidence is missing
+- [x] Add tests
+- [x] Update docs
 
 ## P4.6 GitHub Actions and PR integration docs
 
