@@ -1,4 +1,18 @@
-name: Doctor link P0 Foundation
+name: Doctor link P4 Test Matrix
+jobs:
+  - id: cli-help
+    title: CLI help should run
+    command: doctor-link --help
+    required: true
+    related_verification_steps:
+      - cli-smoke
+  - id: unit-tests
+    title: Python unit tests should pass
+    command: pytest -q
+    required: true
+    related_verification_steps:
+      - pytest
+
 cases:
   - id: generate_standard_package
     type: diagnostic_package

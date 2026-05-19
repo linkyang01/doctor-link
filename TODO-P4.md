@@ -49,13 +49,13 @@ P4 should be implemented in small CI-safe PRs:
 
 ## P4.3 Test matrix automation
 
-- [ ] Extend `.doctorlink/test-matrix.yml` for executable jobs
-- [ ] Define test job status model
-- [ ] Add `doctor-link test run`
-- [ ] Capture outputs into `evidence/test-results/`
-- [ ] Link test results to verification checklist where possible
-- [ ] Add tests
-- [ ] Update docs
+- [x] Extend `.doctorlink/test-matrix.yml` for executable jobs
+- [x] Define test job status model
+- [x] Add `doctor-link test run`
+- [x] Capture outputs into `evidence/test-results/`
+- [x] Link test results to verification checklist where possible
+- [x] Add tests
+- [x] Update docs
 
 ## P4.4 Before / after package workflow
 
