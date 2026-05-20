@@ -20,40 +20,9 @@ It follows these principles:
 - local-first and read-only-first;
 - protocol and CLI before Web UI.
 
-## Key Concept: User Assertion
-
-Sometimes AI does not recognize something as a problem, while the user knows the output is wrong. Doctor link lets the user explicitly mark:
-
-> This is the problem.
-
-That human-confirmed issue becomes a first-class diagnostic signal and is carried into AI tasks, test records, verification, and compliance checks.
-
 ## Standard Diagnostic Package
 
-Doctor link generates and maintains standard diagnostic packages:
-
-```text
-DoctorReports/
-└── <timestamp>_<project>_<issue>/
-    ├── summary.md
-    ├── problem-map.md
-    ├── timeline.md
-    ├── evidence-list.md
-    ├── doctor-report.md
-    ├── doctor-report.json
-    ├── ai-context.json
-    ├── reproduce-steps.md
-    ├── ai-task.md
-    ├── investigation-boundary.md
-    ├── fix-verification-checklist.md
-    ├── user-assertions.json
-    ├── verification-result.json
-    ├── ai-repair-result.json
-    ├── diagnosis-history.json
-    ├── assertion-compliance-report.json
-    ├── repair-risk-review.json
-    └── evidence/
-```
+Doctor link generates and maintains standard diagnostic packages under `DoctorReports/`, including evidence, timeline, user assertions, verification results, AI collaboration records, workflow metadata, and pipeline summaries.
 
 ## Common Commands
 
@@ -65,19 +34,25 @@ doctor-link report <library> --out DoctorReports
 doctor-link collect <package_dir> --project-root . --logs "logs/*.log" --command "python --version"
 doctor-link verify <package_dir> --write-back
 doctor-link assert <package_dir> --statement "This is the problem"
-doctor-link env --project-root . --out environment.json
-doctor-link probe <file> --summary --out probe.json
-doctor-link record <package_dir> --name "Test name" --status partial --assertion-id assertion-1
-doctor-link vly-proof <library> --package-dir <package_dir>
-doctor-link compare before.json after.json --package-dir <package_dir>
-doctor-link doctor-package <package_dir> --out DoctorReports/package.zip
 doctor-link view <package_dir>
 doctor-link view DoctorReports
+
 doctor-link handoff <package_dir> --tool codex --out DoctorReports/handoff
 doctor-link ai-result <package_dir> --summary "AI repair summary" --claimed-fix "claimed fix" --assertion-id assertion-1 --verification-step pytest
 doctor-link diagnosis-history <package_dir> --ai-pass "round 1" --user-correction "human correction" --evidence-id ev-1
 doctor-link assertion-check <package_dir>
 doctor-link risk-review <package_dir> --file doctor_link/cli.py --boundary doctor_link/
+
+doctor-link strategy validate . --json
+doctor-link reproduce list . --json
+doctor-link reproduce run <reproduction_id> . --package-dir <package_dir> --json
+doctor-link test list . --json
+doctor-link test run . --job <job_id> --package-dir <package_dir> --json
+doctor-link diagnose before --project "Demo" --summary "before issue" --out DoctorReports
+doctor-link diagnose after --project "Demo" --summary "after fix" --before-package <before_package> --out DoctorReports
+doctor-link diagnose compare <after_package> --json
+doctor-link diagnose verify <after_package> --json
+doctor-link health DoctorReports --json
 ```
 
 ## P1 / P1+: Evidence and Verification Loop
@@ -93,17 +68,7 @@ It does not mark a fix complete just because AI claimed it was fixed. It records
 
 ## P2 / P2+: Local Diagnostic Workbench
 
-`doctor-link view` provides a local read-only workbench for browsing:
-
-- summary / timeline / evidence;
-- user assertions;
-- AI task;
-- verification;
-- comparison;
-- redaction / manifest;
-- evidence reverse references;
-- assertion coverage;
-- AI handoff blocks.
+`doctor-link view` provides a local read-only workbench for browsing summaries, timeline, evidence, assertions, AI task, verification, comparison, redaction, manifest, and AI handoff blocks.
 
 The Web UI is local and read-only by default. It does not add cloud sync, login, or default package write-back.
 
@@ -119,14 +84,29 @@ P3 adds AI Coding collaboration features:
 - `doctor-link assertion-check`;
 - `doctor-link risk-review`.
 
-P3 generates and maintains:
+AI output is a collaboration record, not verification evidence; completion still depends on verification results.
 
-- `ai-repair-result.json` / `ai-repair-result.md`;
-- `diagnosis-history.json` / `diagnosis-history.md`;
-- `assertion-compliance-report.json` / `assertion-compliance-report.md`;
-- `repair-risk-review.json` / `repair-risk-review.md`.
+## P4: Automated Diagnosis Pipeline
 
-These files record AI repair claims, diagnosis rounds, assertion coverage, and repair risk. AI output is a collaboration record, not verification evidence; completion still depends on verification results.
+P4 adds a local automated diagnosis pipeline:
+
+- diagnosis strategy validation with `.doctorlink/diagnosis.yml`;
+- reproduction management with `.doctorlink/reproduce.yml`;
+- executable test matrix jobs with `.doctorlink/test-matrix.yml`;
+- before / after diagnostic packages;
+- automated comparison and verification;
+- GitHub Actions PR diagnostics documentation;
+- project health summary.
+
+P4 generates and maintains:
+
+- `diagnosis-workflow.json` / `diagnosis-workflow.md`;
+- `diagnosis-pipeline-summary.json` / `diagnosis-pipeline-summary.md`;
+- `project-health.json` / `project-health.md`;
+- `evidence/reproductions/*.json`;
+- `evidence/test-results/*.json`.
+
+Pipeline success remains false when verification evidence is missing.
 
 ## Project Configuration
 
@@ -135,6 +115,8 @@ Projects can define diagnostic rules in `.doctorlink/`:
 ```text
 .doctorlink/
 ├── doctorlink.yml
+├── diagnosis.yml
+├── reproduce.yml
 ├── collect.yml
 ├── package.yml
 ├── test-matrix.yml
@@ -153,9 +135,10 @@ Doctor link has completed:
 - P1+: CLI Evidence Pipeline;
 - P2: Local Read-only Diagnostic Workbench;
 - P2+: Mainline Diagnostic Workbench Enhancements;
-- P3: AI Coding Collaboration Layer.
+- P3: AI Coding Collaboration Layer;
+- P4: Automated Diagnosis Pipeline.
 
-The next phase is P4: Automated Diagnosis Pipeline.
+The next phase is P5: Productization and Release Readiness.
 
 ## Boundaries
 
