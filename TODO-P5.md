@@ -23,13 +23,13 @@ P5 should be implemented in small CI-safe PRs:
 
 ## P5.1 Versioning and release policy
 
-- [ ] Define semantic versioning policy
-- [ ] Add `CHANGELOG.md`
-- [ ] Add release checklist document
-- [ ] Add release approval rule: no publishing without explicit authorization
-- [ ] Add version consistency check
-- [ ] Add tests or CI coverage for version consistency
-- [ ] Update docs
+- [x] Define semantic versioning policy
+- [x] Add `CHANGELOG.md`
+- [x] Add release checklist document
+- [x] Add release approval rule: no publishing without explicit authorization
+- [x] Add version consistency check
+- [x] Add tests or CI coverage for version consistency
+- [x] Update docs
 
 ## P5.2 Packaging and installation
 
