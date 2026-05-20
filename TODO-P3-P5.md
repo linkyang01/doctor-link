@@ -7,6 +7,7 @@ Related files:
 - Roadmap: `docs/roadmap/p3-p5.md`
 - ADR: `docs/adr/0005-p3-p5-roadmap.md`
 - P3 final audit: `docs/p3-final-audit.md`
+- P4 final audit: `docs/p4-final-audit.md`
 
 ## P3: AI Coding Collaboration Layer
 
@@ -24,49 +25,55 @@ Completed scope:
 - [x] P3.6 repair risk review
 - [x] P3.7 P3 quality and closure
 
-Completed commands:
-
-- [x] `doctor-link handoff`
-- [x] `doctor-link ai-result`
-- [x] `doctor-link diagnosis-history`
-- [x] `doctor-link assertion-check`
-- [x] `doctor-link risk-review`
-
-Completed outputs:
-
-- [x] `ai-repair-result.json`
-- [x] `ai-repair-result.md`
-- [x] `diagnosis-history.json`
-- [x] `diagnosis-history.md`
-- [x] `assertion-compliance-report.json`
-- [x] `assertion-compliance-report.md`
-- [x] `repair-risk-review.json`
-- [x] `repair-risk-review.md`
-
-Quality:
-
-- [x] P3 unit tests
-- [x] P3 CLI tests
-- [x] CI validation
-- [x] P3 final audit
-- [x] Close Issue #18 after final audit PR merges
-
 ## P4: Automated Diagnosis Pipeline
 
-Status: not started.
+Status: complete.
 
 Issue: #19
 
-Planned scope:
+Completed scope:
 
-- [ ] Project diagnosis strategy
-- [ ] Reproduction script management
-- [ ] Test matrix automation
-- [ ] Before / after package workflow
-- [ ] Automated comparison and verification
-- [ ] GitHub Actions and PR integration
-- [ ] Project health summary
-- [ ] P4 quality and closure
+- [x] P4.1 Strategy foundation
+- [x] P4.2 Reproduction management
+- [x] P4.3 Test matrix automation
+- [x] P4.4 Before / after package workflow
+- [x] P4.5 Automated comparison and verification
+- [x] P4.6 GitHub Actions and PR integration docs
+- [x] P4.7 Project health summary
+- [x] P4.8 P4 quality and closure
+
+Completed commands:
+
+- [x] `doctor-link strategy validate`
+- [x] `doctor-link reproduce list`
+- [x] `doctor-link reproduce run`
+- [x] `doctor-link test list`
+- [x] `doctor-link test run`
+- [x] `doctor-link diagnose before`
+- [x] `doctor-link diagnose after`
+- [x] `doctor-link diagnose compare`
+- [x] `doctor-link diagnose verify`
+- [x] `doctor-link health`
+
+Completed outputs:
+
+- [x] `diagnosis-workflow.json`
+- [x] `diagnosis-workflow.md`
+- [x] `diagnosis-pipeline-summary.json`
+- [x] `diagnosis-pipeline-summary.md`
+- [x] `project-health.json`
+- [x] `project-health.md`
+- [x] `evidence/reproductions/*.json`
+- [x] `evidence/test-results/*.json`
+
+Quality:
+
+- [x] P4 unit tests
+- [x] P4 CLI tests
+- [x] P4 pipeline smoke
+- [x] CI validation
+- [x] P4 final audit
+- [x] Close Issue #19 after final audit PR merges
 
 ## P5: Productization and Release Readiness
 
