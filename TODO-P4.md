@@ -78,12 +78,12 @@ P4 should be implemented in small CI-safe PRs:
 
 ## P4.6 GitHub Actions and PR integration docs
 
-- [ ] Add reusable workflow example
-- [ ] Add PR diagnostic check mode documentation
-- [ ] Document artifact upload pattern
-- [ ] Document optional PR comment summary
-- [ ] Add workflow syntax check if feasible
-- [ ] Update docs
+- [x] Add reusable workflow example
+- [x] Add PR diagnostic check mode documentation
+- [x] Document artifact upload pattern
+- [x] Document optional PR comment summary
+- [x] Add workflow syntax check if feasible
+- [x] Update docs
 
 ## P4.7 Project health summary
 
