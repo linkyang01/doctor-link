@@ -1,0 +1,52 @@
+name: Doctor link PR Diagnostics
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  doctor-link:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install project and tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -m pip install pytest
+
+      - name: Validate Doctor link strategy
+        run: doctor-link strategy validate . --json
+
+      - name: Create baseline diagnostic package
+        run: doctor-link diagnose before --project "${{ github.repository }}" --summary "PR baseline" --out DoctorReports
+
+      - name: Run test matrix
+        run: |
+          PACKAGE_DIR=$(find DoctorReports -mindepth 1 -maxdepth 1 -type d | head -n 1)
+          doctor-link test run . --package-dir "$PACKAGE_DIR" --json
+
+      - name: Create result diagnostic package
+        run: |
+          BEFORE_PACKAGE=$(find DoctorReports -mindepth 1 -maxdepth 1 -type d | head -n 1)
+          doctor-link diagnose after --project "${{ github.repository }}" --summary "PR result" --before-package "$BEFORE_PACKAGE" --out DoctorReports
+
+      - name: Run automated comparison and verification
+        run: |
+          AFTER_PACKAGE=$(find DoctorReports -mindepth 1 -maxdepth 1 -type d | tail -n 1)
+          doctor-link diagnose verify "$AFTER_PACKAGE" --json
+
+      - name: Upload Doctor link diagnostic reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: doctor-link-reports
+          path: DoctorReports/**
+          if-no-files-found: warn
