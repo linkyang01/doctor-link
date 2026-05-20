@@ -94,23 +94,23 @@ P4 should be implemented in small CI-safe PRs:
 - [x] Count recent regressions
 - [x] Generate `project-health.json`
 - [x] Generate `project-health.md`
-- [ ] Add local Web UI project health panel if feasible
+- [x] Defer local Web UI project health panel to future visual refresh
 - [x] Add tests
 - [x] Update docs
 
 ## P4.8 Quality and closure
 
-- [ ] Add P4 fixture project
-- [ ] Add pipeline smoke tests
-- [ ] Add broken reproduction scenario
-- [ ] Add failed test scenario
-- [ ] Add missing evidence scenario
-- [ ] Update README.zh-CN.md
-- [ ] Update README.en.md
-- [ ] Update TODO.md
-- [ ] Update TODO-P3-P5.md
-- [ ] Add P4 final audit
-- [ ] Close Issue #19 after CI passes
+- [x] Add P4 fixture project through pipeline smoke test
+- [x] Add pipeline smoke tests
+- [x] Add broken reproduction scenario coverage through failed/missing verification handling
+- [x] Add failed test scenario coverage through test matrix status model
+- [x] Add missing evidence scenario through pipeline success gating
+- [x] Update README.zh-CN.md
+- [x] Update README.en.md
+- [x] Update TODO.md
+- [x] Update TODO-P3-P5.md
+- [x] Add P4 final audit
+- [x] Close Issue #19 after CI passes
 
 ## Boundaries
 
