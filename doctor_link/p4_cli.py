@@ -8,6 +8,7 @@ import click
 from doctor_link.cli import main
 from doctor_link.core.diagnosis_pipeline import run_diagnosis_compare, run_diagnosis_verify
 from doctor_link.core.diagnosis_workflow import create_after_package, create_before_package
+from doctor_link.core.project_health import write_project_health
 from doctor_link.core.reproduction import load_reproduction_catalog, run_reproduction
 from doctor_link.core.test_matrix_runner import load_test_matrix, run_test_matrix
 
@@ -146,6 +147,21 @@ def diagnose_verify(after_package: Path, no_write_back: bool, json_output: bool)
     click.echo(f"Verification status: {summary.verification_status}")
     click.echo(f"Pipeline success: {summary.success}")
     click.echo(f"Summary: {after_package / 'diagnosis-pipeline-summary.md'}")
+
+
+@main.command("health")
+@click.argument("reports_dir", type=click.Path(file_okay=False, path_type=Path), default=Path("DoctorReports"), required=False)
+@click.option("--out", "output", type=click.Path(file_okay=False, path_type=Path), default=None, help="Optional output directory.")
+@click.option("--json", "json_output", is_flag=True, help="Print JSON output.")
+def health_command(reports_dir: Path, output: Path | None, json_output: bool) -> None:
+    """Generate project health summary from DoctorReports."""
+    summary = write_project_health(reports_dir, output_dir=output)
+    if json_output:
+        click.echo(json.dumps(summary.to_dict(), ensure_ascii=False, indent=2))
+        return
+    out = output or reports_dir
+    click.echo(f"Project health status: {summary.status}")
+    click.echo(f"Summary: {out / 'project-health.md'}")
 
 
 if __name__ == "__main__":

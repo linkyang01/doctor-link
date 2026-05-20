@@ -87,16 +87,16 @@ P4 should be implemented in small CI-safe PRs:
 
 ## P4.7 Project health summary
 
-- [ ] Define project health model
-- [ ] Count diagnostic packages
-- [ ] Count unresolved assertions
-- [ ] Count failed or missing verifications
-- [ ] Count recent regressions
-- [ ] Generate `project-health.json`
-- [ ] Generate `project-health.md`
+- [x] Define project health model
+- [x] Count diagnostic packages
+- [x] Count unresolved assertions
+- [x] Count failed or missing verifications
+- [x] Count recent regressions
+- [x] Generate `project-health.json`
+- [x] Generate `project-health.md`
 - [ ] Add local Web UI project health panel if feasible
-- [ ] Add tests
-- [ ] Update docs
+- [x] Add tests
+- [x] Update docs
 
 ## P4.8 Quality and closure
 
