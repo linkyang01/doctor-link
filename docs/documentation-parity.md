@@ -1,6 +1,6 @@
 # Documentation Parity Checklist
 
-This checklist keeps Chinese and English user-facing documentation aligned.
+This checklist keeps Doctor link Chinese and English user-facing documentation aligned.
 
 ## README parity
 
