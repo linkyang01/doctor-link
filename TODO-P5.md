@@ -33,14 +33,14 @@ P5 should be implemented in small CI-safe PRs:
 
 ## P5.2 Packaging and installation
 
-- [ ] Review `pyproject.toml` metadata
-- [ ] Add license metadata
-- [ ] Add classifiers
-- [ ] Add package data rules for templates and docs
-- [ ] Test local install from source
-- [ ] Test wheel build
-- [ ] Add packaging CI job or smoke check
-- [ ] Document installation methods
+- [x] Review `pyproject.toml` metadata
+- [x] Add license metadata
+- [x] Add classifiers
+- [x] Add package data rules for templates and docs
+- [x] Test local install from source
+- [x] Test wheel build
+- [x] Add packaging CI job or smoke check
+- [x] Document installation methods
 
 ## P5.3 User documentation
 

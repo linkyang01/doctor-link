@@ -4,8 +4,29 @@ version = "0.1.0"
 description = "Universal diagnostic and AI collaboration tool for software debugging."
 readme = "README.md"
 requires-python = ">=3.10"
+license = { text = "MIT" }
 authors = [
   { name = "linkyang01" }
+]
+keywords = [
+  "diagnostics",
+  "ai-coding",
+  "debugging",
+  "developer-tools",
+  "evidence"
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Software Development :: Testing",
+  "Topic :: Software Development :: Quality Assurance"
 ]
 dependencies = [
   "click>=8.1.7",
@@ -13,11 +34,19 @@ dependencies = [
   "PyYAML>=6.0.0"
 ]
 
+[project.urls]
+Homepage = "https://github.com/linkyang01/doctor-link"
+Repository = "https://github.com/linkyang01/doctor-link"
+Issues = "https://github.com/linkyang01/doctor-link/issues"
+
 [project.scripts]
 doctor-link = "doctor_link.p4_cli:main"
 
 [tool.setuptools.packages.find]
 include = ["doctor_link*"]
+
+[tool.setuptools.package-data]
+doctor_link = ["py.typed"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
