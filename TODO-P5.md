@@ -54,12 +54,12 @@ P5 should be implemented in small CI-safe PRs:
 
 ## P5.4 Examples and templates
 
-- [ ] Add example diagnostic package
-- [ ] Add example project with `.doctorlink` config
-- [ ] Add example AI handoff package
-- [ ] Add example before/after comparison
-- [ ] Add example verification result
-- [ ] Add template gallery documentation
+- [x] Add example diagnostic package
+- [x] Add example project with `.doctorlink` config
+- [x] Add example AI handoff package
+- [x] Add example before/after comparison
+- [x] Add example verification result
+- [x] Add template gallery documentation
 
 ## P5.5 Security and privacy review
 
