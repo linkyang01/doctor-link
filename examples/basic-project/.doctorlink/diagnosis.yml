@@ -1,0 +1,9 @@
+project_type: python
+default_commands:
+  - python sample_app.py
+evidence_rules:
+  - README.md
+verification_rules:
+  - python sample_app.py
+excluded_paths:
+  - __pycache__/
