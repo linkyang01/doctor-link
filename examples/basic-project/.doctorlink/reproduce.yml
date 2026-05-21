@@ -1,0 +1,10 @@
+reproductions:
+  - id: run-sample-app
+    title: Run sample app
+    kind: command
+    command: python sample_app.py
+    expected: prints 5
+  - id: inspect-output
+    title: Manual output inspection
+    kind: manual
+    description: Confirm the sample app output is understandable.
