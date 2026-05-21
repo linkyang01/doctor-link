@@ -44,13 +44,13 @@ P5 should be implemented in small CI-safe PRs:
 
 ## P5.3 User documentation
 
-- [ ] Add quick start guide
-- [ ] Add CLI command reference
-- [ ] Add diagnostic package format guide
-- [ ] Add AI coding workflow guide
-- [ ] Add P2 local workbench guide
-- [ ] Add troubleshooting guide
-- [ ] Add Chinese and English documentation parity checklist
+- [x] Add quick start guide
+- [x] Add CLI command reference
+- [x] Add diagnostic package format guide
+- [x] Add AI coding workflow guide
+- [x] Add P2 local workbench guide
+- [x] Add troubleshooting guide
+- [x] Add Chinese and English documentation parity checklist
 
 ## P5.4 Examples and templates
 
