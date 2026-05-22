@@ -1,0 +1,10 @@
+{
+  "status": "needs_evidence",
+  "missing_evidence": [
+    "re-run the failing test",
+    "attach before/after comparison"
+  ],
+  "notes": [
+    "AI claim is not verification evidence."
+  ]
+}

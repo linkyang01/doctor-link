@@ -1,0 +1,10 @@
+reproductions:
+  - id: repro-cli-help
+    title: CLI help should run
+    kind: command
+    command: doctor-link --help
+    expected: Command exits successfully
+  - id: repro-manual
+    title: Manual issue reproduction
+    kind: manual
+    description: Describe the user-visible issue and exact manual steps here.

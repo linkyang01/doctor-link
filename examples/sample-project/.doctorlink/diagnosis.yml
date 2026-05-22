@@ -1,0 +1,14 @@
+project_type: python
+default_commands:
+  - python --version
+  - pytest -q
+evidence_rules:
+  - logs/*.log
+  - DoctorReports/**/*.json
+verification_rules:
+  - pytest -q
+excluded_paths:
+  - .git/
+  - .venv/
+  - __pycache__/
+  - DoctorReports/.doctorlink-web/

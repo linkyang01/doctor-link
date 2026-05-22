@@ -1,0 +1,12 @@
+{
+  "project": "Example Project",
+  "category": "example",
+  "summary": "Example diagnostic package without real user data.",
+  "status": "example",
+  "user_assertions": [
+    {
+      "assertion_id": "assertion-1",
+      "user_statement": "This is the problem"
+    }
+  ]
+}

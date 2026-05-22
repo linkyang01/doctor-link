@@ -1,0 +1,20 @@
+name: Sample Project Test Matrix
+jobs:
+  - id: cli-help
+    title: Doctor link CLI should respond
+    command: doctor-link --help
+    required: true
+    related_verification_steps:
+      - cli-smoke
+  - id: python-version
+    title: Python should be available
+    command: python --version
+    required: true
+    related_verification_steps:
+      - environment-smoke
+cases:
+  - id: user-visible-problem
+    type: manual
+    expected:
+      - user-confirmed issue is recorded
+      - verification remains false until evidence is complete

@@ -1,0 +1,14 @@
+name: Basic Project Test Matrix
+jobs:
+  - id: run-sample-app
+    title: Run sample app
+    command: python sample_app.py
+    required: true
+    related_verification_steps:
+      - sample-app-runs
+cases:
+  - id: sample-app-output
+    type: smoke
+    required: true
+    expected:
+      - sample app prints 5

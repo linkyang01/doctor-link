@@ -1,0 +1,11 @@
+{
+  "status": "needs_evidence",
+  "missing_evidence": [
+    "test result evidence",
+    "before / after comparison evidence"
+  ],
+  "required_next_steps": [
+    "Run doctor-link test run",
+    "Run doctor-link diagnose verify"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "tool": "codex",
+  "package_dir": "DoctorReports/example-package",
+  "included_files": [
+    "doctor-report.json",
+    "ai-context.json",
+    "ai-task.md",
+    "fix-verification-checklist.md"
+  ],
+  "missing_files": [],
+  "human_assertion_rule": "Do not dismiss user-confirmed problems without evidence."
+}
