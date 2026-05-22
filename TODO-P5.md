@@ -84,11 +84,11 @@ P5 should be implemented in small CI-safe PRs:
 
 ## P5.7 Adapter and plugin documentation
 
-- [ ] Document adapter concept
-- [ ] Document collector extension points
-- [ ] Document handoff profile extension points
-- [ ] Document project-specific `.doctorlink` customization
-- [ ] Add future SDK placeholder docs without over-promising implementation
+- [x] Document adapter concept
+- [x] Document collector extension points
+- [x] Document handoff profile extension points
+- [x] Document project-specific `.doctorlink` customization
+- [x] Add future SDK placeholder docs without over-promising implementation
 
 ## P5.8 Release readiness without publishing
 
