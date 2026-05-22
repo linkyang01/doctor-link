@@ -63,12 +63,12 @@ P5 should be implemented in small CI-safe PRs:
 
 ## P5.5 Security and privacy review
 
-- [ ] Write privacy model document
-- [ ] Write sensitive information handling document
-- [ ] Review redaction defaults
-- [ ] Add security checklist for exported packages
-- [ ] Add documentation for what may be included in diagnostic packages
-- [ ] Add tests for redaction regression cases
+- [x] Write privacy model document
+- [x] Write sensitive information handling document
+- [x] Review redaction defaults
+- [x] Add security checklist for exported packages
+- [x] Add documentation for what may be included in diagnostic packages
+- [x] Add tests for redaction regression cases
 
 ## P5.6 Product positioning and website docs
 
