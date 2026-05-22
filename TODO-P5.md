@@ -72,15 +72,15 @@ P5 should be implemented in small CI-safe PRs:
 
 ## P5.6 Product positioning and website docs
 
-- [ ] Add product overview page
-- [ ] Add use case page: non-programmer user
-- [ ] Add use case page: AI coding tool
-- [ ] Add use case page: developer
-- [ ] Add use case page: team workflow
-- [ ] Add architecture overview diagram source
-- [ ] Add roadmap document
-- [ ] Add contribution guide
-- [ ] Add issue triage guide
+- [x] Add product overview page
+- [x] Add use case page: non-programmer user
+- [x] Add use case page: AI coding tool
+- [x] Add use case page: developer
+- [x] Add use case page: team workflow
+- [x] Add architecture overview diagram source
+- [x] Add roadmap document
+- [x] Add contribution guide
+- [x] Add issue triage guide
 
 ## P5.7 Adapter and plugin documentation
 
