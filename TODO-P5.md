@@ -92,19 +92,19 @@ P5 should be implemented in small CI-safe PRs:
 
 ## P5.8 Release readiness without publishing
 
-- [ ] Prepare draft release notes
-- [ ] Prepare draft GitHub Release body
-- [ ] Verify all tests pass
-- [ ] Verify documentation is current
-- [ ] Verify examples work
-- [ ] Verify no known critical privacy gaps
-- [ ] Add P5 final audit
-- [ ] Update README.zh-CN.md
-- [ ] Update README.en.md
-- [ ] Update TODO.md
-- [ ] Update TODO-P3-P5.md
-- [ ] Close Issue #20 after CI passes
-- [ ] Stop before publishing unless explicit release authorization is given
+- [x] Prepare draft release notes
+- [x] Prepare draft GitHub Release body
+- [x] Verify all tests pass
+- [x] Verify documentation is current
+- [x] Verify examples work
+- [x] Verify no known critical privacy gaps
+- [x] Add P5 final audit
+- [x] Update README.zh-CN.md
+- [x] Update README.en.md
+- [x] Update TODO.md
+- [x] Update TODO-P3-P5.md
+- [x] Close Issue #20 after CI passes
+- [x] Stop before publishing unless explicit release authorization is given
 
 ## Boundaries
 
