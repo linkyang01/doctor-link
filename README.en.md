@@ -55,6 +55,21 @@ doctor-link diagnose verify <after_package> --json
 doctor-link health DoctorReports --json
 ```
 
+## Documentation
+
+Key user and product documents:
+
+- `docs/installation.md`
+- `docs/quick-start.md`
+- `docs/cli-reference.md`
+- `docs/diagnostic-package-format.md`
+- `docs/ai-coding-workflow.md`
+- `docs/local-workbench.md`
+- `docs/troubleshooting.md`
+- `docs/privacy-model.md`
+- `docs/product-overview.md`
+- `docs/release-policy.md`
+
 ## P1 / P1+: Evidence and Verification Loop
 
 Doctor link supports environment collection, logs, command output, media probing, attachments, test records, Vly proof, before/after comparison, and standard diagnostic package export.
@@ -98,15 +113,22 @@ P4 adds a local automated diagnosis pipeline:
 - GitHub Actions PR diagnostics documentation;
 - project health summary.
 
-P4 generates and maintains:
-
-- `diagnosis-workflow.json` / `diagnosis-workflow.md`;
-- `diagnosis-pipeline-summary.json` / `diagnosis-pipeline-summary.md`;
-- `project-health.json` / `project-health.md`;
-- `evidence/reproductions/*.json`;
-- `evidence/test-results/*.json`.
-
 Pipeline success remains false when verification evidence is missing.
+
+## P5: Productization and Release Readiness
+
+P5 adds productization and release readiness preparation without publishing:
+
+- semantic versioning and release policy;
+- `CHANGELOG.md` and release checklist;
+- packaging metadata, license, and installation guide;
+- user documentation and examples;
+- privacy and security review;
+- product positioning and contribution docs;
+- adapter and extension documentation;
+- draft release notes and draft GitHub Release body.
+
+P5 does not publish a release, create a GitHub Release, tag a release, or publish to PyPI.
 
 ## Project Configuration
 
@@ -136,9 +158,10 @@ Doctor link has completed:
 - P2: Local Read-only Diagnostic Workbench;
 - P2+: Mainline Diagnostic Workbench Enhancements;
 - P3: AI Coding Collaboration Layer;
-- P4: Automated Diagnosis Pipeline.
+- P4: Automated Diagnosis Pipeline;
+- P5: Productization and Release Readiness.
 
-The next phase is P5: Productization and Release Readiness.
+The next phase is P6: Diagnostic Protocol Standardization and Ecosystem Platform. P6 implementation requires separate explicit authorization.
 
 ## Boundaries
 
