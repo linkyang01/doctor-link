@@ -8,8 +8,8 @@ Goal: release hardening and usability validation.
 
 - [x] Create P5.9 tracking issue.
 - [x] Add P5.9 tracker.
-- [ ] Add wheel build validation.
-- [ ] Add wheel install CLI smoke.
+- [x] Add wheel build validation.
+- [x] Add wheel install CLI smoke.
 - [ ] Add one-command end-to-end validation script.
 - [ ] Add end-to-end validation documentation.
 - [ ] Add ruff static checks.
