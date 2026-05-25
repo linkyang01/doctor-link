@@ -8,6 +8,7 @@ Related files:
 - ADR: `docs/adr/0005-p3-p5-roadmap.md`
 - P3 final audit: `docs/p3-final-audit.md`
 - P4 final audit: `docs/p4-final-audit.md`
+- P5 final audit: `docs/p5-final-audit.md`
 
 ## P3: AI Coding Collaboration Layer
 
@@ -77,20 +78,43 @@ Quality:
 
 ## P5: Productization and Release Readiness
 
-Status: not started.
+Status: complete.
 
 Issue: #20
 
-Planned scope:
+Completed scope:
 
-- [ ] Version and release strategy
-- [ ] Packaging and installation
-- [ ] User documentation
-- [ ] Examples and templates
-- [ ] Security and privacy review
-- [ ] Product overview documentation
-- [ ] Adapter and extension documentation
-- [ ] Draft release preparation without publishing
+- [x] Version and release strategy
+- [x] Packaging and installation
+- [x] User documentation
+- [x] Examples and templates
+- [x] Security and privacy review
+- [x] Product overview documentation
+- [x] Adapter and extension documentation
+- [x] Draft release preparation without publishing
+
+Completed artifacts:
+
+- [x] `CHANGELOG.md`
+- [x] `LICENSE`
+- [x] `docs/installation.md`
+- [x] `docs/quick-start.md`
+- [x] `docs/cli-reference.md`
+- [x] `docs/privacy-model.md`
+- [x] `docs/release-policy.md`
+- [x] `docs/release-checklist.md`
+- [x] `docs/release-notes/0.1.0-draft.md`
+- [x] `docs/release-notes/github-release-0.1.0-draft.md`
+- [x] `docs/p5-final-audit.md`
+
+Quality:
+
+- [x] Documentation coverage tests
+- [x] Packaging metadata tests
+- [x] Redaction regression tests
+- [x] Example/template tests
+- [x] CI validation
+- [x] Close Issue #20 after final audit PR merges
 
 ## Boundaries
 

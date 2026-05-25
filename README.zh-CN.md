@@ -55,6 +55,19 @@ doctor-link diagnose verify <after_package> --json
 doctor-link health DoctorReports --json
 ```
 
+## 文档入口
+
+- `docs/installation.md`
+- `docs/quick-start.md`
+- `docs/cli-reference.md`
+- `docs/diagnostic-package-format.md`
+- `docs/ai-coding-workflow.md`
+- `docs/local-workbench.md`
+- `docs/troubleshooting.md`
+- `docs/privacy-model.md`
+- `docs/product-overview.md`
+- `docs/release-policy.md`
+
 ## P1 / P1+：证据采集与验证闭环
 
 Doctor link 支持环境、日志、命令输出、媒体探测、附件、测试记录、Vly proof、修复前后对比和标准诊断包打包。
@@ -98,15 +111,22 @@ P4 已完成本地自动化诊断流水线能力：
 - GitHub Actions PR diagnostics 文档与 workflow 示例；
 - 项目健康度摘要。
 
-P4 生成并维护：
-
-- `diagnosis-workflow.json` / `diagnosis-workflow.md`；
-- `diagnosis-pipeline-summary.json` / `diagnosis-pipeline-summary.md`；
-- `project-health.json` / `project-health.md`；
-- `evidence/reproductions/*.json`；
-- `evidence/test-results/*.json`。
-
 当验证证据缺失时，pipeline success 保持 false，不会误判为成功。
+
+## P5：产品化与发布准备
+
+P5 已完成产品化和发布准备，但没有执行发布：
+
+- 语义化版本与发布策略；
+- `CHANGELOG.md` 与 release checklist；
+- 包元数据、License 和安装指南；
+- 用户文档与示例模板；
+- 隐私与安全审查；
+- 产品定位与贡献文档；
+- Adapter 与扩展文档；
+- draft release notes 和 draft GitHub Release body。
+
+P5 不创建 GitHub Release，不打 release tag，不发布到 PyPI。
 
 ## 项目配置
 
@@ -136,9 +156,10 @@ Doctor link 当前已完成：
 - P2：Local Read-only Diagnostic Workbench；
 - P2+：Mainline Diagnostic Workbench Enhancements；
 - P3：AI Coding Collaboration Layer；
-- P4：Automated Diagnosis Pipeline。
+- P4：Automated Diagnosis Pipeline；
+- P5：Productization and Release Readiness。
 
-下一阶段是 P5：Productization and Release Readiness。
+下一阶段是 P6：Diagnostic Protocol Standardization and Ecosystem Platform。P6 实现开发需要单独明确授权。
 
 ## 边界
 
