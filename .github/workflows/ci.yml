@@ -83,3 +83,43 @@ jobs:
             junit/test-results-${{ matrix.python-version }}.xml
             DoctorReports/**
           if-no-files-found: warn
+
+  package:
+    name: Build and install wheel
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Build wheel and source distribution
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build
+          python -m build
+          test -n "$(find dist -name '*.whl' -print -quit)"
+          test -n "$(find dist -name '*.tar.gz' -print -quit)"
+
+      - name: Install wheel in clean virtual environment
+        run: |
+          python -m venv /tmp/doctor-link-wheel-smoke
+          . /tmp/doctor-link-wheel-smoke/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install dist/*.whl
+          doctor-link --help
+          doctor-link init /tmp/DoctorWorkspace
+          doctor-link strategy validate . --json
+
+      - name: Upload package artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: doctor-link-package-artifacts
+          path: dist/**
+          if-no-files-found: error
