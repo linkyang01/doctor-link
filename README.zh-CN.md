@@ -64,9 +64,28 @@ doctor-link health DoctorReports --json
 - `docs/ai-coding-workflow.md`
 - `docs/local-workbench.md`
 - `docs/troubleshooting.md`
+- `docs/e2e-validation.md`
 - `docs/privacy-model.md`
 - `docs/product-overview.md`
 - `docs/release-policy.md`
+
+## 可用性验证
+
+P5.9 增加了发布前工程加固检查：
+
+- ruff 静态检查；
+- coverage 覆盖率报告；
+- wheel 和源码包构建；
+- 安装 wheel 后的 CLI smoke；
+- 端到端验证脚本；
+- CLI 入口关系审查。
+
+本地执行端到端验证：
+
+```bash
+python -m pip install -e .
+bash scripts/e2e_validate.sh
+```
 
 ## P1 / P1+：证据采集与验证闭环
 
@@ -157,7 +176,8 @@ Doctor link 当前已完成：
 - P2+：Mainline Diagnostic Workbench Enhancements；
 - P3：AI Coding Collaboration Layer；
 - P4：Automated Diagnosis Pipeline；
-- P5：Productization and Release Readiness。
+- P5：Productization and Release Readiness；
+- P5.9：Release Hardening and Usability Validation。
 
 下一阶段是 P6：Diagnostic Protocol Standardization and Ecosystem Platform。P6 实现开发需要单独明确授权。
 
