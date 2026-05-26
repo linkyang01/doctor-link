@@ -34,7 +34,7 @@ jobs:
 
       - name: Run static checks
         run: |
-          ruff check doctor_link tests
+          ruff check doctor_link tests scripts
 
       - name: Run tests with coverage
         run: |
@@ -78,6 +78,10 @@ jobs:
           test -f DoctorReports/.doctorlink-web/index.html
           test -f "DoctorReports/.doctorlink-web/packages/$(basename "$PACKAGE_DIR")/index.html"
 
+      - name: Run E2E validation
+        run: |
+          bash scripts/e2e_validate.sh "$(pwd)"
+
       - name: Build wheel and source distribution
         run: |
           python -m build
@@ -103,5 +107,6 @@ jobs:
             junit/test-results-${{ matrix.python-version }}.xml
             coverage.xml
             dist/**
+            .doctorlink-e2e/**
             DoctorReports/**
           if-no-files-found: warn
