@@ -66,9 +66,28 @@ Key user and product documents:
 - `docs/ai-coding-workflow.md`
 - `docs/local-workbench.md`
 - `docs/troubleshooting.md`
+- `docs/e2e-validation.md`
 - `docs/privacy-model.md`
 - `docs/product-overview.md`
 - `docs/release-policy.md`
+
+## Validation
+
+P5.9 adds release hardening checks:
+
+- ruff static check;
+- coverage report;
+- wheel and source distribution build;
+- installed wheel CLI smoke;
+- end-to-end validation script;
+- CLI entrypoint review.
+
+Run local E2E validation:
+
+```bash
+python -m pip install -e .
+bash scripts/e2e_validate.sh
+```
 
 ## P1 / P1+: Evidence and Verification Loop
 
@@ -159,7 +178,8 @@ Doctor link has completed:
 - P2+: Mainline Diagnostic Workbench Enhancements;
 - P3: AI Coding Collaboration Layer;
 - P4: Automated Diagnosis Pipeline;
-- P5: Productization and Release Readiness.
+- P5: Productization and Release Readiness;
+- P5.9: Release Hardening and Usability Validation.
 
 The next phase is P6: Diagnostic Protocol Standardization and Ecosystem Platform. P6 implementation requires separate explicit authorization.
 
