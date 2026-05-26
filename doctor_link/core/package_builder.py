@@ -13,7 +13,6 @@ from doctor_link.core.models import (
     ScanResult,
     TestPlan,
     TimelineStep,
-    UserAssertion,
     VerificationChecklist,
     utc_now_iso,
 )
