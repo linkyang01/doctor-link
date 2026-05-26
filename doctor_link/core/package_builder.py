@@ -32,206 +32,299 @@ def event_from_scan(scan_result: ScanResult, test_plan: TestPlan, project: str =
     timeline = [
         TimelineStep(
             order=1,
-            action="Scan library",
+            action="scan_library",
             target=str(scan_result.root),
-            expected_result="Identify files and formats for diagnostics",
-            actual_result=f"Found {len(scan_result.files)} file(s)",
+            expected_result="Test library can be scanned and categorized.",
+            actual_result=f"Detected {len(scan_result.files)} file(s).",
+            status="passed",
             evidence_ids=[evidence[0].evidence_id],
-            status="done",
         )
     ]
 
+    missing_count = len(test_plan.missing_categories)
     problem_map = ProblemMap(
-        symptoms=[f"{len(scan_result.files)} media-related file(s) need diagnostic coverage"],
-        affected_files=[str(item.path) for item in scan_result.files],
-        likely_areas=["format coverage", "playback compatibility", "transcoding pipeline"],
+        user_symptom="Initial diagnostic package generated from a scanned test library.",
+        failure_stage="test_library_completeness" if missing_count else "ready_for_playback_testing",
+        possible_root_causes=test_plan.missing_categories[:10],
+        ruled_out_causes=[],
+        related_modules=["test_planner", "scanner"],
+        next_actions=test_plan.recommended_tests[:10] or ["Add test samples and rerun Doctor link."],
+        human_confirmed_problem=None,
+        evidence_ids=[item.evidence_id for item in evidence],
+    )
+
+    ai_task = AITask(
+        title="Review Doctor link diagnostic package",
+        summary="Review the generated diagnostic package and identify missing evidence or next diagnostic steps.",
+        requested_work=[
+            "Review the diagnostic report and JSON payload.",
+            "Do not guess root causes without evidence.",
+            "Identify missing test samples or missing runtime evidence.",
+        ],
+        investigation_boundary=["diagnostic package", "test plan", "scan result"],
+        do_not_change=["Do not modify unrelated application code without evidence."],
+        evidence_ids=[item.evidence_id for item in evidence],
+        verification_steps=[
+            "Confirm the diagnostic package was generated.",
+            "Confirm missing categories are listed.",
+            "Confirm next actions are explicit.",
+        ],
+    )
+
+    verification = VerificationChecklist(
+        items=[
+            "Open summary.md and confirm it is readable.",
+            "Open doctor-report.json and confirm it is machine-readable.",
+            "Open ai-task.md and confirm it contains evidence and boundaries.",
+            "If user assertions exist, confirm they are included in ai-task.md.",
+        ]
     )
 
     return DiagnosticEvent(
         project=project,
-        category="library-diagnostics",
-        summary="Generated diagnostic event from scanned library",
-        details="Scan results and generated test plan were converted into a Doctor link diagnostic package.",
-        evidence=evidence,
+        adapter="generic",
+        severity="warning" if missing_count else "info",
+        category="test_library_incomplete" if missing_count else "diagnostic_package_created",
+        summary="Generated a standard Doctor link diagnostic package from a test library scan.",
+        environment={"generated_at": utc_now_iso(), "library_root": str(scan_result.root)},
         timeline=timeline,
+        evidence=evidence,
+        reproduce_steps=[f"Run doctor-link report {scan_result.root}"],
         problem_map=problem_map,
-        test_plan=test_plan,
+        ai_task=ai_task,
+        verification_checklist=verification,
+        status="ai_ready",
     )
 
 
-def build_diagnostic_package(event: DiagnosticEvent, output_dir: Path) -> DiagnosticPackage:
-    """Build and write a standard diagnostic package."""
-    output_dir.mkdir(parents=True, exist_ok=True)
-    package = DiagnosticPackage(event=event)
-    package_dir = output_dir / package.package_id
-    package_dir.mkdir(parents=True, exist_ok=True)
-    package.root_dir = package_dir
+def build_diagnostic_package(event: DiagnosticEvent, output_root: Path) -> DiagnosticPackage:
+    """Write a standard diagnostic package to disk."""
+    safe_project = _safe_name(event.project or "project")
+    safe_issue = _safe_name(event.category or "issue")
+    timestamp = utc_now_iso().replace(":", "-")
+    package_root = output_root / f"{timestamp}_{safe_project}_{safe_issue}"
 
-    _write_markdown(package_dir / "summary.md", _render_summary(event, package.package_id))
-    _write_markdown(package_dir / "timeline.md", _render_timeline(event.timeline))
-    _write_markdown(package_dir / "problem-map.md", _render_problem_map(event.problem_map))
-    _write_markdown(package_dir / "evidence-list.md", _render_evidence(event.evidence))
-    _write_markdown(package_dir / "test-plan.md", _render_test_plan(event.test_plan))
-    _write_markdown(package_dir / "reproduce-steps.md", _render_reproduce_steps(event))
-    _write_markdown(package_dir / "fix-verification-checklist.md", _render_verification(event.verification_checklist))
-    _write_markdown(package_dir / "ai-task.md", _render_ai_task(event.ai_task))
-    _write_markdown(package_dir / "investigation-boundary.md", _render_investigation_boundary(event))
-    _write_markdown(package_dir / "doctor-report.md", _render_doctor_report(event, package.package_id))
-    _write_json(package_dir / "doctor-report.json", _package_payload(event, package.package_id))
-    _write_json(package_dir / "ai-context.json", _ai_context_payload(event, package.package_id))
-    _write_json(package_dir / "user-assertions.json", [])
-    return package
+    evidence_root = package_root / "evidence"
+    for subdir in [
+        evidence_root,
+        evidence_root / "logs",
+        evidence_root / "screenshots",
+        evidence_root / "command-output",
+        evidence_root / "test-results",
+        evidence_root / "attachments",
+    ]:
+        subdir.mkdir(parents=True, exist_ok=True)
 
-
-def _package_payload(event: DiagnosticEvent, package_id: str) -> dict[str, Any]:
-    return {
-        "package_id": package_id,
-        "event": event.to_dict(),
-        "files": [
-            "summary.md",
-            "timeline.md",
-            "problem-map.md",
-            "evidence-list.md",
-            "test-plan.md",
-            "reproduce-steps.md",
-            "fix-verification-checklist.md",
-            "ai-task.md",
-            "investigation-boundary.md",
-            "doctor-report.md",
-            "doctor-report.json",
-            "ai-context.json",
-            "user-assertions.json",
-        ],
+    files = {
+        "summary": package_root / "summary.md",
+        "problem_map": package_root / "problem-map.md",
+        "timeline": package_root / "timeline.md",
+        "evidence_list": package_root / "evidence-list.md",
+        "doctor_report_md": package_root / "doctor-report.md",
+        "doctor_report_json": package_root / "doctor-report.json",
+        "ai_context": package_root / "ai-context.json",
+        "reproduce_steps": package_root / "reproduce-steps.md",
+        "ai_task": package_root / "ai-task.md",
+        "investigation_boundary": package_root / "investigation-boundary.md",
+        "verification": package_root / "fix-verification-checklist.md",
+        "user_assertions": package_root / "user-assertions.json",
+        "environment": evidence_root / "environment.json",
     }
 
+    files["summary"].write_text(_render_summary(event), encoding="utf-8")
+    files["problem_map"].write_text(_render_problem_map(event), encoding="utf-8")
+    files["timeline"].write_text(_render_timeline(event), encoding="utf-8")
+    files["evidence_list"].write_text(_render_evidence_list(event), encoding="utf-8")
+    files["doctor_report_md"].write_text(_render_doctor_report(event), encoding="utf-8")
+    files["doctor_report_json"].write_text(_json(event.to_dict()), encoding="utf-8")
+    files["ai_context"].write_text(_json(_ai_context(event)), encoding="utf-8")
+    files["reproduce_steps"].write_text(_render_reproduce_steps(event), encoding="utf-8")
+    files["ai_task"].write_text(_render_ai_task(event), encoding="utf-8")
+    files["investigation_boundary"].write_text(_render_investigation_boundary(event), encoding="utf-8")
+    files["verification"].write_text(_render_verification(event), encoding="utf-8")
+    files["user_assertions"].write_text(_json([item.to_dict() for item in event.user_assertions]), encoding="utf-8")
+    files["environment"].write_text(_json(event.environment), encoding="utf-8")
 
-def _ai_context_payload(event: DiagnosticEvent, package_id: str) -> dict[str, Any]:
-    return {
-        "package_id": package_id,
-        "project": event.project,
-        "category": event.category,
-        "summary": event.summary,
-        "details": event.details,
-        "problem_map": event.problem_map.to_dict(),
-        "evidence": [item.to_dict() for item in event.evidence],
-        "timeline": [step.to_dict() for step in event.timeline],
-        "test_plan": event.test_plan.to_dict(),
-        "verification_checklist": event.verification_checklist.to_dict(),
-        "ai_task": event.ai_task.to_dict(),
-    }
-
-
-def _render_summary(event: DiagnosticEvent, package_id: str) -> str:
-    return f"""# Doctor Link Diagnostic Summary
-
-- Package ID: `{package_id}`
-- Project: {event.project}
-- Category: {event.category}
-- Created: {event.created_at}
-
-## Summary
-
-{event.summary}
-
-## Details
-
-{event.details or 'No additional details provided.'}
-"""
+    return DiagnosticPackage(
+        event_id=event.event_id,
+        root_dir=package_root,
+        status=event.status,
+        files={name: str(path) for name, path in files.items()},
+    )
 
 
-def _render_timeline(timeline: list[TimelineStep]) -> str:
-    lines = ["# Timeline", ""]
-    for step in sorted(timeline, key=lambda item: item.order):
-        lines.extend(
-            [
-                f"## {step.order}. {step.action}",
-                "",
-                f"- Target: {step.target}",
-                f"- Expected: {step.expected_result}",
-                f"- Actual: {step.actual_result}",
-                f"- Status: {step.status}",
-                f"- Evidence IDs: {', '.join(step.evidence_ids) if step.evidence_ids else 'None'}",
-                "",
-            ]
-        )
-    return "\n".join(lines)
-
-
-def _render_problem_map(problem_map: ProblemMap) -> str:
+def _render_summary(event: DiagnosticEvent) -> str:
+    assertions = "Yes" if event.user_assertions else "No"
     return "\n".join(
         [
-            "# Problem Map",
+            "# Doctor link Summary",
             "",
-            "## Symptoms",
-            *_bullet(problem_map.symptoms),
+            f"- Project: `{event.project}`",
+            f"- Category: `{event.category}`",
+            f"- Severity: `{event.severity}`",
+            f"- Status: `{event.status}`",
+            f"- User confirmed problem: `{assertions}`",
             "",
-            "## Affected Files",
-            *_bullet(problem_map.affected_files),
+            "## Summary",
+            event.summary or "No summary provided.",
             "",
-            "## Likely Areas",
-            *_bullet(problem_map.likely_areas),
+            "## Next action",
+            event.problem_map.next_actions[0] if event.problem_map.next_actions else "No next action generated.",
             "",
         ]
     )
 
 
-def _render_evidence(evidence: list[EvidenceItem]) -> str:
-    lines = ["# Evidence List", ""]
-    for item in evidence:
+def _render_problem_map(event: DiagnosticEvent) -> str:
+    pm = event.problem_map
+    lines = [
+        "# Problem Map",
+        "",
+        f"## User symptom\n\n{pm.user_symptom or 'Not provided.'}",
+        "",
+        f"## Failure stage\n\n`{pm.failure_stage}`",
+        "",
+        "## Human confirmed problem",
+        pm.human_confirmed_problem or "No user assertion has been recorded yet.",
+        "",
+        "## Possible root causes",
+        *_list(pm.possible_root_causes),
+        "",
+        "## Ruled out causes",
+        *_list(pm.ruled_out_causes),
+        "",
+        "## Related modules",
+        *_list(pm.related_modules),
+        "",
+        "## Next actions",
+        *_list(pm.next_actions),
+        "",
+    ]
+    return "\n".join(lines)
+
+
+def _render_timeline(event: DiagnosticEvent) -> str:
+    lines = ["# Timeline", ""]
+    if not event.timeline:
+        lines.append("No timeline steps recorded.")
+    for step in sorted(event.timeline, key=lambda item: item.order):
+        marker = " **Failure point**" if step.is_failure_point else ""
         lines.extend(
             [
-                f"## {item.evidence_id}: {item.title}",
+                f"## Step {step.order}: {step.action}{marker}",
                 "",
-                f"- Kind: {item.kind}",
-                f"- Source: {item.source}",
-                f"- Path: {item.path or 'N/A'}",
-                "",
-                item.content or "No content provided.",
+                f"- Time: `{step.timestamp}`",
+                f"- Target: `{step.target or 'N/A'}`",
+                f"- Status: `{step.status}`",
+                f"- Expected: {step.expected_result or 'N/A'}",
+                f"- Actual: {step.actual_result or 'N/A'}",
+                f"- Evidence: {', '.join(step.evidence_ids) if step.evidence_ids else 'None'}",
+                f"- User note: {step.user_note or 'N/A'}",
                 "",
             ]
         )
     return "\n".join(lines)
 
 
-def _render_test_plan(test_plan: TestPlan) -> str:
-    lines = ["# Test Plan", ""]
-    for area in test_plan.areas:
-        lines.extend([f"## {area.name}", ""])
-        lines.extend(_bullet(area.checks))
-        lines.append("")
+def _render_evidence_list(event: DiagnosticEvent) -> str:
+    lines = ["# Evidence List", ""]
+    if not event.evidence:
+        lines.append("No evidence recorded.")
+    for item in event.evidence:
+        lines.extend(
+            [
+                f"## {item.title}",
+                "",
+                f"- ID: `{item.evidence_id}`",
+                f"- Kind: `{item.kind}`",
+                f"- Source: `{item.source}`",
+                f"- Path: `{item.path or 'N/A'}`",
+                f"- Related step: `{item.related_step_id or 'N/A'}`",
+                "",
+                item.content or "No content preview.",
+                "",
+            ]
+        )
     return "\n".join(lines)
+
+
+def _render_doctor_report(event: DiagnosticEvent) -> str:
+    return "\n".join(
+        [
+            "# Doctor Report",
+            "",
+            f"Event ID: `{event.event_id}`",
+            f"Project: `{event.project}`",
+            f"Adapter: `{event.adapter}`",
+            f"Occurred at: `{event.occurred_at}`",
+            f"Severity: `{event.severity}`",
+            f"Category: `{event.category}`",
+            f"Status: `{event.status}`",
+            "",
+            "## Summary",
+            event.summary or "No summary provided.",
+            "",
+            "## User assertions",
+            *_list([item.user_statement for item in event.user_assertions]),
+            "",
+            "## Verification",
+            *_list(event.verification_checklist.items),
+            "",
+        ]
+    )
 
 
 def _render_reproduce_steps(event: DiagnosticEvent) -> str:
-    return "\n".join(
+    return "\n".join(["# Reproduce Steps", "", *_numbered(event.reproduce_steps), ""])
+
+
+def _render_ai_task(event: DiagnosticEvent) -> str:
+    lines = [
+        "# AI Debugging Task",
+        "",
+        "## Problem summary",
+        event.ai_task.summary or event.summary or "No summary provided.",
+        "",
+    ]
+
+    if event.user_assertions:
+        lines.extend(
+            [
+                "## Human-confirmed issue",
+                "The human user has confirmed this as the problem. Do not dismiss it as normal behavior without evidence.",
+                "",
+            ]
+        )
+        for assertion in event.user_assertions:
+            lines.extend(
+                [
+                    f"- Statement: {assertion.user_statement}",
+                    f"  - Expected: {assertion.expected_behavior or 'N/A'}",
+                    f"  - Actual: {assertion.actual_behavior or 'N/A'}",
+                    f"  - Why wrong: {assertion.why_user_thinks_it_is_wrong or 'N/A'}",
+                ]
+            )
+        lines.append("")
+
+    lines.extend(
         [
-            "# Reproduce Steps",
+            "## Evidence",
+            *_list([f"{item.evidence_id}: {item.title}" for item in event.evidence]),
             "",
-            "1. Confirm the affected project and package ID.",
-            "2. Review `problem-map.md` and `evidence-list.md`.",
-            "3. Execute the checks listed in `test-plan.md`.",
-            "4. Record observed behavior in `timeline.md` before applying fixes.",
+            "## Requested work",
+            *_list(event.ai_task.requested_work),
             "",
-            f"Context: {event.summary}",
+            "## Investigation boundary",
+            *_list(event.ai_task.investigation_boundary),
+            "",
+            "## Do not change",
+            *_list(event.ai_task.do_not_change),
+            "",
+            "## Verification steps",
+            *_list(event.ai_task.verification_steps or event.verification_checklist.items),
             "",
         ]
     )
-
-
-def _render_verification(checklist: VerificationChecklist) -> str:
-    lines = ["# Fix Verification Checklist", ""]
-    for item in checklist.items:
-        lines.append(f"- [ ] {item}")
-    lines.append("")
-    return "\n".join(lines)
-
-
-def _render_ai_task(ai_task: AITask) -> str:
-    lines = ["# AI Task", "", "## Prompt", "", ai_task.prompt, "", "## Constraints", ""]
-    lines.extend(_bullet(ai_task.constraints))
-    lines.extend(["", "## Expected Outputs", ""])
-    lines.extend(_bullet(ai_task.expected_outputs))
-    lines.append("")
     return "\n".join(lines)
 
 
@@ -240,49 +333,52 @@ def _render_investigation_boundary(event: DiagnosticEvent) -> str:
         [
             "# Investigation Boundary",
             "",
-            "## In Scope",
-            "- Files, evidence, and checks referenced in this package.",
-            "- Reproduction and verification steps listed in this package.",
+            "## Investigate",
+            *_list(event.ai_task.investigation_boundary),
             "",
-            "## Out of Scope",
-            "- Large refactors not required to resolve the described issue.",
-            "- Unrelated code style changes.",
-            "",
-            f"Primary issue: {event.summary}",
+            "## Do not change without evidence",
+            *_list(event.ai_task.do_not_change),
             "",
         ]
     )
 
 
-def _render_doctor_report(event: DiagnosticEvent, package_id: str) -> str:
-    return "\n".join(
-        [
-            "# Doctor Report",
-            "",
-            f"Package `{package_id}` is ready for human and AI-assisted diagnosis.",
-            "",
-            "Recommended order:",
-            "",
-            "1. Read `summary.md`.",
-            "2. Inspect `problem-map.md`.",
-            "3. Review `evidence-list.md`.",
-            "4. Follow `reproduce-steps.md`.",
-            "5. Use `ai-task.md` only after evidence review.",
-            "6. Validate fixes with `fix-verification-checklist.md`.",
-            "",
-            f"Summary: {event.summary}",
-            "",
-        ]
-    )
+def _render_verification(event: DiagnosticEvent) -> str:
+    return "\n".join(["# Fix Verification Checklist", "", *_checkboxes(event.verification_checklist.items), ""])
 
 
-def _bullet(items: list[str]) -> list[str]:
+def _ai_context(event: DiagnosticEvent) -> dict[str, Any]:
+    return {
+        "event_id": event.event_id,
+        "project": event.project,
+        "summary": event.summary,
+        "category": event.category,
+        "severity": event.severity,
+        "status": event.status,
+        "evidence": [item.to_dict() for item in event.evidence],
+        "timeline": [item.to_dict() for item in event.timeline],
+        "user_assertions": [item.to_dict() for item in event.user_assertions],
+        "problem_map": event.problem_map.to_dict(),
+        "ai_task": event.ai_task.to_dict(),
+        "verification_checklist": event.verification_checklist.to_dict(),
+    }
+
+
+def _json(payload: Any) -> str:
+    return json.dumps(payload, ensure_ascii=False, indent=2)
+
+
+def _safe_name(value: str) -> str:
+    return "".join(ch.lower() if ch.isalnum() else "-" for ch in value).strip("-") or "item"
+
+
+def _list(items: list[str]) -> list[str]:
     return [f"- {item}" for item in items] if items else ["- None"]
 
 
-def _write_markdown(path: Path, content: str) -> None:
-    path.write_text(content, encoding="utf-8")
+def _numbered(items: list[str]) -> list[str]:
+    return [f"{index}. {item}" for index, item in enumerate(items, start=1)] if items else ["1. No reproduce steps recorded."]
 
 
-def _write_json(path: Path, payload: dict[str, Any] | list[Any]) -> None:
-    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+def _checkboxes(items: list[str]) -> list[str]:
+    return [f"- [ ] {item}" for item in items] if items else ["- [ ] No verification step generated."]
