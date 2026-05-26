@@ -1,6 +1,6 @@
 # Doctor link P3-P5 TODO
 
-This file tracks phase-level status for P3, P4, and P5. Detailed implementation history is recorded in PRs, issues, and audit documents.
+This file tracks phase-level status for P3, P4, P5, and P5.9. Detailed implementation history is recorded in PRs, issues, and audit documents.
 
 Related files:
 
@@ -9,6 +9,7 @@ Related files:
 - P3 final audit: `docs/p3-final-audit.md`
 - P4 final audit: `docs/p4-final-audit.md`
 - P5 final audit: `docs/p5-final-audit.md`
+- P5.9 final audit: `docs/p5-9-final-audit.md`
 
 ## P3: AI Coding Collaboration Layer
 
@@ -115,6 +116,22 @@ Quality:
 - [x] Example/template tests
 - [x] CI validation
 - [x] Close Issue #20 after final audit PR merges
+
+## P5.9: Release Hardening and Usability Validation
+
+Status: complete after final CI and merge.
+
+Issue: #71
+
+Completed scope:
+
+- [x] Ruff static check
+- [x] Coverage report
+- [x] Wheel build validation
+- [x] Installed wheel CLI smoke validation
+- [x] End-to-end usability validation script
+- [x] CLI entrypoint review
+- [x] P5.9 final audit
 
 ## Boundaries
 
