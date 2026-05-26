@@ -12,6 +12,7 @@ This file tracks phase-level project status. Detailed implementation tasks are t
 - [x] P3: AI Coding Collaboration Layer
 - [x] P4: Automated Diagnosis Pipeline
 - [x] P5: Productization and Release Readiness
+- [x] P5.9: Release Hardening and Usability Validation
 - [ ] P6: Diagnostic Protocol Standardization and Ecosystem Platform
 
 ## Completed Phase Audits
@@ -22,6 +23,7 @@ This file tracks phase-level project status. Detailed implementation tasks are t
 - [x] P3 final audit: `docs/p3-final-audit.md`
 - [x] P4 final audit: `docs/p4-final-audit.md`
 - [x] P5 final audit: `docs/p5-final-audit.md`
+- [x] P5.9 final audit: `docs/p5-9-final-audit.md`
 
 ## Completed Tracking Issues
 
@@ -31,6 +33,7 @@ This file tracks phase-level project status. Detailed implementation tasks are t
 - [x] Issue #18: P3 AI Coding collaboration layer
 - [x] Issue #19: P4 automated diagnosis pipeline
 - [x] Issue #20: P5 productization and release readiness
+- [x] Issue #71: P5.9 release hardening and usability validation
 
 ## Active / Future Tracking Issues
 
@@ -57,6 +60,15 @@ This file tracks phase-level project status. Detailed implementation tasks are t
 - [x] Product positioning and website docs
 - [x] Adapter and plugin documentation
 - [x] Draft release notes and release readiness audit
+
+## Completed P5.9 Scope
+
+- [x] Wheel build validation
+- [x] Installed wheel CLI smoke validation
+- [x] E2E usability validation script
+- [x] Coverage reporting
+- [x] Ruff static check
+- [x] CLI entrypoint review
 
 ## Deferred Decisions
 
