@@ -30,11 +30,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e .
-          python -m pip install pytest
+          python -m pip install pytest pytest-cov build ruff
 
-      - name: Run tests
+      - name: Run static checks
         run: |
-          pytest -q --junitxml=junit/test-results-${{ matrix.python-version }}.xml
+          ruff check doctor_link tests scripts
+
+      - name: Run tests with coverage
+        run: |
+          pytest -q --cov=doctor_link --cov-report=term-missing --cov-report=xml --junitxml=junit/test-results-${{ matrix.python-version }}.xml
 
       - name: Run CLI smoke tests
         run: |
@@ -51,6 +55,26 @@ jobs:
           doctor-link view "$PACKAGE_DIR" --build-only
           test -f "$PACKAGE_DIR/.doctorlink-web/index.html"
 
+      - name: Run E2E validation
+        run: |
+          bash scripts/e2e_validate.sh "$(pwd)"
+
+      - name: Build wheel and source distribution
+        run: |
+          python -m build
+          test -n "$(find dist -name '*.whl' -print -quit)"
+          test -n "$(find dist -name '*.tar.gz' -print -quit)"
+
+      - name: Smoke test installed wheel
+        run: |
+          python -m venv .wheel-smoke
+          . .wheel-smoke/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install dist/*.whl
+          doctor-link --help
+          doctor-link strategy validate . --json
+          deactivate
+
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
@@ -58,6 +82,9 @@ jobs:
           name: doctor-link-test-results-${{ matrix.python-version }}
           path: |
             junit/test-results-${{ matrix.python-version }}.xml
+            coverage.xml
+            dist/**
+            .doctorlink-e2e/**
             DoctorReports/**
           if-no-files-found: warn
 
