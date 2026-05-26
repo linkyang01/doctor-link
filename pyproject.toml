@@ -51,3 +51,27 @@ doctor_link = ["py.typed"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+exclude = [
+  ".git",
+  ".venv",
+  "DoctorReports",
+  "dist",
+  "build"
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = ["E501"]
+
+[tool.coverage.run]
+source = ["doctor_link"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+fail_under = 0
