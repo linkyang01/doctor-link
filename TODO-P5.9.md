@@ -10,10 +10,10 @@ Goal: release hardening and usability validation.
 - [x] Add P5.9 tracker.
 - [x] Add wheel build validation.
 - [x] Add wheel install CLI smoke.
-- [ ] Add one-command end-to-end validation script.
-- [ ] Add end-to-end validation documentation.
-- [ ] Add ruff static checks.
-- [ ] Add coverage reporting.
+- [x] Add validation script.
+- [x] Add validation documentation.
+- [x] Add ruff static checks.
+- [x] Add coverage reporting.
 - [ ] Review CLI entrypoint structure.
 - [ ] Update README and tracking docs.
 - [ ] Add P5.9 final audit.
