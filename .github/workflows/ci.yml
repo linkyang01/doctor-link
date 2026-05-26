@@ -40,39 +40,16 @@ jobs:
         run: |
           doctor-link --help
           doctor-link init DoctorWorkspace
-          mkdir -p VlyTestLibrary/01-BasicFormats logs
+          mkdir -p VlyTestLibrary/01-BasicFormats
           echo "sample" > VlyTestLibrary/01-BasicFormats/sample.mp4
-          echo "subtitle" > VlyTestLibrary/01-BasicFormats/sample.srt
-          echo "audio" > VlyTestLibrary/01-BasicFormats/sample.dts
-          echo "password=ci-secret user@example.com" > VlyTestLibrary/app.log
-          echo "password=config-secret" > logs/config.log
-          echo "attachment" > VlyTestLibrary/input.txt
           doctor-link scan VlyTestLibrary
           doctor-link plan VlyTestLibrary
           doctor-link report VlyTestLibrary --out DoctorReports
-          doctor-link ai-task VlyTestLibrary --out DoctorReports
-          doctor-link env --project-root . --out DoctorReports/environment-smoke.json
-          doctor-link probe VlyTestLibrary/01-BasicFormats/sample.mp4 --ffprobe missing-ffprobe-for-ci --summary --out DoctorReports/probe-smoke.json
           PACKAGE_DIR=$(find DoctorReports -mindepth 1 -maxdepth 1 -type d | head -n 1)
-          cp "$PACKAGE_DIR/doctor-report.json" DoctorReports/before-smoke.json
-          doctor-link collect "$PACKAGE_DIR" --project-root . --logs "VlyTestLibrary/*.log" --command "python -c \"print('api_key=ci_command_secret')\"" --probe VlyTestLibrary/01-BasicFormats/sample.mp4 --attachment VlyTestLibrary/input.txt --ffprobe missing-ffprobe-for-ci --note "CI collect smoke" --redact-email --redact-pattern "ci_command_secret"
-          test -f "$PACKAGE_DIR/redaction-report.md"
-          doctor-link collect "$PACKAGE_DIR" --ffprobe missing-ffprobe-for-ci --note "CI config-driven collect smoke"
-          doctor-link vly-proof VlyTestLibrary --out DoctorReports/vly-proof-smoke.md --package-dir "$PACKAGE_DIR"
-          doctor-link record "$PACKAGE_DIR" --name "CI playback smoke" --status partial --expected "Sample should be playable" --actual "Placeholder media cannot be probed as playable" --file VlyTestLibrary/01-BasicFormats/sample.mp4 --note "CI smoke record"
-          doctor-link compare DoctorReports/before-smoke.json "$PACKAGE_DIR/doctor-report.json" --out DoctorReports/comparison-smoke --package-dir "$PACKAGE_DIR"
+          test -f "$PACKAGE_DIR/doctor-report.json"
           doctor-link verify "$PACKAGE_DIR" --write-back
-          doctor-link handoff "$PACKAGE_DIR" --tool codex --out DoctorReports/handoff-smoke
-          test -f DoctorReports/handoff-smoke/handoff-manifest.json
-          test -f DoctorReports/handoff-smoke/CODEX_TASK.md
-          doctor-link doctor-package "$PACKAGE_DIR" --out DoctorReports/doctor-package-smoke.zip --exclude-attachments --max-file-size 1000000
-          doctor-link doctor-package "$PACKAGE_DIR"
           doctor-link view "$PACKAGE_DIR" --build-only
           test -f "$PACKAGE_DIR/.doctorlink-web/index.html"
-          rm -rf DoctorReports/.doctorlink-web
-          doctor-link view DoctorReports --build-only
-          test -f DoctorReports/.doctorlink-web/index.html
-          test -f "DoctorReports/.doctorlink-web/packages/$(basename "$PACKAGE_DIR")/index.html"
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
@@ -106,15 +83,14 @@ jobs:
           test -n "$(find dist -name '*.whl' -print -quit)"
           test -n "$(find dist -name '*.tar.gz' -print -quit)"
 
-      - name: Install wheel in clean virtual environment
+      - name: Install wheel and run validation
         run: |
           python -m venv /tmp/doctor-link-wheel-smoke
           . /tmp/doctor-link-wheel-smoke/bin/activate
           python -m pip install --upgrade pip
           python -m pip install dist/*.whl
           doctor-link --help
-          doctor-link init /tmp/DoctorWorkspace
-          doctor-link strategy validate . --json
+          bash scripts/validate_doctor_link.sh /tmp/DoctorLinkValidation
 
       - name: Upload package artifacts
         uses: actions/upload-artifact@v4
