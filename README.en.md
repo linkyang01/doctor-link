@@ -72,6 +72,7 @@ Key user and product documents:
 - `docs/usability-validation.md`
 - `docs/e2e-validation.md`
 - `docs/p5.9-final-audit.md`
+- `docs/p5.10-local-validation.md`
 
 ## P1 / P1+: Evidence and Verification Loop
 
@@ -155,6 +156,31 @@ bash scripts/e2e_validate.sh "$(pwd)"
 
 P5.9 does not publish a GitHub Release, create a release tag, publish to PyPI, change repository permissions, introduce paid cloud services or external account systems, or start P6 implementation.
 
+## P5.10: Local Validation Hardening before P6 Authorization
+
+P5.10 has established the local full-validation gate, but the actual local run result has not been recorded yet.
+
+P5.10 validates the current repository from a clean local environment before any P6 authorization discussion. It covers static checks, test coverage, package build, wheel installation, usability validation, and E2E validation.
+
+Local validation entrypoint:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -e .
+python -m pip install pytest pytest-cov build ruff
+ruff check doctor_link tests scripts
+pytest -q --cov=doctor_link --cov-report=term-missing --cov-report=xml
+python -m build
+bash scripts/validate_doctor_link.sh
+bash scripts/e2e_validate.sh "$(pwd)"
+```
+
+After validation completes, record the actual run date, machine / OS, Python version, commit SHA, branch, and result in `docs/p5.10-local-validation.md`.
+
+P5.10 does not add product features, publish a GitHub Release, create a release tag, publish to PyPI, change repository permissions, introduce paid cloud services or external account systems, or start P6 implementation.
+
 ## Project Configuration
 
 Projects can define diagnostic rules in `.doctorlink/`:
@@ -187,7 +213,12 @@ Doctor link has completed:
 - P5: Productization and Release Readiness;
 - P5.9: Release Hardening and Usability Validation.
 
-The next phase is P6: Diagnostic Protocol Standardization and Ecosystem Platform. P6 implementation requires separate explicit authorization.
+Doctor link still needs:
+
+- P5.10: Local Validation Hardening before P6 Authorization, pending recorded local validation results;
+- P6: Diagnostic Protocol Standardization and Ecosystem Platform, not started.
+
+P6 implementation requires separate explicit authorization. Do not start P6 until P5.10 local validation results are recorded.
 
 ## Boundaries
 
