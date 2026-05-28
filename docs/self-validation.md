@@ -4,6 +4,18 @@ Doctor link can be used to validate itself as a project.
 
 Self-validation means using the installed `doctor-link` CLI to scan the Doctor link source tree, generate a diagnostic package, collect evidence, record a user assertion, record a test result, verify the package, build a local web view, create an AI handoff package, and generate a project health summary.
 
+## Recorded cloud self-validation result
+
+```text
+Workflow: Self Validation #1
+Branch: main
+Job: validate
+Result: success
+Duration: 30 seconds
+```
+
+The successful run confirmed that Doctor link can execute its own self-validation workflow in GitHub Actions.
+
 ## Run locally
 
 Install Doctor link from source first:

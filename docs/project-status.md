@@ -4,7 +4,7 @@ Status date: 2026-05-28
 
 ## Current status
 
-Doctor link has completed P0 through P5.9 and has passed P5.10 cloud validation on GitHub Actions.
+Doctor link has completed P0 through P5.9, has passed P5.10 cloud validation on GitHub Actions, and has passed cloud self-validation.
 
 P6 is not started.
 
@@ -20,6 +20,7 @@ P6 is not started.
 - [x] P5: Productization and Release Readiness
 - [x] P5.9: Release Hardening and Usability Validation
 - [x] P5.10: Cloud Validation on GitHub Actions
+- [x] Self Validation: Doctor link validates itself on GitHub Actions
 - [ ] P5.10: Local or target-environment validation
 - [ ] P6: Diagnostic Protocol Standardization and Ecosystem Platform
 
@@ -36,6 +37,18 @@ Duration: 30 seconds
 ```
 
 The cloud validation confirms that the current `main` branch can run static checks, tests with coverage, package build, usability validation, and end-to-end validation in GitHub Actions.
+
+## Self-validation result
+
+```text
+Workflow: Self Validation #1
+Branch: main
+Job: validate
+Result: success
+Duration: 30 seconds
+```
+
+The self-validation result confirms that Doctor link can use its own CLI to scan its source tree, generate a diagnostic package, collect evidence, record assertions and test results, verify outputs, build a handoff package, build a local web view, and generate a project health summary.
 
 ## Release status
 
