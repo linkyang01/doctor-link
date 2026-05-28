@@ -70,6 +70,7 @@ doctor-link health DoctorReports --json
 - `docs/usability-validation.md`
 - `docs/e2e-validation.md`
 - `docs/p5.9-final-audit.md`
+- `docs/p5.10-local-validation.md`
 
 ## P1 / P1+：证据采集与验证闭环
 
@@ -153,6 +154,31 @@ bash scripts/e2e_validate.sh "$(pwd)"
 
 P5.9 不发布 GitHub Release，不创建 release tag，不发布 PyPI，不修改仓库权限，不引入付费云服务或外部账号体系，不启动 P6 实现开发。
 
+## P5.10：P6 授权前本地验证加固
+
+P5.10 已建立本地完整验证门槛，但尚未完成实际本地运行结果回填。
+
+P5.10 的目标是在进入任何 P6 授权讨论前，先从干净本地环境验证当前仓库，包括静态检查、测试覆盖、构建、wheel 安装、可用性验证和 E2E 验证。
+
+本地验证入口：
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -e .
+python -m pip install pytest pytest-cov build ruff
+ruff check doctor_link tests scripts
+pytest -q --cov=doctor_link --cov-report=term-missing --cov-report=xml
+python -m build
+bash scripts/validate_doctor_link.sh
+bash scripts/e2e_validate.sh "$(pwd)"
+```
+
+验证完成后，需要将实际运行日期、机器/系统、Python 版本、commit SHA、分支和结果回填到 `docs/p5.10-local-validation.md`。
+
+P5.10 不写新功能，不发布 GitHub Release，不创建 release tag，不发布 PyPI，不修改仓库权限，不引入付费云服务或外部账号体系，不启动 P6 实现开发。
+
 ## 项目配置
 
 项目可以在 `.doctorlink/` 中定义诊断规则：
@@ -185,7 +211,12 @@ Doctor link 当前已完成：
 - P5：Productization and Release Readiness；
 - P5.9：Release Hardening and Usability Validation。
 
-下一阶段是 P6：Diagnostic Protocol Standardization and Ecosystem Platform。P6 实现开发需要单独明确授权。
+Doctor link 当前待完成：
+
+- P5.10：Local Validation Hardening before P6 Authorization，本地验证结果尚未回填；
+- P6：Diagnostic Protocol Standardization and Ecosystem Platform，未启动。
+
+P6 实现开发需要单独明确授权。在 P5.10 本地验证结果回填前，不启动 P6。
 
 ## 边界
 
