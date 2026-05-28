@@ -69,6 +69,9 @@ Key user and product documents:
 - `docs/privacy-model.md`
 - `docs/product-overview.md`
 - `docs/release-policy.md`
+- `docs/usability-validation.md`
+- `docs/e2e-validation.md`
+- `docs/p5.9-final-audit.md`
 
 ## P1 / P1+: Evidence and Verification Loop
 
@@ -130,6 +133,28 @@ P5 adds productization and release readiness preparation without publishing:
 
 P5 does not publish a release, create a GitHub Release, tag a release, or publish to PyPI.
 
+## P5.9: Release Hardening and Usability Validation
+
+P5.9 completes pre-release hardening and usability validation:
+
+- wheel and source distribution build validation;
+- installed wheel CLI smoke validation;
+- ruff static checks;
+- pytest coverage reporting;
+- one-command local usability validation;
+- end-to-end validation;
+- CLI entrypoint relationship review;
+- P5.9 final audit.
+
+Validation entrypoints:
+
+```bash
+bash scripts/validate_doctor_link.sh
+bash scripts/e2e_validate.sh "$(pwd)"
+```
+
+P5.9 does not publish a GitHub Release, create a release tag, publish to PyPI, change repository permissions, introduce paid cloud services or external account systems, or start P6 implementation.
+
 ## Project Configuration
 
 Projects can define diagnostic rules in `.doctorlink/`:
@@ -159,7 +184,8 @@ Doctor link has completed:
 - P2+: Mainline Diagnostic Workbench Enhancements;
 - P3: AI Coding Collaboration Layer;
 - P4: Automated Diagnosis Pipeline;
-- P5: Productization and Release Readiness.
+- P5: Productization and Release Readiness;
+- P5.9: Release Hardening and Usability Validation.
 
 The next phase is P6: Diagnostic Protocol Standardization and Ecosystem Platform. P6 implementation requires separate explicit authorization.
 
