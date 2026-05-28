@@ -67,6 +67,9 @@ doctor-link health DoctorReports --json
 - `docs/privacy-model.md`
 - `docs/product-overview.md`
 - `docs/release-policy.md`
+- `docs/usability-validation.md`
+- `docs/e2e-validation.md`
+- `docs/p5.9-final-audit.md`
 
 ## P1 / P1+：证据采集与验证闭环
 
@@ -128,6 +131,28 @@ P5 已完成产品化和发布准备，但没有执行发布：
 
 P5 不创建 GitHub Release，不打 release tag，不发布到 PyPI。
 
+## P5.9：发布加固与可用性验证
+
+P5.9 已完成发布前加固和可用性验证收尾：
+
+- wheel 与 sdist 构建验证；
+- 已安装 wheel 的 CLI smoke 验证；
+- ruff 静态检查；
+- pytest coverage 报告；
+- 一键本地可用性验证脚本；
+- E2E 验证脚本；
+- CLI 入口关系审查；
+- P5.9 final audit。
+
+可用性验证入口：
+
+```bash
+bash scripts/validate_doctor_link.sh
+bash scripts/e2e_validate.sh "$(pwd)"
+```
+
+P5.9 不发布 GitHub Release，不创建 release tag，不发布 PyPI，不修改仓库权限，不引入付费云服务或外部账号体系，不启动 P6 实现开发。
+
 ## 项目配置
 
 项目可以在 `.doctorlink/` 中定义诊断规则：
@@ -157,7 +182,8 @@ Doctor link 当前已完成：
 - P2+：Mainline Diagnostic Workbench Enhancements；
 - P3：AI Coding Collaboration Layer；
 - P4：Automated Diagnosis Pipeline；
-- P5：Productization and Release Readiness。
+- P5：Productization and Release Readiness；
+- P5.9：Release Hardening and Usability Validation。
 
 下一阶段是 P6：Diagnostic Protocol Standardization and Ecosystem Platform。P6 实现开发需要单独明确授权。
 

@@ -1,6 +1,6 @@
 # Doctor link P3-P5 TODO
 
-This file tracks phase-level status for P3, P4, and P5. Detailed implementation history is recorded in PRs, issues, and audit documents.
+This file tracks phase-level status for P3, P4, P5, and P5.9. Detailed implementation history is recorded in PRs, issues, and audit documents.
 
 Related files:
 
@@ -9,6 +9,7 @@ Related files:
 - P3 final audit: `docs/p3-final-audit.md`
 - P4 final audit: `docs/p4-final-audit.md`
 - P5 final audit: `docs/p5-final-audit.md`
+- P5.9 final audit: `docs/p5.9-final-audit.md`
 
 ## P3: AI Coding Collaboration Layer
 
@@ -115,6 +116,46 @@ Quality:
 - [x] Example/template tests
 - [x] CI validation
 - [x] Close Issue #20 after final audit PR merges
+
+## P5.9: Release Hardening and Usability Validation
+
+Status: complete after closeout PR passes CI and merges.
+
+Primary Issue: #71
+Earlier tracker: #66
+
+Completed scope:
+
+- [x] P5.9 tracker
+- [x] Wheel build validation
+- [x] Installed wheel CLI smoke
+- [x] Local usability validation script
+- [x] Local usability validation documentation
+- [x] End-to-end validation script
+- [x] End-to-end validation documentation
+- [x] Ruff static checks
+- [x] Coverage reporting
+- [x] CLI entrypoint review
+- [x] P5.9 final audit
+
+Completed artifacts:
+
+- [x] `TODO-P5.9.md`
+- [x] `docs/usability-validation.md`
+- [x] `docs/e2e-validation.md`
+- [x] `docs/p5.9-final-audit.md`
+- [x] `scripts/validate_doctor_link.sh`
+- [x] `scripts/e2e_validate.sh`
+
+Boundary:
+
+- [x] No GitHub Release created
+- [x] No release tag created
+- [x] No PyPI package published
+- [x] No repository permission changes
+- [x] No paid cloud services introduced
+- [x] No external account system introduced
+- [x] No P6 implementation started
 
 ## Boundaries
 
