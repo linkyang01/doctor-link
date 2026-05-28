@@ -1,0 +1,73 @@
+name: P5.10 Manual Validation
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Manual P5.10 validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install package and validation tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -m pip install pytest pytest-cov build ruff
+
+      - name: Run static checks
+        run: |
+          ruff check doctor_link tests scripts
+
+      - name: Run tests with coverage
+        run: |
+          pytest -q --cov=doctor_link --cov-report=term-missing --cov-report=xml
+
+      - name: Build wheel and source distribution
+        run: |
+          python -m build
+          test -n "$(find dist -name '*.whl' -print -quit)"
+          test -n "$(find dist -name '*.tar.gz' -print -quit)"
+
+      - name: Run usability validation script
+        run: |
+          bash scripts/validate_doctor_link.sh ManualCloudValidation
+
+      - name: Run E2E validation script
+        run: |
+          bash scripts/e2e_validate.sh "$(pwd)"
+
+      - name: Write validation summary
+        if: always()
+        run: |
+          mkdir -p .doctorlink-manual-validation
+          echo "# P5.10 Manual Validation" > .doctorlink-manual-validation/summary.md
+          echo "" >> .doctorlink-manual-validation/summary.md
+          echo "Runner: GitHub Actions ubuntu-latest" >> .doctorlink-manual-validation/summary.md
+          echo "Python: 3.12" >> .doctorlink-manual-validation/summary.md
+          echo "Scope: cloud validation only; local validation remains separate." >> .doctorlink-manual-validation/summary.md
+
+      - name: Upload validation artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p5-10-manual-validation
+          path: |
+            .doctorlink-manual-validation/summary.md
+            coverage.xml
+            dist/**
+            ManualCloudValidation/**
+            .doctorlink-e2e/**
+          if-no-files-found: warn
