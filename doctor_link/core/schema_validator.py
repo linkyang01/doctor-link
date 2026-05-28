@@ -49,163 +49,138 @@ class SchemaValidationResult:
 def validate_diagnostic_package(package_dir: Path) -> SchemaValidationResult:
     package_dir = package_dir.resolve()
     result = SchemaValidationResult(package_dir=str(package_dir))
-
     if not package_dir.is_dir():
         result.add(str(package_dir), "error", "Diagnostic package directory does not exist.")
         return result
 
     for relative in CORE_PACKAGE_FILES:
-        path = package_dir / relative
-        if not path.exists():
-            result.add(relative, "error", "Required package file is missing.")
-            continue
-        payload = _load_json(path, result, relative)
-        if payload is None:
-            continue
-        result.checked_files.append(relative)
-        _validate_named_payload(relative, payload, result)
-
+        _validate_required_file(package_dir, relative, result)
     for relative in OPTIONAL_PACKAGE_FILES:
         path = package_dir / relative
-        if not path.exists():
-            continue
-        payload = _load_json(path, result, relative)
-        if payload is None:
-            continue
-        result.checked_files.append(relative)
-        _validate_named_payload(relative, payload, result)
+        if path.exists():
+            _validate_file(path, relative, result)
 
-    handoff_manifest = package_dir / "handoff-manifest.json"
-    if handoff_manifest.exists():
-        payload = _load_json(handoff_manifest, result, "handoff-manifest.json")
-        if payload is not None:
-            result.checked_files.append("handoff-manifest.json")
-            _validate_handoff_manifest(payload, result)
-
+    for manifest_name in ["handoff-manifest.json", "manifest.json"]:
+        path = package_dir / manifest_name
+        if path.exists():
+            _validate_file(path, manifest_name, result)
     return result
 
 
 def write_schema_validation_result(package_dir: Path, result: SchemaValidationResult) -> None:
-    package_dir.mkdir(parents=True, exist_ok=True)
     (package_dir / "schema-validation-result.json").write_text(
-        json.dumps(result.to_dict(), ensure_ascii=False, indent=2),
-        encoding="utf-8",
+        json.dumps(result.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8"
     )
     (package_dir / "schema-validation-result.md").write_text(_to_markdown(result), encoding="utf-8")
 
 
-def _load_json(path: Path, result: SchemaValidationResult, relative: str) -> Any | None:
+def _validate_required_file(package_dir: Path, relative: str, result: SchemaValidationResult) -> None:
+    path = package_dir / relative
+    if not path.exists():
+        result.add(relative, "error", "Required package file is missing.")
+        return
+    _validate_file(path, relative, result)
+
+
+def _validate_file(path: Path, relative: str, result: SchemaValidationResult) -> None:
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        payload = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         result.add(relative, "error", f"Invalid JSON: {exc.msg}.")
-        return None
+        return
+    result.checked_files.append(relative)
+    _validate_named_payload(relative, payload, result)
 
 
 def _validate_named_payload(relative: str, payload: Any, result: SchemaValidationResult) -> None:
     if relative == "doctor-report.json":
-        _validate_object(relative, payload, result)
-        if isinstance(payload, dict):
-            _require_keys(relative, payload, result, ["schema_version", "event_id", "project", "timeline", "evidence", "user_assertions", "problem_map", "ai_task", "verification_checklist", "status"])
-            _require_version(relative, payload, result)
-            _require_list(relative, payload, result, "timeline")
-            _require_list(relative, payload, result, "evidence")
-            _require_list(relative, payload, result, "user_assertions")
-            _require_object(relative, payload, result, "problem_map")
-            _require_object(relative, payload, result, "ai_task")
-            _require_object(relative, payload, result, "verification_checklist")
+        if _object(relative, payload, result):
+            _required(relative, payload, result, ["event_id", "project", "timeline", "evidence", "user_assertions", "problem_map", "ai_task", "verification_checklist", "status"])
+            _schema_version(relative, payload, result)
+            _list(relative, payload, result, "timeline")
+            _list(relative, payload, result, "evidence")
+            _list(relative, payload, result, "user_assertions")
+            _dict(relative, payload, result, "problem_map")
+            _dict(relative, payload, result, "ai_task")
+            _dict(relative, payload, result, "verification_checklist")
         return
-
     if relative == "ai-context.json":
-        _validate_object(relative, payload, result)
-        if isinstance(payload, dict):
-            _require_keys(relative, payload, result, ["schema_version", "event_id", "project", "evidence", "timeline", "user_assertions", "problem_map", "ai_task", "verification_checklist"])
-            _require_version(relative, payload, result)
-            _require_list(relative, payload, result, "evidence")
-            _require_list(relative, payload, result, "timeline")
-            _require_list(relative, payload, result, "user_assertions")
+        if _object(relative, payload, result):
+            _required(relative, payload, result, ["event_id", "project", "evidence", "timeline", "user_assertions", "problem_map", "ai_task", "verification_checklist"])
+            _schema_version(relative, payload, result)
+            _list(relative, payload, result, "evidence")
+            _list(relative, payload, result, "timeline")
+            _list(relative, payload, result, "user_assertions")
         return
-
     if relative == "user-assertions.json":
         if not isinstance(payload, list):
             result.add(relative, "error", "Expected an array of user assertion objects.")
             return
         for index, item in enumerate(payload):
-            if not isinstance(item, dict):
+            if isinstance(item, dict):
+                _required(f"{relative}[{index}]", item, result, ["assertion_id", "user_statement", "severity"])
+            else:
                 result.add(relative, "error", f"User assertion at index {index} is not an object.")
-                continue
-            _require_keys(f"{relative}[{index}]", item, result, ["assertion_id", "user_statement", "severity"])
         return
-
     if relative == "verification-result.json":
-        _validate_object(relative, payload, result)
-        if isinstance(payload, dict):
-            _require_keys(relative, payload, result, ["schema_version", "package_dir", "status", "missing_evidence", "tests_to_rerun", "next_commands", "notes"])
-            _require_version(relative, payload, result)
-            _require_list(relative, payload, result, "missing_evidence")
-            _require_list(relative, payload, result, "tests_to_rerun")
-            _require_list(relative, payload, result, "next_commands")
+        if _object(relative, payload, result):
+            _required(relative, payload, result, ["package_dir", "status", "missing_evidence", "tests_to_rerun", "next_commands", "notes"])
+            _schema_version(relative, payload, result)
+            _list(relative, payload, result, "missing_evidence")
+            _list(relative, payload, result, "tests_to_rerun")
+            _list(relative, payload, result, "next_commands")
         return
-
     if relative in {"ai-repair-result.json", "diagnosis-history.json"}:
         if not isinstance(payload, list):
             result.add(relative, "error", "Expected an array of records.")
         return
+    if relative in {"handoff-manifest.json", "manifest.json"}:
+        if _object(relative, payload, result):
+            _required(relative, payload, result, ["tool", "source_package", "instruction_file", "included_files", "missing_files"])
+            _schema_version(relative, payload, result)
+            _list(relative, payload, result, "included_files")
+            _list(relative, payload, result, "missing_files")
 
 
-def _validate_handoff_manifest(payload: Any, result: SchemaValidationResult) -> None:
-    relative = "handoff-manifest.json"
-    _validate_object(relative, payload, result)
-    if isinstance(payload, dict):
-        _require_keys(relative, payload, result, ["schema_version", "tool", "source_package", "instruction_file", "included_files", "missing_files"])
-        _require_version(relative, payload, result)
-        _require_list(relative, payload, result, "included_files")
-        _require_list(relative, payload, result, "missing_files")
-
-
-def _validate_object(relative: str, payload: Any, result: SchemaValidationResult) -> None:
+def _object(relative: str, payload: Any, result: SchemaValidationResult) -> bool:
     if not isinstance(payload, dict):
         result.add(relative, "error", "Expected a JSON object.")
+        return False
+    return True
 
 
-def _require_keys(relative: str, payload: dict[str, Any], result: SchemaValidationResult, keys: list[str]) -> None:
+def _required(relative: str, payload: dict[str, Any], result: SchemaValidationResult, keys: list[str]) -> None:
     for key in keys:
         if key not in payload:
             result.add(relative, "error", f"Missing required field `{key}`.")
 
 
-def _require_version(relative: str, payload: dict[str, Any], result: SchemaValidationResult) -> None:
+def _schema_version(relative: str, payload: dict[str, Any], result: SchemaValidationResult) -> None:
     version = payload.get("schema_version")
-    if version != SCHEMA_VERSION:
+    if version is None:
+        result.add(relative, "warning", f"Missing schema_version; treating as pre-v{SCHEMA_VERSION} compatible payload.")
+    elif version != SCHEMA_VERSION:
         result.add(relative, "error", f"Expected schema_version `{SCHEMA_VERSION}`, got `{version}`.")
 
 
-def _require_list(relative: str, payload: dict[str, Any], result: SchemaValidationResult, key: str) -> None:
+def _list(relative: str, payload: dict[str, Any], result: SchemaValidationResult, key: str) -> None:
     if key in payload and not isinstance(payload[key], list):
         result.add(relative, "error", f"Field `{key}` must be an array.")
 
 
-def _require_object(relative: str, payload: dict[str, Any], result: SchemaValidationResult, key: str) -> None:
+def _dict(relative: str, payload: dict[str, Any], result: SchemaValidationResult, key: str) -> None:
     if key in payload and not isinstance(payload[key], dict):
         result.add(relative, "error", f"Field `{key}` must be an object.")
 
 
 def _to_markdown(result: SchemaValidationResult) -> str:
     lines = [
-        "# Schema Validation Result",
-        "",
-        f"- Package: `{result.package_dir}`",
-        f"- Schema version: `{result.schema_version}`",
-        f"- Status: `{result.status}`",
-        f"- Valid: `{result.valid}`",
-        "",
-        "## Checked files",
+        "# Schema Validation Result", "", f"- Package: `{result.package_dir}`", f"- Schema version: `{result.schema_version}`", f"- Status: `{result.status}`", f"- Valid: `{result.valid}`", "", "## Checked files",
     ]
     lines.extend([f"- `{item}`" for item in result.checked_files] or ["- None"])
     lines.extend(["", "## Findings"])
     if result.findings:
-        for item in result.findings:
-            lines.append(f"- `{item.level}` `{item.path}`: {item.message}")
+        lines.extend([f"- `{item.level}` `{item.path}`: {item.message}" for item in result.findings])
     else:
         lines.append("- No schema validation findings.")
     lines.append("")
