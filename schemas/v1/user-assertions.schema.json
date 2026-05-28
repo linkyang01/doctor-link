@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://doctor-link.local/schemas/v1/user-assertions.schema.json",
+  "title": "Doctor link User Assertions",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["assertion_id", "user_statement", "severity"],
+    "properties": {
+      "assertion_id": { "type": "string" },
+      "created_at": { "type": "string" },
+      "severity": { "type": "string" },
+      "user_statement": { "type": "string" },
+      "expected_behavior": { "type": ["string", "null"] },
+      "actual_behavior": { "type": ["string", "null"] },
+      "related_evidence_ids": { "type": "array", "items": { "type": "string" } },
+      "investigation_scope": { "type": "array", "items": { "type": "string" } },
+      "locked_scope": { "type": "array", "items": { "type": "string" } }
+    },
+    "additionalProperties": true
+  }
+}
