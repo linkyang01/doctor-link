@@ -63,10 +63,14 @@ test -f DoctorReports/handoff-validation/handoff-manifest.json
 doctor-link view "$PACKAGE_DIR" --build-only >/dev/null
 test -f "$PACKAGE_DIR/.doctorlink-web/index.html"
 
-doctor-link diagnose before --project "Validation" --summary "before validation" --out DoctorReports >/dev/null
-BEFORE_PACKAGE=$(find DoctorReports -mindepth 1 -maxdepth 1 -type d | tail -n 1)
-doctor-link diagnose after --project "Validation" --summary "after validation" --before-package "$BEFORE_PACKAGE" --out DoctorReports >/dev/null
-AFTER_PACKAGE=$(find DoctorReports -mindepth 1 -maxdepth 1 -type d | tail -n 1)
+BEFORE_PACKAGE=$(doctor-link diagnose before --project "Validation" --summary "before validation" --out DoctorReports | awk -F': ' '/Created before package/ {print $2}')
+test -n "$BEFORE_PACKAGE"
+test -f "$BEFORE_PACKAGE/doctor-report.json"
+
+AFTER_PACKAGE=$(doctor-link diagnose after --project "Validation" --summary "after validation" --before-package "$BEFORE_PACKAGE" --out DoctorReports | awk -F': ' '/Created after package/ {print $2}')
+test -n "$AFTER_PACKAGE"
+test -f "$AFTER_PACKAGE/doctor-report.json"
+
 doctor-link diagnose compare "$AFTER_PACKAGE" --json >/dev/null
 doctor-link diagnose verify "$AFTER_PACKAGE" --json >/dev/null
 
