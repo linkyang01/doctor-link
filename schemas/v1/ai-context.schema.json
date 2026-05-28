@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://doctor-link.local/schemas/v1/ai-context.schema.json",
+  "title": "Doctor link AI Context",
+  "type": "object",
+  "required": ["event_id", "project", "evidence", "timeline", "user_assertions", "problem_map", "ai_task", "verification_checklist"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "event_id": { "type": "string" },
+    "project": { "type": "string" },
+    "summary": { "type": "string" },
+    "category": { "type": "string" },
+    "severity": { "type": "string" },
+    "status": { "type": "string" },
+    "evidence": { "type": "array", "items": { "type": "object" } },
+    "timeline": { "type": "array", "items": { "type": "object" } },
+    "user_assertions": { "type": "array", "items": { "type": "object" } },
+    "problem_map": { "type": "object" },
+    "ai_task": { "type": "object" },
+    "verification_checklist": { "type": "object" }
+  },
+  "additionalProperties": true
+}
