@@ -13,6 +13,7 @@ This file tracks phase-level project status. Detailed implementation tasks are t
 - [x] P4: Automated Diagnosis Pipeline
 - [x] P5: Productization and Release Readiness
 - [x] P5.9: Release hardening and usability validation
+- [ ] P5.10: Local validation hardening before P6 authorization
 - [ ] P6: Diagnostic Protocol Standardization and Ecosystem Platform
 
 ## Completed Phase Audits
@@ -33,10 +34,11 @@ This file tracks phase-level project status. Detailed implementation tasks are t
 - [x] Issue #18: P3 AI Coding collaboration layer
 - [x] Issue #19: P4 automated diagnosis pipeline
 - [x] Issue #20: P5 productization and release readiness
-- [x] Issue #71: P5.9 release hardening and usability validation, complete after closeout PR passes CI and merges
+- [x] Issue #71: P5.9 release hardening and usability validation
 
 ## Active / Future Tracking Issues
 
+- [ ] P5.10 local validation hardening before P6 authorization
 - [ ] Issue #22: P6 diagnostic protocol standardization and ecosystem platform
 
 ## Completed P4 Scope
@@ -61,6 +63,15 @@ This file tracks phase-level project status. Detailed implementation tasks are t
 - [x] Adapter and plugin documentation
 - [x] Draft release notes and release readiness audit
 - [x] P5.9 release hardening and usability validation
+
+## P5.10 Scope
+
+- [x] Keep feature development paused.
+- [x] Define local validation command sequence.
+- [x] Define expected validation artifacts.
+- [x] Define failure triage workflow.
+- [x] Define P6 authorization gate.
+- [ ] Record actual local validation run results.
 
 ## Deferred Decisions
 
