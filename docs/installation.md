@@ -301,12 +301,12 @@ Local validation is still recommended when you need to prove the project on a sp
 
 The following actions require separate explicit authorization:
 
-- Publishing to PyPI
-- Creating a GitHub Release
-- Creating a release tag
-- Changing repository permissions
-- Introducing paid cloud services
-- Introducing external account systems
-- Starting P6 implementation
+- Do not publish to PyPI without explicit authorization.
+- Do not create a GitHub Release without explicit authorization.
+- Do not tag a public release without explicit authorization.
+- Do not change repository permissions without explicit authorization.
+- Do not introduce paid cloud services without explicit authorization.
+- Do not introduce external account systems without explicit authorization.
+- Do not start P6 implementation without explicit authorization.
 
 This guide only covers local source installation, local package build, and local validation.
