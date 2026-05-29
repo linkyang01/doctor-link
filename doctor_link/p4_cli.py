@@ -6,6 +6,7 @@ from pathlib import Path
 import click
 
 from doctor_link.cli import main
+from doctor_link.core.conformance import run_conformance_suite, write_conformance_report
 from doctor_link.core.diagnosis_pipeline import run_diagnosis_compare, run_diagnosis_verify
 from doctor_link.core.diagnosis_workflow import create_after_package, create_before_package
 from doctor_link.core.project_health import write_project_health
@@ -172,6 +173,29 @@ def schema_validate(package_dir: Path, write_result: bool, json_output: bool) ->
         click.echo(f"Findings: {len(result.findings)}")
     if not result.valid:
         raise click.ClickException("Schema validation failed.")
+
+
+@main.group("conformance")
+def conformance_group() -> None:
+    """Run schema compatibility conformance suites."""
+
+
+@conformance_group.command("run")
+@click.argument("fixtures_root", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--out", "output", type=click.Path(file_okay=False, path_type=Path), default=Path("DoctorReports/conformance"), help="Output directory.")
+@click.option("--json", "json_output", is_flag=True, help="Print JSON output.")
+def conformance_run(fixtures_root: Path, output: Path, json_output: bool) -> None:
+    """Run a compatibility and conformance suite."""
+    report = run_conformance_suite(fixtures_root)
+    write_conformance_report(output, report)
+    if json_output:
+        click.echo(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+    else:
+        click.echo(f"Conformance status: {report.status}")
+        click.echo(f"Compatibility score: {report.compatibility_score}")
+        click.echo(f"Report: {output / 'conformance-report.md'}")
+    if report.status != "passed":
+        raise click.ClickException("Conformance suite failed.")
 
 
 @main.command("health")

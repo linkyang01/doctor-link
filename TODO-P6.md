@@ -7,9 +7,10 @@
 - P6 Issue: #22
 - Roadmap: `docs/roadmap/p6.md`
 - P6.1 Schema v1: `docs/p6-schema-v1.md`
+- P6.2 Conformance: `docs/p6-conformance.md`
 - Schema files: `schemas/v1/`
 
-P6 已从 P6.1 schema 标准化开始。当前仅完成 P6.1，不启动 Web 平台、云服务、账号体系、市场平台、Adapter SDK 或 Plugin SDK。
+P6 已从 P6.1 schema 标准化开始，并完成 P6.2 本地兼容性与一致性测试套件。当前不启动 Web 平台、云服务、账号体系、市场平台、Adapter SDK 或 Plugin SDK。
 
 ---
 
@@ -30,14 +31,14 @@ P6 已从 P6.1 schema 标准化开始。当前仅完成 P6.1，不启动 Web 平
 
 ## P6.2 Compatibility and conformance test suite
 
-- [ ] 定义 valid diagnostic package fixture set
-- [ ] 定义 invalid diagnostic package fixture set
-- [ ] 定义 backward compatibility fixture set
-- [ ] 定义 schema migration fixture set
-- [ ] 定义 conformance report format
-- [ ] 定义 compatibility score model
-- [ ] 规划 conformance tests CI
-- [ ] 编写 compatibility guarantees 文档
+- [x] 定义 valid diagnostic package fixture set
+- [x] 定义 invalid diagnostic package fixture set
+- [x] 定义 backward compatibility fixture set
+- [x] 定义 schema migration fixture set
+- [x] 定义 conformance report format
+- [x] 定义 compatibility score model
+- [x] 规划并接入 conformance tests CI
+- [x] 编写 compatibility guarantees 文档
 
 ## P6.3 Adapter SDK planning
 
@@ -142,5 +143,5 @@ P6 已从 P6.1 schema 标准化开始。当前仅完成 P6.1，不启动 Web 平
 - [ ] 增加 P6 compatibility review checklist
 - [ ] 更新 README.zh-CN.md 的 P6 roadmap summary
 - [ ] 更新 README.en.md 的 P6 roadmap summary
-- [ ] 获得明确授权后才启动 P6.2+ 实现开发
+- [ ] 获得明确授权后才启动 P6.3+ 实现开发
 - [ ] P6 Issue #22 全部完成后关闭
