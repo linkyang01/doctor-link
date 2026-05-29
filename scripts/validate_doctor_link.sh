@@ -24,6 +24,9 @@ test -n "$PACKAGE_DIR"
 test -f "$PACKAGE_DIR/doctor-report.json"
 test -f "$PACKAGE_DIR/summary.md"
 
+doctor-link schema validate "$PACKAGE_DIR" --write --json >/dev/null
+test -f "$PACKAGE_DIR/schema-validation-result.json"
+
 cp "$PACKAGE_DIR/doctor-report.json" DoctorReports/before-validation.json
 
 doctor-link collect "$PACKAGE_DIR" \
@@ -57,6 +60,8 @@ doctor-link compare DoctorReports/before-validation.json "$PACKAGE_DIR/doctor-re
 doctor-link verify "$PACKAGE_DIR" --write-back >/dev/null
 test -f "$PACKAGE_DIR/verification-result.json"
 
+doctor-link schema validate "$PACKAGE_DIR" --write --json >/dev/null
+
 doctor-link handoff "$PACKAGE_DIR" --tool codex --out DoctorReports/handoff-validation >/dev/null
 test -f DoctorReports/handoff-validation/handoff-manifest.json
 
@@ -67,12 +72,15 @@ BEFORE_PACKAGE=$(doctor-link diagnose before --project "Validation" --summary "b
 test -n "$BEFORE_PACKAGE"
 test -f "$BEFORE_PACKAGE/doctor-report.json"
 
+doctor-link schema validate "$BEFORE_PACKAGE" --write --json >/dev/null
+
 AFTER_PACKAGE=$(doctor-link diagnose after --project "Validation" --summary "after validation" --before-package "$BEFORE_PACKAGE" --out DoctorReports | awk -F': ' '/Created after package/ {print $2}')
 test -n "$AFTER_PACKAGE"
 test -f "$AFTER_PACKAGE/doctor-report.json"
 
 doctor-link diagnose compare "$AFTER_PACKAGE" --json >/dev/null
 doctor-link diagnose verify "$AFTER_PACKAGE" --json >/dev/null
+doctor-link schema validate "$AFTER_PACKAGE" --write --json >/dev/null
 
 doctor-link health DoctorReports --json >/dev/null
 test -f DoctorReports/project-health.json

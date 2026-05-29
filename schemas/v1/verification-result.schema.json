@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://doctor-link.local/schemas/v1/verification-result.schema.json",
+  "title": "Doctor link Verification Result",
+  "type": "object",
+  "required": ["package_dir", "status", "missing_evidence", "tests_to_rerun", "next_commands", "notes"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "package_dir": { "type": "string" },
+    "generated_at": { "type": "string" },
+    "status": { "type": "string" },
+    "summary": { "type": "string" },
+    "missing_evidence": { "type": "array", "items": { "type": "string" } },
+    "tests_to_rerun": { "type": "array", "items": { "type": "string" } },
+    "next_commands": { "type": "array", "items": { "type": "string" } },
+    "checklist_present": { "type": "boolean" },
+    "user_assertion_count": { "type": "integer" },
+    "test_record_count": { "type": "integer" },
+    "assertion_test_coverage": { "type": "array", "items": { "type": "object" } },
+    "notes": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

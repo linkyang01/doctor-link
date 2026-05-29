@@ -22,6 +22,9 @@ test -n "$PACKAGE_DIR"
 test -f "$PACKAGE_DIR/doctor-report.json"
 test -f "$PACKAGE_DIR/summary.md"
 
+doctor-link schema validate "$PACKAGE_DIR" --write --json > "$ROOT_DIR/schema-validation-initial.json"
+test -f "$PACKAGE_DIR/schema-validation-result.json"
+
 doctor-link env --project-root . --out "$ROOT_DIR/environment.json"
 
 doctor-link collect "$PACKAGE_DIR" \
@@ -47,6 +50,8 @@ doctor-link record "$PACKAGE_DIR" \
 doctor-link verify "$PACKAGE_DIR" --write-back >/dev/null
 test -f "$PACKAGE_DIR/verification-result.json"
 
+doctor-link schema validate "$PACKAGE_DIR" --write --json > "$ROOT_DIR/schema-validation-final.json"
+
 doctor-link handoff "$PACKAGE_DIR" --tool generic --out "$ROOT_DIR/handoff" >/dev/null
 test -f "$ROOT_DIR/handoff/handoff-manifest.json"
 
@@ -61,7 +66,7 @@ cat > "$ROOT_DIR/self-validation-summary.md" <<'SUMMARY'
 
 Result: success
 
-Doctor link successfully diagnosed its own repository by scanning the source package, generating a diagnostic package, collecting evidence, recording a user assertion, recording a validation result, writing verification output, creating an AI handoff package, building a local web view, and generating a project health summary.
+Doctor link successfully diagnosed its own repository by scanning the source package, generating a diagnostic package, validating schema compatibility, collecting evidence, recording a user assertion, recording a validation result, writing verification output, creating an AI handoff package, building a local web view, and generating a project health summary.
 SUMMARY
 
 echo "Doctor link self-validation completed successfully."

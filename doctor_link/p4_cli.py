@@ -10,6 +10,7 @@ from doctor_link.core.diagnosis_pipeline import run_diagnosis_compare, run_diagn
 from doctor_link.core.diagnosis_workflow import create_after_package, create_before_package
 from doctor_link.core.project_health import write_project_health
 from doctor_link.core.reproduction import load_reproduction_catalog, run_reproduction
+from doctor_link.core.schema_validator import validate_diagnostic_package, write_schema_validation_result
 from doctor_link.core.test_matrix_runner import load_test_matrix, run_test_matrix
 
 
@@ -147,6 +148,30 @@ def diagnose_verify(after_package: Path, no_write_back: bool, json_output: bool)
     click.echo(f"Verification status: {summary.verification_status}")
     click.echo(f"Pipeline success: {summary.success}")
     click.echo(f"Summary: {after_package / 'diagnosis-pipeline-summary.md'}")
+
+
+@main.group("schema")
+def schema_group() -> None:
+    """Validate diagnostic package schema compatibility."""
+
+
+@schema_group.command("validate")
+@click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--write", "write_result", is_flag=True, help="Write schema-validation-result files into the package.")
+@click.option("--json", "json_output", is_flag=True, help="Print JSON output.")
+def schema_validate(package_dir: Path, write_result: bool, json_output: bool) -> None:
+    """Validate a diagnostic package against Doctor link schema v1 policy."""
+    result = validate_diagnostic_package(package_dir)
+    if write_result:
+        write_schema_validation_result(package_dir, result)
+    if json_output:
+        click.echo(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+    else:
+        click.echo(f"Schema validation status: {result.status}")
+        click.echo(f"Checked files: {len(result.checked_files)}")
+        click.echo(f"Findings: {len(result.findings)}")
+    if not result.valid:
+        raise click.ClickException("Schema validation failed.")
 
 
 @main.command("health")

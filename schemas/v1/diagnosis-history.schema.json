@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://doctor-link.local/schemas/v1/diagnosis-history.schema.json",
+  "title": "Doctor link Diagnosis History",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["round_id"],
+    "properties": {
+      "round_id": { "type": "string" },
+      "ai_pass": { "type": "string" },
+      "user_correction": { "type": "string" },
+      "evidence_added": { "type": "array", "items": { "type": "string" } },
+      "verification_attempt": { "type": "string" }
+    },
+    "additionalProperties": true
+  }
+}

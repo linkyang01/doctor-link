@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://doctor-link.local/schemas/v1/handoff-manifest.schema.json",
+  "title": "Doctor link Handoff Manifest",
+  "type": "object",
+  "required": ["tool", "source_package", "instruction_file", "included_files", "missing_files"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "tool": { "type": "string" },
+    "display_name": { "type": "string" },
+    "source_package": { "type": "string" },
+    "instruction_file": { "type": "string" },
+    "included_files": { "type": "array", "items": { "type": "string" } },
+    "missing_files": { "type": "array", "items": { "type": "string" } },
+    "notes": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

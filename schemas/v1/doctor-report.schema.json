@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://doctor-link.local/schemas/v1/doctor-report.schema.json",
+  "title": "Doctor link Doctor Report",
+  "type": "object",
+  "required": ["event_id", "project", "timeline", "evidence", "user_assertions", "problem_map", "ai_task", "verification_checklist", "status"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "event_id": { "type": "string" },
+    "project": { "type": "string" },
+    "adapter": { "type": "string" },
+    "occurred_at": { "type": "string" },
+    "severity": { "type": "string" },
+    "category": { "type": "string" },
+    "summary": { "type": "string" },
+    "environment": { "type": "object" },
+    "timeline": { "type": "array", "items": { "type": "object" } },
+    "evidence": { "type": "array", "items": { "type": "object" } },
+    "reproduce_steps": { "type": "array", "items": { "type": "string" } },
+    "user_assertions": { "type": "array", "items": { "type": "object" } },
+    "problem_map": { "type": "object" },
+    "ai_task": { "type": "object" },
+    "verification_checklist": { "type": "object" },
+    "status": { "type": "string" }
+  },
+  "additionalProperties": true
+}
