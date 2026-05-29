@@ -27,6 +27,16 @@ test -f "$PACKAGE_DIR/summary.md"
 doctor-link schema validate "$PACKAGE_DIR" --write --json >/dev/null
 test -f "$PACKAGE_DIR/schema-validation-result.json"
 
+mkdir -p ConformanceFixtures/valid ConformanceFixtures/invalid ConformanceFixtures/backward-compatible ConformanceFixtures/migration
+cp -R "$PACKAGE_DIR" ConformanceFixtures/valid/generated-valid
+cp -R "$PACKAGE_DIR" ConformanceFixtures/backward-compatible/generated-legacy
+cp -R "$PACKAGE_DIR" ConformanceFixtures/migration/generated-migration
+cp -R "$PACKAGE_DIR" ConformanceFixtures/invalid/generated-invalid
+rm -f ConformanceFixtures/invalid/generated-invalid/doctor-report.json
+
+doctor-link conformance run ConformanceFixtures --out DoctorReports/conformance --json >/dev/null
+test -f DoctorReports/conformance/conformance-report.json
+
 cp "$PACKAGE_DIR/doctor-report.json" DoctorReports/before-validation.json
 
 doctor-link collect "$PACKAGE_DIR" \
