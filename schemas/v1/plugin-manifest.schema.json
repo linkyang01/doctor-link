@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://doctor-link.local/schemas/v1/plugin-manifest.schema.json",
+  "title": "Doctor link Plugin Manifest",
+  "type": "object",
+  "required": [
+    "plugin_id",
+    "name",
+    "version",
+    "kind",
+    "capabilities",
+    "entrypoints",
+    "permissions",
+    "supported_schema_versions",
+    "security"
+  ],
+  "properties": {
+    "plugin_id": { "type": "string" },
+    "name": { "type": "string" },
+    "version": { "type": "string" },
+    "kind": { "type": "string" },
+    "description": { "type": "string" },
+    "capabilities": {
+      "type": "object",
+      "properties": {
+        "collector": { "type": "boolean" },
+        "renderer": { "type": "boolean" },
+        "handoff": { "type": "boolean" },
+        "verification": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "entrypoints": {
+      "type": "object",
+      "properties": {
+        "collect": { "type": "string" },
+        "render": { "type": "string" },
+        "handoff": { "type": "string" },
+        "verify": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "permissions": {
+      "type": "object",
+      "properties": {
+        "read_package": { "type": "boolean" },
+        "write_package": { "type": "boolean" },
+        "read_project": { "type": "boolean" },
+        "run_local_command": { "type": "boolean" },
+        "network_access": { "type": "boolean" },
+        "export_files": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "supported_schema_versions": { "type": "array", "items": { "type": "string" } },
+    "security": {
+      "type": "object",
+      "properties": {
+        "local_only": { "type": "boolean" },
+        "requires_user_approval": { "type": "boolean" },
+        "network_required": { "type": "boolean" },
+        "redaction_required": { "type": "boolean" },
+        "security_notes": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "minimum_doctor_link_version": { "type": "string" },
+    "requirements": { "type": "array", "items": { "type": "string" } },
+    "limitations": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}
