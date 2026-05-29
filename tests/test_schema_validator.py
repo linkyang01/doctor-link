@@ -22,6 +22,7 @@ SCHEMA_FILES = [
     "manifest.schema.json",
     "adapter-manifest.schema.json",
     "plugin-manifest.schema.json",
+    "ai-tool-integration.schema.json",
 ]
 
 
