@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://doctor-link.local/schemas/v1/integrity-manifest.schema.json",
+  "title": "Doctor link Integrity Manifest",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "package_id",
+    "created_at",
+    "hash_algorithm",
+    "hash_scope",
+    "files",
+    "missing_files",
+    "signature",
+    "verification"
+  ],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "package_id": { "type": "string" },
+    "created_at": { "type": "string" },
+    "hash_algorithm": { "type": "string" },
+    "hash_scope": { "type": "array", "items": { "type": "string" } },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "size_bytes", "sha256", "required"],
+        "properties": {
+          "path": { "type": "string" },
+          "size_bytes": { "type": "integer" },
+          "sha256": { "type": "string" },
+          "required": { "type": "boolean" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "missing_files": { "type": "array", "items": { "type": "string" } },
+    "signature": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": { "type": "string" },
+        "signature_id": { "type": "string" },
+        "signature_algorithm": { "type": "string" },
+        "signed_at": { "type": "string" },
+        "signer": { "type": "string" },
+        "key_id": { "type": "string" },
+        "signature_value": { "type": "string" },
+        "signed_manifest_hash": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "verification": {
+      "type": "object",
+      "properties": {
+        "status": { "type": "string" },
+        "checked_at": { "type": "string" },
+        "findings": { "type": "array", "items": { "type": "object" } }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}
