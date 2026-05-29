@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://doctor-link.local/schemas/v1/ai-tool-integration.schema.json",
+  "title": "Doctor link AI Tool Integration Manifest",
+  "type": "object",
+  "required": [
+    "integration_id",
+    "name",
+    "target_tool",
+    "version",
+    "handoff_protocol",
+    "supported_schema_versions",
+    "minimum_tool_capabilities",
+    "unsupported_behavior",
+    "privacy"
+  ],
+  "properties": {
+    "integration_id": { "type": "string" },
+    "name": { "type": "string" },
+    "target_tool": { "type": "string" },
+    "version": { "type": "string" },
+    "description": { "type": "string" },
+    "handoff_protocol": { "type": "string" },
+    "supported_schema_versions": { "type": "array", "items": { "type": "string" } },
+    "minimum_tool_capabilities": {
+      "type": "object",
+      "properties": {
+        "read_file_context": { "type": "boolean" },
+        "multi_file_context": { "type": "boolean" },
+        "structured_instructions": { "type": "boolean" },
+        "test_command_execution": { "type": "boolean" },
+        "patch_generation": { "type": "boolean" },
+        "human_review_loop": { "type": "boolean" },
+        "local_only_mode": { "type": "boolean" },
+        "network_required": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "unsupported_behavior": {
+      "type": "object",
+      "properties": {
+        "reduced_handoff_allowed": { "type": "boolean" },
+        "warn_on_missing_evidence": { "type": "boolean" },
+        "warn_on_network_required": { "type": "boolean" },
+        "refuse_when_unsafe": { "type": "boolean" },
+        "notes": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "privacy": {
+      "type": "object",
+      "properties": {
+        "local_only_supported": { "type": "boolean" },
+        "external_service_possible": { "type": "boolean" },
+        "redaction_required": { "type": "boolean" },
+        "privacy_notes": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "examples": { "type": "array", "items": { "type": "string" } },
+    "limitations": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}
