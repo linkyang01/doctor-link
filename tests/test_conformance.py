@@ -14,11 +14,11 @@ from doctor_link.p4_cli import main
 
 def test_conformance_suite_scores_expected_cases(tmp_path: Path) -> None:
     fixtures = tmp_path / "fixtures"
-    valid_package = _generated_package(fixtures / "valid", "valid-case")
+    _generated_package(fixtures / "valid", "valid-case")
     backward_package = _generated_package(fixtures / "backward-compatible", "legacy-case")
     _remove_schema_version(backward_package / "doctor-report.json")
     _remove_schema_version(backward_package / "ai-context.json")
-    migration_package = _generated_package(fixtures / "migration", "migration-case")
+    _generated_package(fixtures / "migration", "migration-case")
     invalid_package = _generated_package(fixtures / "invalid", "invalid-case")
     (invalid_package / "doctor-report.json").unlink()
 
