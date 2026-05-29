@@ -21,6 +21,7 @@ SCHEMA_FILES = [
     "diagnosis-history.schema.json",
     "manifest.schema.json",
     "adapter-manifest.schema.json",
+    "plugin-manifest.schema.json",
 ]
 
 
