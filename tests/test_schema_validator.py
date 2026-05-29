@@ -20,6 +20,7 @@ SCHEMA_FILES = [
     "ai-repair-result.schema.json",
     "diagnosis-history.schema.json",
     "manifest.schema.json",
+    "adapter-manifest.schema.json",
 ]
 
 

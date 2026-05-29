@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://doctor-link.local/schemas/v1/adapter-manifest.schema.json",
+  "title": "Doctor link Adapter Manifest",
+  "type": "object",
+  "required": [
+    "adapter_id",
+    "name",
+    "version",
+    "target",
+    "capabilities",
+    "entrypoints",
+    "supported_schema_versions",
+    "privacy"
+  ],
+  "properties": {
+    "adapter_id": { "type": "string" },
+    "name": { "type": "string" },
+    "version": { "type": "string" },
+    "description": { "type": "string" },
+    "target": { "type": "string" },
+    "capabilities": {
+      "type": "object",
+      "properties": {
+        "evidence_collection": { "type": "boolean" },
+        "reproduction": { "type": "boolean" },
+        "verification": { "type": "boolean" },
+        "handoff": { "type": "boolean" },
+        "redaction": { "type": "boolean" },
+        "project_health": { "type": "boolean" },
+        "schema_validation": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "entrypoints": {
+      "type": "object",
+      "properties": {
+        "collect": { "type": "string" },
+        "verify": { "type": "string" },
+        "handoff": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "supported_schema_versions": { "type": "array", "items": { "type": "string" } },
+    "privacy": {
+      "type": "object",
+      "properties": {
+        "local_only": { "type": "boolean" },
+        "network_required": { "type": "boolean" },
+        "redaction_required": { "type": "boolean" },
+        "sensitive_data_notes": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "minimum_doctor_link_version": { "type": "string" },
+    "requirements": { "type": "array", "items": { "type": "string" } },
+    "limitations": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}
