@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://doctor-link.local/schemas/v1/plugin-manifest.schema.json",
+  "title": "Doctor link Plugin Manifest",
+  "type": "object",
+  "required": [
+    "plugin_id",
+    "name",
+    "version",
+    "kind",
+    "extension_points",
+    "permissions",
+    "supported_schema_versions",
+    "entrypoints",
+    "compatibility",
+    "security"
+  ],
+  "properties": {
+    "plugin_id": { "type": "string" },
+    "name": { "type": "string" },
+    "version": { "type": "string" },
+    "description": { "type": "string" },
+    "kind": { "type": "string" },
+    "extension_points": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["collector", "renderer", "handoff", "verification"]
+      }
+    },
+    "permissions": {
+      "type": "object",
+      "properties": {
+        "read_package": { "type": "boolean" },
+        "write_package": { "type": "boolean" },
+        "read_project": { "type": "boolean" },
+        "write_project": { "type": "boolean" },
+        "network": { "type": "boolean" },
+        "execute_command": { "type": "boolean" },
+        "render_output": { "type": "boolean" },
+        "export_package": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "supported_schema_versions": { "type": "array", "items": { "type": "string" } },
+    "entrypoints": {
+      "type": "object",
+      "properties": {
+        "collect": { "type": "string" },
+        "render": { "type": "string" },
+        "handoff": { "type": "string" },
+        "verify": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "compatibility": {
+      "type": "object",
+      "properties": {
+        "minimum_doctor_link_version": { "type": "string" },
+        "requires_conformance": { "type": "boolean" },
+        "unsupported_behavior": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "security": {
+      "type": "object",
+      "properties": {
+        "local_only": { "type": "boolean" },
+        "network_required": { "type": "boolean" },
+        "redaction_required": { "type": "boolean" },
+        "sandbox_required": { "type": "boolean" },
+        "security_notes": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "requirements": { "type": "array", "items": { "type": "string" } },
+    "limitations": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}
