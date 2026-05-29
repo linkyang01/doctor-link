@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://doctor-link.local/schemas/v1/ai-repair-result.schema.json",
+  "title": "Doctor link AI Repair Result",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["result_id", "summary", "verified"],
+    "properties": {
+      "result_id": { "type": "string" },
+      "summary": { "type": "string" },
+      "claimed_fix": { "type": "string" },
+      "files_changed": { "type": "array", "items": { "type": "string" } },
+      "evidence_used": { "type": "array", "items": { "type": "string" } },
+      "related_assertion_ids": { "type": "array", "items": { "type": "string" } },
+      "verification_steps": { "type": "array", "items": { "type": "string" } },
+      "risks": { "type": "array", "items": { "type": "string" } },
+      "assumptions": { "type": "array", "items": { "type": "string" } },
+      "verified": { "type": "boolean" }
+    },
+    "additionalProperties": true
+  }
+}
