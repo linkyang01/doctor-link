@@ -60,9 +60,7 @@ class ConformanceReport:
         if not self.results:
             lines.append("- No conformance cases found.")
         for item in self.results:
-            lines.append(
-                f"- `{item.group}/{item.case_id}`: passed=`{item.passed}`, expected_valid=`{item.expected_valid}`, actual_valid=`{item.actual_valid}`, errors=`{item.error_count}`, warnings=`{item.warning_count}`"
-            )
+            lines.append(_case_line(item))
         lines.append("")
         return "\n".join(lines)
 
@@ -94,18 +92,29 @@ def run_conformance_suite(fixtures_root: Path) -> ConformanceReport:
     report.total_cases = len(report.results)
     report.passed_cases = sum(1 for item in report.results if item.passed)
     report.failed_cases = report.total_cases - report.passed_cases
-    report.compatibility_score = round((report.passed_cases / report.total_cases) * 100, 2) if report.total_cases else 0.0
+    if report.total_cases:
+        report.compatibility_score = round((report.passed_cases / report.total_cases) * 100, 2)
+    else:
+        report.compatibility_score = 0.0
     report.status = "passed" if report.failed_cases == 0 and report.total_cases > 0 else "failed"
     return report
 
 
 def write_conformance_report(output_dir: Path, report: ConformanceReport) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
-    (output_dir / "conformance-report.json").write_text(json.dumps(report.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
+    (output_dir / "conformance-report.json").write_text(
+        json.dumps(report.to_dict(), ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
     (output_dir / "conformance-report.md").write_text(report.to_markdown(), encoding="utf-8")
 
 
-def _case_result(group: str, package_dir: Path, expected_valid: bool, validation: SchemaValidationResult) -> ConformanceCaseResult:
+def _case_result(
+    group: str,
+    package_dir: Path,
+    expected_valid: bool,
+    validation: SchemaValidationResult,
+) -> ConformanceCaseResult:
     error_count = sum(1 for item in validation.findings if item.level == "error")
     warning_count = sum(1 for item in validation.findings if item.level == "warning")
     actual_valid = validation.valid
@@ -118,4 +127,15 @@ def _case_result(group: str, package_dir: Path, expected_valid: bool, validation
         passed=actual_valid == expected_valid,
         error_count=error_count,
         warning_count=warning_count,
+    )
+
+
+def _case_line(item: ConformanceCaseResult) -> str:
+    return (
+        f"- `{item.group}/{item.case_id}`: "
+        f"passed=`{item.passed}`, "
+        f"expected_valid=`{item.expected_valid}`, "
+        f"actual_valid=`{item.actual_valid}`, "
+        f"errors=`{item.error_count}`, "
+        f"warnings=`{item.warning_count}`"
     )
