@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://doctor-link.local/schemas/v1/manifest.schema.json",
+  "title": "Doctor link Package Manifest",
+  "type": "object",
+  "required": ["package_id", "schema_version", "files"],
+  "properties": {
+    "package_id": { "type": "string" },
+    "schema_version": { "type": "string" },
+    "created_at": { "type": "string" },
+    "files": { "type": "array", "items": { "type": "string" } },
+    "integrity": { "type": "object" },
+    "signature": { "type": "object" }
+  },
+  "additionalProperties": true
+}
