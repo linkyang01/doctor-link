@@ -5,10 +5,32 @@ from pathlib import Path
 
 from click.testing import CliRunner
 
-from doctor_link.core.package_builder import build_diagnostic_package
 from doctor_link.core.models import DiagnosticEvent
+from doctor_link.core.package_builder import build_diagnostic_package
 from doctor_link.core.schema_validator import validate_diagnostic_package
 from doctor_link.p4_cli import main
+
+
+SCHEMA_FILES = [
+    "doctor-report.schema.json",
+    "ai-context.schema.json",
+    "user-assertions.schema.json",
+    "verification-result.schema.json",
+    "handoff-manifest.schema.json",
+    "ai-repair-result.schema.json",
+    "diagnosis-history.schema.json",
+    "manifest.schema.json",
+]
+
+
+def test_schema_file_set_exists() -> None:
+    schema_dir = Path("schemas/v1")
+    for filename in SCHEMA_FILES:
+        path = schema_dir / filename
+        assert path.exists(), filename
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        assert payload["$schema"] == "https://json-schema.org/draft/2020-12/schema"
+        assert payload["type"] in {"object", "array"}
 
 
 def test_schema_validator_accepts_generated_package(tmp_path: Path) -> None:
