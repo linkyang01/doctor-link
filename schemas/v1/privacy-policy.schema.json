@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://doctor-link.local/schemas/v1/privacy-policy.schema.json",
+  "title": "Doctor link Privacy Policy",
+  "type": "object",
+  "required": [
+    "policy_id",
+    "privacy_level",
+    "evidence_sensitivity_levels",
+    "redaction_level",
+    "export_safety_level",
+    "sharing_policy",
+    "handoff_warnings",
+    "preview_restrictions"
+  ],
+  "properties": {
+    "policy_id": { "type": "string" },
+    "privacy_level": { "type": "string", "enum": ["public", "internal", "confidential", "restricted"] },
+    "evidence_sensitivity_levels": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["low", "medium", "high", "critical"] }
+    },
+    "redaction_level": { "type": "string", "enum": ["none", "standard", "strict", "locked"] },
+    "export_safety_level": { "type": "string", "enum": ["safe", "review_required", "blocked"] },
+    "sharing_policy": {
+      "type": "object",
+      "properties": {
+        "allowed_recipients": { "type": "array", "items": { "type": "string" } },
+        "allowed_destinations": { "type": "array", "items": { "type": "string" } },
+        "redaction_required": { "type": "boolean" },
+        "review_required": { "type": "boolean" },
+        "retention_days": { "type": "integer" },
+        "external_handoff_allowed": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "handoff_warnings": { "type": "array", "items": { "type": "string" } },
+    "preview_restrictions": { "type": "array", "items": { "type": "string" } },
+    "documentation_requirements": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}
