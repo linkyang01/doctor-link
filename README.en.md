@@ -52,6 +52,8 @@ doctor-link diagnose before --project "Demo" --summary "before issue" --out Doct
 doctor-link diagnose after --project "Demo" --summary "after fix" --before-package <before_package> --out DoctorReports
 doctor-link diagnose compare <after_package> --json
 doctor-link diagnose verify <after_package> --json
+doctor-link schema validate <package_dir> --write --json
+doctor-link conformance run <fixtures_root> --out DoctorReports/conformance --json
 doctor-link health DoctorReports --json
 ```
 
@@ -73,6 +75,17 @@ Key user and product documents:
 - `docs/e2e-validation.md`
 - `docs/p5.9-final-audit.md`
 - `docs/p5.10-local-validation.md`
+- `docs/p6-schema-v1.md`
+- `docs/p6-conformance.md`
+- `docs/p6-adapter-sdk.md`
+- `docs/p6-plugin-sdk.md`
+- `docs/p6-ai-coding-integrations.md`
+- `docs/p6-signing-integrity.md`
+- `docs/p6-privacy-security.md`
+- `docs/p6-enterprise-governance.md`
+- `docs/p6-diagnostic-knowledge-base.md`
+- `docs/p6-public-ecosystem-assets.md`
+- `docs/p6-quality-closure.md`
 
 ## P1 / P1+: Evidence and Verification Loop
 
@@ -154,32 +167,31 @@ bash scripts/validate_doctor_link.sh
 bash scripts/e2e_validate.sh "$(pwd)"
 ```
 
-P5.9 does not publish a GitHub Release, create a release tag, publish to PyPI, change repository permissions, introduce paid cloud services or external account systems, or start P6 implementation.
+## P5.10: Validation Hardening before P6 Authorization
 
-## P5.10: Local Validation Hardening before P6 Authorization
+P5.10 has established the full validation gate and has passed GitHub Actions cloud validation and Doctor link self-validation.
 
-P5.10 has established the local full-validation gate, but the actual local run result has not been recorded yet.
+Local target-environment validation remains optional when Doctor link must be proven on a specific Mac, workstation, or delivery environment.
 
-P5.10 validates the current repository from a clean local environment before any P6 authorization discussion. It covers static checks, test coverage, package build, wheel installation, usability validation, and E2E validation.
+## P6: Diagnostic Protocol Standardization and Ecosystem Specifications
 
-Local validation entrypoint:
+P6 has completed P6.1-P6.11 as planning, schema, specification, compatibility, ecosystem asset, and quality-closure documentation.
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -e .
-python -m pip install pytest pytest-cov build ruff
-ruff check doctor_link tests scripts
-pytest -q --cov=doctor_link --cov-report=term-missing --cov-report=xml
-python -m build
-bash scripts/validate_doctor_link.sh
-bash scripts/e2e_validate.sh "$(pwd)"
-```
+Completed:
 
-After validation completes, record the actual run date, machine / OS, Python version, commit SHA, branch, and result in `docs/p5.10-local-validation.md`.
+- P6.1 Diagnostic Package Schema v1;
+- P6.2 Compatibility and conformance test suite;
+- P6.3 Adapter SDK planning;
+- P6.4 Plugin SDK planning;
+- P6.5 Third-party AI Coding integration specification;
+- P6.6 Diagnostic package signing and integrity;
+- P6.7 Privacy and security level specification;
+- P6.8 Enterprise archive and governance model;
+- P6.9 Cross-project diagnostic knowledge base;
+- P6.10 Public ecosystem assets;
+- P6.11 P6 quality and closure.
 
-P5.10 does not add product features, publish a GitHub Release, create a release tag, publish to PyPI, change repository permissions, introduce paid cloud services or external account systems, or start P6 implementation.
+P6 is currently a specification and schema closure. It does not mean Doctor link has implemented a Web platform, cloud service, account system, marketplace, live third-party integrations, real signing, real permission system, enterprise archive system, real knowledge base service, Adapter SDK runtime, or Plugin SDK runtime.
 
 ## Project Configuration
 
@@ -201,25 +213,20 @@ CLI options override configuration files.
 
 ## Current Status
 
-Doctor link has completed:
+Doctor link has completed the P0-P5.10 mainline product capabilities and P6.1-P6.11 planning/specification closure.
 
-- P0: Diagnostic Foundation;
-- P1: Evidence Collection Primitives;
-- P1+: CLI Evidence Pipeline;
-- P2: Local Read-only Diagnostic Workbench;
-- P2+: Mainline Diagnostic Workbench Enhancements;
-- P3: AI Coding Collaboration Layer;
-- P4: Automated Diagnosis Pipeline;
-- P5: Productization and Release Readiness;
-- P5.9: Release Hardening and Usability Validation.
+Not performed:
 
-Doctor link still needs:
-
-- P5.10: Local Validation Hardening before P6 Authorization, pending recorded local validation results;
-- P6: Diagnostic Protocol Standardization and Ecosystem Platform, not started.
-
-P6 implementation requires separate explicit authorization. Do not start P6 until P5.10 local validation results are recorded.
+- GitHub Release;
+- release tag;
+- PyPI publishing;
+- Web platform;
+- cloud service;
+- account system;
+- marketplace;
+- Adapter SDK runtime;
+- Plugin SDK runtime.
 
 ## Boundaries
 
-The following require separate explicit authorization: publishing a version, creating a GitHub Release, publishing to PyPI, changing repository permissions, adding paid cloud services, adding external account systems, changing Doctor link's core positioning, making the local read-only Web UI write back by default, or starting P6 implementation.
+The following require separate explicit authorization: publishing a version, creating a GitHub Release, publishing to PyPI, changing repository permissions, adding paid cloud services, adding external account systems, changing Doctor link's core positioning, making the local read-only Web UI write back by default, implementing runtime SDKs, or implementing live third-party integrations.
