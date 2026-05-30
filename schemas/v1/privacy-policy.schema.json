@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://doctor-link.local/schemas/v1/privacy-policy.schema.json",
+  "title": "Doctor link Privacy Policy",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "policy_id",
+    "package_privacy_level",
+    "evidence_sensitivity_levels",
+    "redaction_level",
+    "export_safety_level",
+    "enterprise_sharing",
+    "external_handoff_warnings",
+    "sensitive_preview",
+    "documentation"
+  ],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "policy_id": { "type": "string" },
+    "package_privacy_level": { "type": "string" },
+    "evidence_sensitivity_levels": { "type": "array", "items": { "type": "string" } },
+    "redaction_level": { "type": "string" },
+    "export_safety_level": { "type": "string" },
+    "enterprise_sharing": {
+      "type": "object",
+      "required": ["requires_reviewer_approval", "allowed_handoff_targets"],
+      "properties": {
+        "allowed_privacy_levels": { "type": "array", "items": { "type": "string" } },
+        "allowed_export_levels": { "type": "array", "items": { "type": "string" } },
+        "required_redaction_level": { "type": "string" },
+        "requires_reviewer_approval": { "type": "boolean" },
+        "allowed_handoff_targets": { "type": "array", "items": { "type": "string" } },
+        "retention_days": { "type": "integer" },
+        "audit_required": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "external_handoff_warnings": { "type": "array", "items": { "type": "string" } },
+    "sensitive_preview": {
+      "type": "object",
+      "properties": {
+        "default_preview": { "type": "string" },
+        "requires_confirmation_for_high": { "type": "boolean" },
+        "requires_confirmation_for_critical": { "type": "boolean" },
+        "show_redaction_status": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "documentation": {
+      "type": "object",
+      "properties": {
+        "privacy_level_documented": { "type": "boolean" },
+        "sensitivity_summary_documented": { "type": "boolean" },
+        "redaction_level_documented": { "type": "boolean" },
+        "export_safety_documented": { "type": "boolean" },
+        "handoff_warnings_documented": { "type": "boolean" },
+        "reviewer_approval_documented": { "type": "boolean" },
+        "limitations_documented": { "type": "boolean" },
+        "retention_documented": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}
