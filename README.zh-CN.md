@@ -130,7 +130,7 @@ P4 已完成本地自动化诊断流水线能力：
 
 当验证证据缺失时，pipeline success 保持 false，不会误判为成功。
 
-## P5：产品化与发布准备
+## P5：Productization and Release Readiness
 
 P5 已完成产品化和发布准备，但没有执行发布：
 
