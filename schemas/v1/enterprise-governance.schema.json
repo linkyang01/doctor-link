@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://doctor-link.local/schemas/v1/enterprise-governance.schema.json",
+  "title": "Doctor link Enterprise Governance Policy",
+  "type": "object",
+  "required": [
+    "policy_id",
+    "retention_policy",
+    "archive_metadata",
+    "audit_trail",
+    "reviewer_roles",
+    "approval_states",
+    "export_policy",
+    "deletion_boundaries"
+  ],
+  "properties": {
+    "policy_id": { "type": "string" },
+    "retention_policy": {
+      "type": "object",
+      "required": ["retention_days", "archive_required", "review_required", "delete_after_expiry"],
+      "properties": {
+        "package_privacy_level": { "type": "string" },
+        "retention_days": { "type": "integer" },
+        "archive_required": { "type": "boolean" },
+        "review_required": { "type": "boolean" },
+        "legal_hold_allowed": { "type": "boolean" },
+        "delete_after_expiry": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "archive_metadata": {
+      "type": "object",
+      "properties": {
+        "archive_id": { "type": "string" },
+        "package_id": { "type": "string" },
+        "project": { "type": "string" },
+        "privacy_level": { "type": "string" },
+        "retention_policy_id": { "type": "string" },
+        "storage_location": { "type": "string" },
+        "checksum": { "type": "string" },
+        "status": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "audit_trail": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["event_id", "event_type", "occurred_at"],
+        "properties": {
+          "event_id": { "type": "string" },
+          "event_type": { "type": "string" },
+          "actor": { "type": "string" },
+          "occurred_at": { "type": "string" },
+          "package_id": { "type": "string" },
+          "summary": { "type": "string" },
+          "related_files": { "type": "array", "items": { "type": "string" } }
+        },
+        "additionalProperties": true
+      }
+    },
+    "reviewer_roles": { "type": "array", "items": { "type": "string" } },
+    "approval_states": { "type": "array", "items": { "type": "string" } },
+    "export_policy": {
+      "type": "object",
+      "properties": {
+        "allowed_privacy_levels": { "type": "array", "items": { "type": "string" } },
+        "allowed_destinations": { "type": "array", "items": { "type": "string" } },
+        "review_required": { "type": "boolean" },
+        "redaction_required": { "type": "boolean" },
+        "signature_required": { "type": "boolean" },
+        "external_handoff_allowed": { "type": "boolean" },
+        "retention_policy_id": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "deletion_boundaries": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}
