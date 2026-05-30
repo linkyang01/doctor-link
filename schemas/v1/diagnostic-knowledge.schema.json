@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://doctor-link.local/schemas/v1/diagnostic-knowledge.schema.json",
+  "title": "Doctor link Diagnostic Knowledge Export",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "export_id",
+    "created_at",
+    "source_scope",
+    "problem_taxonomy",
+    "reproduction_patterns",
+    "verification_patterns",
+    "repair_outcomes",
+    "recurring_failure_signatures",
+    "metrics",
+    "privacy_boundaries"
+  ],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "export_id": { "type": "string" },
+    "created_at": { "type": "string" },
+    "source_scope": { "type": "string" },
+    "problem_taxonomy": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["problem_id", "category", "summary"],
+        "properties": {
+          "problem_id": { "type": "string" },
+          "category": { "type": "string" },
+          "summary": { "type": "string" },
+          "symptoms": { "type": "array", "items": { "type": "string" } },
+          "affected_components": { "type": "array", "items": { "type": "string" } },
+          "severity": { "type": "string" },
+          "confidence": { "type": "number" },
+          "source_package_ids": { "type": "array", "items": { "type": "string" } }
+        },
+        "additionalProperties": true
+      }
+    },
+    "reproduction_patterns": { "type": "array", "items": { "type": "object" } },
+    "verification_patterns": { "type": "array", "items": { "type": "object" } },
+    "repair_outcomes": { "type": "array", "items": { "type": "object" } },
+    "recurring_failure_signatures": { "type": "array", "items": { "type": "object" } },
+    "metrics": {
+      "type": "object",
+      "properties": {
+        "repair_success_rate": { "type": "number" },
+        "verification_pass_rate": { "type": "number" },
+        "human_correction_rate": { "type": "number" },
+        "schema_validity_rate": { "type": "number" },
+        "conformance_score_trend": { "type": "array", "items": { "type": "number" } }
+      },
+      "additionalProperties": true
+    },
+    "privacy_boundaries": {
+      "type": "object",
+      "properties": {
+        "restricted_packages_excluded": { "type": "boolean" },
+        "confidential_review_required": { "type": "boolean" },
+        "raw_secrets_excluded": { "type": "boolean" },
+        "external_handoff_allowed": { "type": "boolean" },
+        "notes": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}
