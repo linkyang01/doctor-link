@@ -193,6 +193,8 @@ Completed:
 
 P6 is currently a specification and schema closure. It does not mean Doctor link has implemented a Web platform, cloud service, account system, marketplace, live third-party integrations, real signing, real permission system, enterprise archive system, real knowledge base service, Adapter SDK runtime, or Plugin SDK runtime.
 
+P6 implementation requires separate explicit authorization for runtime SDKs, live integrations, platform services, releases, or publishing.
+
 ## Project Configuration
 
 Projects can define diagnostic rules in `.doctorlink/`:
