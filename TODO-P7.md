@@ -25,16 +25,16 @@ Current boundaries:
 
 ## P7.0 Real-capability gap audit and implementation map
 
-- [ ] Create `TODO-P7.md`
-- [ ] Create `docs/roadmap/p7.md`
-- [ ] Create `docs/p7-real-capability-gap-audit.md`
-- [ ] Create `docs/p7-acceptance-criteria.md`
-- [ ] Separate implemented runtime capabilities from documentation-only capabilities
-- [ ] Separate schema-only capabilities from runtime capabilities
-- [ ] Identify deferred UX capabilities from P1-P5
-- [ ] Identify P6 specification-only capabilities that require P7 runtime work
-- [ ] Identify local-only validation steps that require the user's machine
-- [ ] Identify release/distribution actions that require explicit authorization
+- [x] Create `TODO-P7.md`
+- [x] Create `docs/roadmap/p7.md`
+- [x] Create `docs/p7-real-capability-gap-audit.md`
+- [x] Create `docs/p7-acceptance-criteria.md`
+- [x] Separate implemented runtime capabilities from documentation-only capabilities
+- [x] Separate schema-only capabilities from runtime capabilities
+- [x] Identify deferred UX capabilities from P1-P5
+- [x] Identify P6 specification-only capabilities that require P7 runtime work
+- [x] Identify local-only validation steps that require the user's machine
+- [x] Identify release/distribution actions that require explicit authorization
 
 ## P7.1 P1/P1+ evidence hardening
 
