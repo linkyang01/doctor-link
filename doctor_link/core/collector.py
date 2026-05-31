@@ -77,7 +77,6 @@ def collect_into_package(
         _write_redaction_report(package_dir, redaction_report, result)
     _write_collection_result(package_dir, result)
     _write_integrity_report(package_dir, result)
-    _write_collection_result(package_dir, result)
     _update_package_files(package_dir, result)
     return result
 
@@ -145,7 +144,7 @@ def _collect_logs(
         evidence=evidence,
     )
     if not collected:
-        result.warnings.append("No log files matched the provided patterns or all matched files were skipped.")
+        result.warnings.append("No log files matched the provided patterns.")
     for item in skipped:
         result.warnings.append(f"Skipped log file {item.source}: {item.reason}")
     result.evidence.append(evidence)
@@ -234,8 +233,6 @@ def _collect_probes(package_dir: Path, probes: Sequence[Path], ffprobe_binary: s
             evidence=evidence,
             failure=not bool(payload.get("ok")),
         )
-        if not payload.get("ok"):
-            result.warnings.append(f"Media probe failed for {media_file}: {payload.get('error')}")
         result.evidence.append(evidence)
         result.timeline_steps.append(step)
 
