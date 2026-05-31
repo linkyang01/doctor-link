@@ -10,6 +10,7 @@ Related files:
 - Roadmap: `docs/roadmap/p7.md`
 - Gap audit: `docs/p7-real-capability-gap-audit.md`
 - Acceptance criteria: `docs/p7-acceptance-criteria.md`
+- P7.1 Evidence Hardening: `docs/p7-evidence-hardening.md`
 
 Current boundaries:
 
@@ -38,20 +39,20 @@ Current boundaries:
 
 ## P7.1 P1/P1+ evidence hardening
 
-- [ ] Enhance command capture metadata
-- [ ] Add command duration and timeout metadata
-- [ ] Separate stdout and stderr records where appropriate
-- [ ] Improve environment capture
-- [ ] Improve project structure summary
-- [ ] Improve log ingestion for large files
-- [ ] Add encoding-tolerant log ingestion behavior
-- [ ] Add binary file skip behavior
-- [ ] Improve media probe missing-tool behavior
-- [ ] Add stronger redaction coverage
-- [ ] Add custom redaction pattern support
-- [ ] Add evidence hash / integrity index
-- [ ] Add tests and fixtures for P7.1
-- [ ] Update documentation for P7.1
+- [x] Enhance command capture metadata
+- [x] Add command duration and timeout metadata
+- [x] Separate stdout and stderr records where appropriate
+- [x] Improve environment capture
+- [x] Improve project structure summary
+- [x] Improve log ingestion for large files
+- [x] Add encoding-tolerant log ingestion behavior
+- [x] Add binary file skip behavior
+- [x] Improve media probe missing-tool behavior
+- [x] Add stronger redaction coverage
+- [x] Add custom redaction pattern support
+- [x] Add evidence hash / integrity index
+- [x] Add tests and fixtures for P7.1
+- [x] Update documentation for P7.1
 
 ## P7.2 P2/P2+ local workbench product hardening
 
