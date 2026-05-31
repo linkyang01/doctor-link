@@ -1,12 +1,12 @@
 # Doctor link Project Status
 
-Status date: 2026-05-28
+Status date: 2026-05-30
 
 ## Current status
 
-Doctor link has completed P0 through P5.9, has passed P5.10 cloud validation on GitHub Actions, and has passed cloud self-validation.
+Doctor link has completed P0 through P5.10, has passed P5.10 cloud validation on GitHub Actions, has passed cloud self-validation, and has completed P6.1 through P6.11 as planning, schema, specification, conformance, ecosystem asset, and quality-closure documentation.
 
-P6 is not started.
+P6 is complete as a specification and schema closure. It does not mean Doctor link has implemented a Web platform, cloud service, account system, marketplace, live third-party integrations, real signing, real permission system, enterprise archive system, real knowledge base service, Adapter SDK runtime, or Plugin SDK runtime.
 
 ## Phase status
 
@@ -22,7 +22,17 @@ P6 is not started.
 - [x] P5.10: Cloud Validation on GitHub Actions
 - [x] Self Validation: Doctor link validates itself on GitHub Actions
 - [ ] P5.10: Local or target-environment validation
-- [ ] P6: Diagnostic Protocol Standardization and Ecosystem Platform
+- [x] P6.1: Diagnostic Package Schema v1
+- [x] P6.2: Compatibility and Conformance Test Suite
+- [x] P6.3: Adapter SDK Planning Specification
+- [x] P6.4: Plugin SDK Planning Specification
+- [x] P6.5: Third-party AI Coding Integration Specification
+- [x] P6.6: Diagnostic Package Signing and Integrity Specification
+- [x] P6.7: Privacy and Security Level Specification
+- [x] P6.8: Enterprise Archive and Governance Model
+- [x] P6.9: Cross-project Diagnostic Knowledge Base
+- [x] P6.10: Public Ecosystem Assets
+- [x] P6.11: P6 Quality and Closure
 
 ## Cloud validation result
 
@@ -50,6 +60,22 @@ Duration: 30 seconds
 
 The self-validation result confirms that Doctor link can use its own CLI to scan its source tree, generate a diagnostic package, collect evidence, record assertions and test results, verify outputs, build a handoff package, build a local web view, and generate a project health summary.
 
+## P6 specification closure
+
+P6 has completed:
+
+- Diagnostic Package Schema v1;
+- Compatibility and conformance test suite;
+- Adapter SDK planning specification;
+- Plugin SDK planning specification;
+- Third-party AI Coding integration specification;
+- Signing and integrity specification;
+- Privacy and security level specification;
+- Enterprise archive and governance model;
+- Cross-project diagnostic knowledge base specification;
+- Public ecosystem assets specification;
+- P6 quality and closure checklist.
+
 ## Release status
 
 No release action has been performed.
@@ -60,7 +86,15 @@ No release action has been performed.
 - [x] No repository permission changes performed
 - [x] No paid cloud service introduced
 - [x] No external account system introduced
-- [x] No P6 implementation started
+- [x] No Web platform introduced
+- [x] No marketplace introduced
+- [x] No Adapter SDK runtime implemented
+- [x] No Plugin SDK runtime implemented
+- [x] No live third-party integration implemented
+- [x] No real signing or key management implemented
+- [x] No real permission system implemented
+- [x] No enterprise archive system implemented
+- [x] No real knowledge base service implemented
 
 ## Remaining optional validation
 
