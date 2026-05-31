@@ -10,6 +10,8 @@ All repository-side, non-local, non-release closure work has been completed. The
 
 P7 has been opened as the runtime implementation and real-capability completion phase. P7.0 defines the real-capability gap audit, implementation roadmap, and acceptance criteria. P7 runtime work must not be considered complete with documentation alone.
 
+P7.1 has implemented P1/P1+ evidence hardening for command metadata, environment capture, log ingestion hardening, and evidence integrity indexing.
+
 P6 is complete as a specification and schema closure. It does not mean Doctor link has implemented a Web platform, cloud service, account system, marketplace, live third-party integrations, real signing, real permission system, enterprise archive system, real knowledge base service, Adapter SDK runtime, or Plugin SDK runtime. These runtime gaps are now tracked under P7.
 
 ## Phase status
@@ -39,7 +41,7 @@ P6 is complete as a specification and schema closure. It does not mean Doctor li
 - [x] P6.11: P6 Quality and Closure
 - [x] Final non-local closure audit
 - [x] P7.0: Real-capability gap audit and implementation map
-- [ ] P7.1: P1/P1+ evidence hardening
+- [x] P7.1: P1/P1+ evidence hardening
 - [ ] P7.2: P2/P2+ local workbench product hardening
 - [ ] P7.3: P3 AI tool runtime handoff implementation
 - [ ] P7.4: P4 operational automation hardening
@@ -106,6 +108,23 @@ P7 tracks:
 - P6 integrity/signing/privacy runtime gates;
 - P6 local knowledge base and enterprise archive runtime;
 - P7 final validation and closure.
+
+## P7.1 evidence hardening result
+
+P7.1 adds:
+
+- richer command capture metadata;
+- command duration and timeout metadata;
+- separated stdout and stderr output files when present;
+- improved environment capture with tool availability and project markers;
+- project top-level entry summary;
+- large log truncation manifest;
+- encoding-tolerant log ingestion;
+- binary log skipping;
+- media probe failure warnings;
+- stronger existing redaction path coverage through command stdout/stderr paths;
+- custom redaction pattern support through existing collect options;
+- evidence hash / integrity index generation.
 
 ## Final non-local closure result
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 import shlex
@@ -9,7 +10,7 @@ from typing import Any, Sequence
 
 from doctor_link.core.command_runner import run_command
 from doctor_link.core.environment_collector import collect_environment
-from doctor_link.core.log_collector import collect_log_files
+from doctor_link.core.log_collector import collect_log_files_with_manifest
 from doctor_link.core.media_probe import probe_media, summarize_media_probe
 from doctor_link.core.models import EvidenceItem, TimelineStep, utc_now_iso
 from doctor_link.core.redactor import RedactionOptions, RedactionReport, redact_files, redact_text
@@ -23,6 +24,7 @@ class CollectionResult:
     timeline_steps: list[TimelineStep] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     redaction_report: dict[str, Any] | None = None
+    integrity_report: dict[str, Any] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -32,6 +34,7 @@ class CollectionResult:
             "timeline_steps": [item.to_dict() for item in self.timeline_steps],
             "warnings": self.warnings,
             "redaction_report": self.redaction_report,
+            "integrity_report": self.integrity_report,
         }
 
 
@@ -62,7 +65,7 @@ def collect_into_package(
     if log_patterns:
         _collect_logs(package_dir, log_patterns, result, redact, redaction_options, redaction_report)
     if commands:
-        _collect_commands(package_dir, commands, command_timeout_seconds, result, redact, redaction_options, redaction_report)
+        _collect_commands(package_dir, commands, command_timeout_seconds, result, redact, redaction_options, redaction_report, project_root)
     if probes:
         _collect_probes(package_dir, probes, ffprobe_binary, result)
     if attachments:
@@ -73,6 +76,7 @@ def collect_into_package(
     if redact:
         _write_redaction_report(package_dir, redaction_report, result)
     _write_collection_result(package_dir, result)
+    _write_integrity_report(package_dir, result)
     _update_package_files(package_dir, result)
     return result
 
@@ -94,7 +98,7 @@ def _collect_environment(package_dir: Path, project_root: Path, result: Collecti
         action="collect_environment",
         target=str(project_root.resolve()),
         expected="Environment can be captured as structured JSON.",
-        actual=f"Wrote {target.relative_to(package_dir)}.",
+        actual=f"Wrote {target.relative_to(package_dir)} with project markers and tool availability.",
         status="passed",
         evidence=evidence,
     )
@@ -111,7 +115,10 @@ def _collect_logs(
     redaction_report: RedactionReport,
 ) -> None:
     target_dir = package_dir / "evidence" / "logs"
-    collected = collect_log_files(patterns, target_dir)
+    log_result = collect_log_files_with_manifest(patterns, target_dir)
+    collected = log_result.collected_paths
+    skipped = [item for item in log_result.files if item.skipped]
+    truncated = [item for item in log_result.files if item.truncated]
     if redact and collected:
         report = redact_files(collected, package_dir / "redaction-report.md", redaction_options)
         for item in report.files:
@@ -122,19 +129,24 @@ def _collect_logs(
         title="Collected log files",
         source="doctor-link collect",
         path=str(target_dir.relative_to(package_dir)),
-        content=f"Collected {len(collected)} log file(s) from {len(patterns)} pattern(s).",
+        content=(
+            f"Collected {len(collected)} log file(s) from {len(patterns)} pattern(s); "
+            f"truncated={len(truncated)}; skipped={len(skipped)}."
+        ),
     )
     step = _step(
         package_dir,
         action="collect_logs",
         target=", ".join(patterns),
-        expected="Relevant logs are copied into the diagnostic package.",
-        actual=f"Collected {len(collected)} log file(s).",
+        expected="Relevant logs are copied into the diagnostic package with manifest metadata.",
+        actual=f"Collected {len(collected)} log file(s), truncated {len(truncated)}, skipped {len(skipped)}.",
         status="passed" if collected else "unknown",
         evidence=evidence,
     )
     if not collected:
         result.warnings.append("No log files matched the provided patterns.")
+    for item in skipped:
+        result.warnings.append(f"Skipped log file {item.source}: {item.reason}")
     result.evidence.append(evidence)
     result.timeline_steps.append(step)
 
@@ -147,12 +159,14 @@ def _collect_commands(
     redact: bool,
     redaction_options: RedactionOptions,
     redaction_report: RedactionReport,
+    project_root: Path | None = None,
 ) -> None:
     output_dir = package_dir / "evidence" / "command-output"
     output_dir.mkdir(parents=True, exist_ok=True)
+    cwd = project_root.resolve() if project_root is not None else None
     for index, command_text in enumerate(commands, start=1):
         command = shlex.split(command_text)
-        command_result = run_command(command, timeout_seconds=timeout_seconds)
+        command_result = run_command(command, timeout_seconds=timeout_seconds, cwd=cwd)
         payload = command_result.to_dict()
         if redact:
             for field_name in ["stdout", "stderr"]:
@@ -160,6 +174,14 @@ def _collect_commands(
                     redacted = redact_text(str(payload[field_name]), redaction_options)
                     payload[field_name] = redacted.redacted_text
                     redaction_report.add_file(f"command-output/command-{index}.json:{field_name}", redacted)
+        stdout_path = output_dir / f"command-{index}.stdout.txt"
+        stderr_path = output_dir / f"command-{index}.stderr.txt"
+        if payload.get("stdout"):
+            stdout_path.write_text(str(payload["stdout"]), encoding="utf-8")
+            payload["stdout_path"] = str(stdout_path.relative_to(package_dir))
+        if payload.get("stderr"):
+            stderr_path.write_text(str(payload["stderr"]), encoding="utf-8")
+            payload["stderr_path"] = str(stderr_path.relative_to(package_dir))
         target = output_dir / f"command-{index}.json"
         target.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
         evidence = EvidenceItem(
@@ -167,14 +189,17 @@ def _collect_commands(
             title=f"Command output: {command_text}",
             source="doctor-link collect",
             path=str(target.relative_to(package_dir)),
-            content=f"Command returned {command_result.returncode}; timed_out={command_result.timed_out}.",
+            content=(
+                f"Command returned {command_result.returncode}; timed_out={command_result.timed_out}; "
+                f"duration_seconds={command_result.duration_seconds}."
+            ),
         )
         step = _step(
             package_dir,
             action="collect_command_output",
             target=command_text,
-            expected="Command output is captured without shell execution.",
-            actual=f"Return code: {command_result.returncode}.",
+            expected="Command output is captured without shell execution and with runtime metadata.",
+            actual=f"Return code: {command_result.returncode}; duration_seconds={command_result.duration_seconds}.",
             status="passed" if command_result.returncode == 0 else "failed",
             evidence=evidence,
             failure=command_result.returncode != 0,
@@ -280,6 +305,29 @@ def _write_collection_result(package_dir: Path, result: CollectionResult) -> Non
     target.write_text(json.dumps(result.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+def _write_integrity_report(package_dir: Path, result: CollectionResult) -> None:
+    evidence_dir = package_dir / "evidence"
+    files: list[dict[str, Any]] = []
+    if evidence_dir.exists():
+        for path in sorted(item for item in evidence_dir.rglob("*") if item.is_file()):
+            digest = hashlib.sha256(path.read_bytes()).hexdigest()
+            files.append({
+                "path": str(path.relative_to(package_dir)),
+                "size_bytes": path.stat().st_size,
+                "sha256": digest,
+            })
+    report = {
+        "generated_at": utc_now_iso(),
+        "hash_algorithm": "sha256",
+        "file_count": len(files),
+        "files": files,
+    }
+    target = package_dir / "evidence" / "evidence-integrity-index.json"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    result.integrity_report = report
+
+
 def _update_package_files(package_dir: Path, result: CollectionResult) -> None:
     _update_report_json(package_dir, result)
     _append_evidence_list(package_dir, result.evidence)
@@ -301,6 +349,8 @@ def _update_report_json(package_dir: Path, result: CollectionResult) -> None:
     payload.setdefault("collections", []).append(result.to_dict())
     if result.redaction_report is not None:
         payload["redaction_report"] = result.redaction_report
+    if result.integrity_report is not None:
+        payload["evidence_integrity"] = result.integrity_report
     ai_task = payload.setdefault("ai_task", {})
     ai_task.setdefault("evidence_ids", []).extend(item.evidence_id for item in result.evidence)
     ai_task.setdefault("requested_work", []).append("Review newly collected evidence before proposing code changes.")
@@ -345,6 +395,7 @@ def _append_timeline(package_dir: Path, steps: list[TimelineStep]) -> None:
 
 def _append_summary(package_dir: Path, result: CollectionResult) -> None:
     redactions = result.redaction_report.get("total_replacements", 0) if result.redaction_report else 0
+    integrity_files = result.integrity_report.get("file_count", 0) if result.integrity_report else 0
     _append(
         package_dir / "summary.md",
         "\n".join([
@@ -355,6 +406,7 @@ def _append_summary(package_dir: Path, result: CollectionResult) -> None:
             f"- Timeline steps: `{len(result.timeline_steps)}`",
             f"- Warnings: `{len(result.warnings)}`",
             f"- Redactions: `{redactions}`",
+            f"- Integrity indexed files: `{integrity_files}`",
             "",
         ]),
     )
@@ -369,6 +421,8 @@ def _append_ai_task(package_dir: Path, result: CollectionResult) -> None:
     lines.extend(f"- `{item.evidence_id}`: {item.title}" for item in result.evidence)
     if result.redaction_report is not None:
         lines.extend(["", f"Redaction replacements: `{result.redaction_report.get('total_replacements', 0)}`"])
+    if result.integrity_report is not None:
+        lines.extend(["", f"Evidence integrity indexed files: `{result.integrity_report.get('file_count', 0)}`"])
     if result.warnings:
         lines.extend(["", "Warnings:"])
         lines.extend(f"- {warning}" for warning in result.warnings)
