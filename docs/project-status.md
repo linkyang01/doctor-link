@@ -1,10 +1,12 @@
 # Doctor link Project Status
 
-Status date: 2026-05-30
+Status date: 2026-05-31
 
 ## Current status
 
 Doctor link has completed P0 through P5.10, has passed P5.10 cloud validation on GitHub Actions, has passed cloud self-validation, and has completed P6.1 through P6.11 as planning, schema, specification, conformance, ecosystem asset, and quality-closure documentation.
+
+All repository-side, non-local, non-release closure work has been completed. The only remaining unchecked item is local or target-environment validation, which must be executed on the intended local machine, workstation, CI runner, customer delivery environment, or offline target environment.
 
 P6 is complete as a specification and schema closure. It does not mean Doctor link has implemented a Web platform, cloud service, account system, marketplace, live third-party integrations, real signing, real permission system, enterprise archive system, real knowledge base service, Adapter SDK runtime, or Plugin SDK runtime.
 
@@ -33,6 +35,7 @@ P6 is complete as a specification and schema closure. It does not mean Doctor li
 - [x] P6.9: Cross-project Diagnostic Knowledge Base
 - [x] P6.10: Public Ecosystem Assets
 - [x] P6.11: P6 Quality and Closure
+- [x] Final non-local closure audit
 
 ## Cloud validation result
 
@@ -76,6 +79,10 @@ P6 has completed:
 - Public ecosystem assets specification;
 - P6 quality and closure checklist.
 
+## Final non-local closure result
+
+The repository includes `docs/final-non-local-closure.md`, which records the final non-local closure result and confirms that all repository-side, non-local, non-release work has been completed except target-environment execution.
+
 ## Release status
 
 No release action has been performed.
@@ -98,6 +105,6 @@ No release action has been performed.
 
 ## Remaining optional validation
 
-Local or target-environment validation remains optional but recommended if Doctor link must be proven on a specific Mac, workstation, or delivery environment.
+Local or target-environment validation remains optional but recommended if Doctor link must be proven on a specific Mac, workstation, customer delivery environment, production-like environment, or offline target environment.
 
-The local validation record should be written to `docs/p5.10-local-validation.md`.
+The local validation record should be written to `docs/p5.10-local-validation.md` after the commands are run on the intended target environment.
