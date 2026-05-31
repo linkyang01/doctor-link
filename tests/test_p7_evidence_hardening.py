@@ -66,7 +66,7 @@ def test_collect_into_package_writes_p7_hardened_evidence(tmp_path: Path) -> Non
     assert "stdout_path" in command_payload
     assert "[REDACTED]" in (package.root_dir / command_payload["stdout_path"]).read_text(encoding="utf-8")
 
-    log_manifest = json.loads((package.root_dir / "evidence" / "logs" / "log-collection-manifest.json").read_text(encoding="utf-8"))
+    log_manifest = json.loads((package.root_dir / "evidence" / "test-results" / "log-collection-manifest.json").read_text(encoding="utf-8"))
     assert any(item["truncated"] for item in log_manifest["files"])
     assert any(item["skipped"] and item["reason"] == "binary_file" for item in log_manifest["files"])
 
