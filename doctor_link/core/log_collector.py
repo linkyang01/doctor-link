@@ -26,13 +26,18 @@ class CollectedLogFile:
 class LogCollectionResult:
     collected_at: str = field(default_factory=utc_now_iso)
     files: list[CollectedLogFile] = field(default_factory=list)
+    manifest_path: str | None = None
 
     @property
     def collected_paths(self) -> list[Path]:
         return [Path(item.target) for item in self.files if item.target and not item.skipped]
 
     def to_dict(self) -> dict:
-        return {"collected_at": self.collected_at, "files": [item.to_dict() for item in self.files]}
+        return {
+            "collected_at": self.collected_at,
+            "files": [item.to_dict() for item in self.files],
+            "manifest_path": self.manifest_path,
+        }
 
 
 def collect_log_files(patterns: Iterable[str], output_dir: Path, max_bytes: int = 512_000) -> list[Path]:
@@ -70,7 +75,10 @@ def collect_log_files_with_manifest(patterns: Iterable[str], output_dir: Path, m
             target.write_text(text, encoding="utf-8")
             result.files.append(CollectedLogFile(source=str(source), target=str(target), size_bytes=size, collected_bytes=len(text.encode("utf-8")), truncated=truncated))
 
-    manifest = output_dir / "log-collection-manifest.json"
+    manifest_dir = output_dir.parent / "test-results"
+    manifest_dir.mkdir(parents=True, exist_ok=True)
+    manifest = manifest_dir / "log-collection-manifest.json"
+    result.manifest_path = str(manifest)
     manifest.write_text(json.dumps(result.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
     return result
 
