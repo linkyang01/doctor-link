@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shlex
 import sys
 from pathlib import Path
 
@@ -45,12 +46,13 @@ def test_collect_into_package_writes_p7_hardened_evidence(tmp_path: Path) -> Non
     log_file.write_text("prefix\n" + "x" * 600_000 + "\nsecret=abc123456789\n", encoding="utf-8")
     binary_log = tmp_path / "binary.log"
     binary_log.write_bytes(b"abc\x00def")
+    command = " ".join([shlex.quote(sys.executable), "-c", shlex.quote("print('token=abc123456789')")])
 
     result = collect_into_package(
         package.root_dir,
         project_root=project_root,
         log_patterns=[str(log_file), str(binary_log)],
-        commands=[f"{sys.executable} -c print('token=abc123456789')"],
+        commands=[command],
         command_timeout_seconds=10,
     )
 
