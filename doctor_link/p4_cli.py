@@ -6,6 +6,7 @@ from pathlib import Path
 import click
 
 from doctor_link.cli import main
+from doctor_link.core.ci_automation import write_ci_report
 from doctor_link.core.conformance import run_conformance_suite, write_conformance_report
 from doctor_link.core.diagnosis_pipeline import run_diagnosis_compare, run_diagnosis_verify
 from doctor_link.core.diagnosis_workflow import create_after_package, create_before_package
@@ -196,6 +197,29 @@ def conformance_run(fixtures_root: Path, output: Path, json_output: bool) -> Non
         click.echo(f"Report: {output / 'conformance-report.md'}")
     if report.status != "passed":
         raise click.ClickException("Conformance suite failed.")
+
+
+@main.group("ci")
+def ci_group() -> None:
+    """Generate CI and GitHub Actions diagnostic reports."""
+
+
+@ci_group.command("report")
+@click.argument("reports_dir", type=click.Path(file_okay=False, path_type=Path), default=Path("DoctorReports"), required=False)
+@click.option("--out", "output", type=click.Path(file_okay=False, path_type=Path), default=None, help="Output directory for CI report artifacts.")
+@click.option("--json", "json_output", is_flag=True, help="Print JSON output.")
+def ci_report(reports_dir: Path, output: Path | None, json_output: bool) -> None:
+    """Generate CI report, GitHub step summary, trend, triage and artifact index."""
+    report = write_ci_report(reports_dir, output_dir=output)
+    if json_output:
+        click.echo(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+        return
+    out = Path(report.output_dir)
+    click.echo(f"CI report status: {report.status}")
+    click.echo(f"Regression score: {report.regression_score}")
+    click.echo(f"Report: {out / 'ci-report.md'}")
+    click.echo(f"GitHub summary: {out / 'github-step-summary.md'}")
+    click.echo(f"Artifact index: {out / 'ci-artifact-index.json'}")
 
 
 @main.command("health")
