@@ -11,6 +11,7 @@ Related files:
 - Gap audit: `docs/p7-real-capability-gap-audit.md`
 - Acceptance criteria: `docs/p7-acceptance-criteria.md`
 - P7.1 Evidence Hardening: `docs/p7-evidence-hardening.md`
+- P7.2 Workbench Hardening: `docs/p7-workbench-hardening.md`
 
 Current boundaries:
 
@@ -56,18 +57,18 @@ Current boundaries:
 
 ## P7.2 P2/P2+ local workbench product hardening
 
-- [ ] Add collapsible sections to static workbench output
-- [ ] Add dedicated project health page or panel
-- [ ] Add evidence search / filtering in local workbench output
-- [ ] Improve assertion-to-evidence navigation
-- [ ] Improve evidence-to-assertion navigation
-- [ ] Improve verification status visualization
-- [ ] Add basic accessibility audit checklist
-- [ ] Design controlled local write-back mode
-- [ ] Implement controlled local write-back only if explicitly enabled
-- [ ] Add write-back audit record and backup behavior
-- [ ] Add tests and fixtures for P7.2
-- [ ] Update documentation for P7.2
+- [x] Add collapsible sections to static workbench output
+- [x] Add dedicated project health page or panel
+- [x] Add evidence search / filtering in local workbench output
+- [x] Improve assertion-to-evidence navigation
+- [x] Improve evidence-to-assertion navigation
+- [x] Improve verification status visualization
+- [x] Add basic accessibility audit checklist
+- [x] Design controlled local write-back mode
+- [x] Implement controlled local write-back only if explicitly enabled
+- [x] Add write-back audit record and backup behavior
+- [x] Add tests and fixtures for P7.2
+- [x] Update documentation for P7.2
 
 ## P7.3 P3 AI tool runtime handoff implementation
 
