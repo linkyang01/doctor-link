@@ -30,6 +30,7 @@ from doctor_link.core.user_assertion_manager import add_user_assertion
 from doctor_link.core.verification_runner import run_verification
 from doctor_link.core.vly_adapter import build_vly_core_proof_matrix, write_vly_core_proof_to_package
 from doctor_link.core.web_server import build_web_view, serve_web_view
+from doctor_link.core.workbench_writeback import append_workbench_note
 
 
 @click.group()
@@ -350,6 +351,30 @@ def view_command(package_dir: Path, host: str, port: int, no_open_browser: bool,
         click.echo(f"Generated package web view: {result.index_path}")
         return
     serve_web_view(package_dir, host=host, port=port, open_browser=not no_open_browser)
+
+
+@main.command("workbench-note")
+@click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--note", required=True, help="Workbench note to append.")
+@click.option("--section", default="workbench-notes.md", show_default=True, help="Markdown file inside the package to append.")
+@click.option("--enable-write-back", is_flag=True, help="Actually write the note. Disabled by default.")
+@click.option("--json", "json_output", is_flag=True, help="Print JSON output.")
+def workbench_note_command(package_dir: Path, note: str, section: str, enable_write_back: bool, json_output: bool) -> None:
+    """Append a controlled local workbench note with backup and audit."""
+    result = append_workbench_note(package_dir, note=note, section=section, enable_write_back=enable_write_back)
+    if json_output:
+        click.echo(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+        return
+    click.echo(f"Write-back enabled: {result.enabled}")
+    click.echo(f"Wrote note: {result.wrote}")
+    if result.target_file:
+        click.echo(f"Target: {result.target_file}")
+    if result.backup_file:
+        click.echo(f"Backup: {result.backup_file}")
+    if result.audit_file:
+        click.echo(f"Audit: {result.audit_file}")
+    for warning in result.warnings:
+        click.echo(f"Warning: {warning}")
 
 
 @main.command("assert")
