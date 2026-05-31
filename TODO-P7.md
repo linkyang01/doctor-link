@@ -12,6 +12,7 @@ Related files:
 - Acceptance criteria: `docs/p7-acceptance-criteria.md`
 - P7.1 Evidence Hardening: `docs/p7-evidence-hardening.md`
 - P7.2 Workbench Hardening: `docs/p7-workbench-hardening.md`
+- P7.3 AI Handoff Runtime: `docs/p7-ai-handoff-runtime.md`
 
 Current boundaries:
 
@@ -72,23 +73,23 @@ Current boundaries:
 
 ## P7.3 P3 AI tool runtime handoff implementation
 
-- [ ] Define target tool profile model
-- [ ] Add Codex profile
-- [ ] Add Cursor profile
-- [ ] Add Continue profile
-- [ ] Add Aider profile
-- [ ] Add OpenHands profile
-- [ ] Add Claude Code profile
-- [ ] Add handoff compatibility checker
-- [ ] Add target-tool-specific instruction generation
-- [ ] Add file inclusion policy enforcement
-- [ ] Add missing evidence warnings
-- [ ] Add privacy warnings in handoff output
-- [ ] Enhance AI result ingestion
-- [ ] Add repair session id support
-- [ ] Add multi-round repair session management
-- [ ] Add tests and fixtures for P7.3
-- [ ] Update documentation for P7.3
+- [x] Define target tool profile model
+- [x] Add Codex profile
+- [x] Add Cursor profile
+- [x] Add Continue profile
+- [x] Add Aider profile
+- [x] Add OpenHands profile
+- [x] Add Claude Code profile
+- [x] Add handoff compatibility checker
+- [x] Add target-tool-specific instruction generation
+- [x] Add file inclusion policy enforcement
+- [x] Add missing evidence warnings
+- [x] Add privacy warnings in handoff output
+- [x] Enhance AI result ingestion
+- [x] Add repair session id support
+- [x] Add multi-round repair session management
+- [x] Add tests and fixtures for P7.3
+- [x] Update documentation for P7.3
 
 ## P7.4 P4 operational automation hardening
 
