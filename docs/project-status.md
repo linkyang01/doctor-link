@@ -14,6 +14,8 @@ P7.1 has implemented P1/P1+ evidence hardening for command metadata, environment
 
 P7.2 has implemented P2/P2+ local workbench product hardening for collapsible sections, local evidence filters, project health panel, verification state visualization, accessibility structure, and controlled CLI-only write-back with backup and audit.
 
+P7.3 has implemented P3 AI tool runtime handoff for target tool profiles, compatibility checks, target-specific instructions, file inclusion policy enforcement, missing evidence warnings, privacy warnings, enhanced AI result ingestion, repair session IDs, and multi-round repair session management.
+
 P6 is complete as a specification and schema closure. It does not mean Doctor link has implemented a Web platform, cloud service, account system, marketplace, live third-party integrations, real signing, real permission system, enterprise archive system, real knowledge base service, Adapter SDK runtime, or Plugin SDK runtime. These runtime gaps are now tracked under P7.
 
 ## Phase status
@@ -45,7 +47,7 @@ P6 is complete as a specification and schema closure. It does not mean Doctor li
 - [x] P7.0: Real-capability gap audit and implementation map
 - [x] P7.1: P1/P1+ evidence hardening
 - [x] P7.2: P2/P2+ local workbench product hardening
-- [ ] P7.3: P3 AI tool runtime handoff implementation
+- [x] P7.3: P3 AI tool runtime handoff implementation
 - [ ] P7.4: P4 operational automation hardening
 - [ ] P7.5: P5 release/distribution readiness execution plan
 - [ ] P7.6: P6 Adapter SDK runtime
@@ -141,6 +143,21 @@ P7.2 adds:
 - controlled CLI-only local write-back;
 - disabled-by-default write-back behavior;
 - write-back audit log and backup behavior.
+
+## P7.3 AI handoff runtime result
+
+P7.3 adds:
+
+- target tool profile model;
+- Codex, Cursor, Continue, Aider, OpenHands, Claude Code, and generic profiles;
+- handoff compatibility checker;
+- target-tool-specific instruction generation;
+- file inclusion policy enforcement;
+- missing evidence warnings;
+- privacy warnings;
+- enhanced AI result ingestion;
+- repair session id support;
+- multi-round repair session management.
 
 ## Final non-local closure result
 
