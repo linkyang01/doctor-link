@@ -13,8 +13,9 @@ This file tracks phase-level project status. Detailed implementation tasks are t
 - [x] P4: Automated Diagnosis Pipeline
 - [x] P5: Productization and Release Readiness
 - [x] P5.9: Release hardening and usability validation
-- [ ] P5.10: Local validation hardening before P6 authorization
-- [ ] P6: Diagnostic Protocol Standardization and Ecosystem Platform
+- [ ] P5.10: Local or target-environment validation record
+- [x] P6: Diagnostic Protocol Standardization and Ecosystem Platform specification closure
+- [ ] P7: Runtime implementation and real-capability completion
 
 ## Completed Phase Audits
 
@@ -25,6 +26,8 @@ This file tracks phase-level project status. Detailed implementation tasks are t
 - [x] P4 final audit: `docs/p4-final-audit.md`
 - [x] P5 final audit: `docs/p5-final-audit.md`
 - [x] P5.9 final audit: `docs/p5.9-final-audit.md`
+- [x] P6 quality and closure: `docs/p6-quality-closure.md`
+- [x] Final non-local closure audit: `docs/final-non-local-closure.md`
 
 ## Completed Tracking Issues
 
@@ -35,11 +38,12 @@ This file tracks phase-level project status. Detailed implementation tasks are t
 - [x] Issue #19: P4 automated diagnosis pipeline
 - [x] Issue #20: P5 productization and release readiness
 - [x] Issue #71: P5.9 release hardening and usability validation
+- [x] Issue #22: P6 diagnostic protocol standardization and ecosystem platform specification closure
 
 ## Active / Future Tracking Issues
 
-- [ ] P5.10 local validation hardening before P6 authorization
-- [ ] Issue #22: P6 diagnostic protocol standardization and ecosystem platform
+- [ ] P5.10 local or target-environment validation record
+- [ ] Issue #95: P7 runtime implementation and real-capability completion
 
 ## Completed P4 Scope
 
@@ -66,18 +70,30 @@ This file tracks phase-level project status. Detailed implementation tasks are t
 
 ## P5.10 Scope
 
-- [x] Keep feature development paused.
 - [x] Define local validation command sequence.
 - [x] Define expected validation artifacts.
 - [x] Define failure triage workflow.
-- [x] Define P6 authorization gate.
-- [ ] Record actual local validation run results.
+- [x] Refresh local validation documentation after P6 closure.
+- [ ] Record actual local or target-environment validation run results.
+
+## P7 Scope
+
+- [x] P7.0 real-capability gap audit and implementation map
+- [ ] P7.1 P1/P1+ evidence hardening
+- [ ] P7.2 P2/P2+ local workbench product hardening
+- [ ] P7.3 P3 AI tool runtime handoff implementation
+- [ ] P7.4 P4 operational automation hardening
+- [ ] P7.5 P5 release/distribution readiness execution plan
+- [ ] P7.6 P6 Adapter SDK runtime
+- [ ] P7.7 P6 Plugin SDK runtime
+- [ ] P7.8 P6 integrity/signing/privacy runtime gates
+- [ ] P7.9 P6 local knowledge base and enterprise archive runtime
+- [ ] P7.10 P7 final validation and closure
 
 ## Deferred Decisions
 
-- [ ] Web UI write-back remains deferred and requires a future ADR.
-- [ ] Dedicated project health Web UI panel is deferred to a future visual refresh.
-- [ ] P6 implementation requires separate explicit authorization.
+- [ ] Web UI write-back remains deferred until P7.2 designs and implements controlled local write-back safeguards.
+- [ ] Dedicated project health Web UI panel is deferred to P7.2.
 - [ ] Release publishing, GitHub Release, PyPI publishing, repository permission changes, paid cloud services, and external account systems require separate explicit authorization.
 
 ## Working Rules
@@ -87,3 +103,4 @@ This file tracks phase-level project status. Detailed implementation tasks are t
 3. Completed work must update tracking files.
 4. Do not proceed from memory only; inspect repository state first.
 5. Do not publish releases without explicit authorization.
+6. P7 runtime items are not complete with documentation alone; they require implementation, tests, documentation, and CI validation.
