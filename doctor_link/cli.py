@@ -245,6 +245,8 @@ def handoff_command(package_dir: Path, tool: str, output: Path | None) -> None:
     click.echo(f"Instruction: {result.instruction_path}")
     click.echo(f"Included files: {len(result.included_files)}")
     click.echo(f"Missing files: {len(result.missing_files)}")
+    if result.compatibility_path:
+        click.echo(f"Compatibility: {result.compatibility_path}")
 
 
 @main.command("ai-result")
@@ -257,10 +259,13 @@ def handoff_command(package_dir: Path, tool: str, output: Path | None) -> None:
 @click.option("--verification-step", "verification_steps", multiple=True, help="Required verification step.")
 @click.option("--risk", "risks", multiple=True, help="Known risk.")
 @click.option("--assumption", "assumptions", multiple=True, help="Assumption made by the AI result.")
-def ai_result_command(package_dir: Path, summary: str, claimed_fix: str, files_changed: tuple[str, ...], evidence_used: tuple[str, ...], related_assertion_ids: tuple[str, ...], verification_steps: tuple[str, ...], risks: tuple[str, ...], assumptions: tuple[str, ...]) -> None:
+@click.option("--repair-session-id", default=None, help="Repair session id to attach this result to.")
+@click.option("--tool", default="generic", show_default=True, type=click.Choice(sorted(SUPPORTED_TOOLS)), help="AI tool that produced this result.")
+def ai_result_command(package_dir: Path, summary: str, claimed_fix: str, files_changed: tuple[str, ...], evidence_used: tuple[str, ...], related_assertion_ids: tuple[str, ...], verification_steps: tuple[str, ...], risks: tuple[str, ...], assumptions: tuple[str, ...], repair_session_id: str | None, tool: str) -> None:
     """Record an AI repair result into a diagnostic package."""
-    result = add_ai_result(package_dir, summary, claimed_fix, list(files_changed), list(evidence_used), list(related_assertion_ids), list(verification_steps), list(risks), list(assumptions))
+    result = add_ai_result(package_dir, summary, claimed_fix, list(files_changed), list(evidence_used), list(related_assertion_ids), list(verification_steps), list(risks), list(assumptions), repair_session_id=repair_session_id, tool=tool)
     click.echo(f"Recorded AI result: {result['result_id']}")
+    click.echo(f"Repair session: {result['repair_session_id']}")
     click.echo("Verification is still required before closing.")
 
 
@@ -270,10 +275,13 @@ def ai_result_command(package_dir: Path, summary: str, claimed_fix: str, files_c
 @click.option("--user-correction", default="", help="Human correction.")
 @click.option("--evidence-id", "evidence_added", multiple=True, help="Evidence added in this round.")
 @click.option("--verification-attempt", default="", help="Verification attempt summary.")
-def diagnosis_history_command(package_dir: Path, ai_pass: str, user_correction: str, evidence_added: tuple[str, ...], verification_attempt: str) -> None:
+@click.option("--repair-session-id", default=None, help="Repair session id to attach this round to.")
+@click.option("--tool", default="generic", show_default=True, type=click.Choice(sorted(SUPPORTED_TOOLS)), help="AI tool used in this round.")
+def diagnosis_history_command(package_dir: Path, ai_pass: str, user_correction: str, evidence_added: tuple[str, ...], verification_attempt: str, repair_session_id: str | None, tool: str) -> None:
     """Record a diagnosis round."""
-    result = add_history_round(package_dir, ai_pass, user_correction, list(evidence_added), verification_attempt)
+    result = add_history_round(package_dir, ai_pass, user_correction, list(evidence_added), verification_attempt, repair_session_id=repair_session_id, tool=tool)
     click.echo(f"Recorded diagnosis round: {result['round_id']}")
+    click.echo(f"Repair session: {result['repair_session_id']}")
 
 
 @main.command("assertion-check")
