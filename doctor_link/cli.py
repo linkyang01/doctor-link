@@ -30,6 +30,7 @@ from doctor_link.core.user_assertion_manager import add_user_assertion
 from doctor_link.core.verification_runner import run_verification
 from doctor_link.core.vly_adapter import build_vly_core_proof_matrix, write_vly_core_proof_to_package
 from doctor_link.core.web_server import build_web_view, serve_web_view
+from doctor_link.core.workbench_writeback import append_workbench_note
 
 
 @click.group()
@@ -254,25 +255,29 @@ def handoff_command(package_dir: Path, tool: str, output: Path | None) -> None:
 @click.option("--evidence-id", "evidence_used", multiple=True, help="Evidence ID used by the AI result.")
 @click.option("--assertion-id", "related_assertion_ids", multiple=True, help="Related user assertion ID.")
 @click.option("--verification-step", "verification_steps", multiple=True, help="Required verification step.")
-@click.option("--risk", "risks", multiple=True, help="Known risk.")
-@click.option("--assumption", "assumptions", multiple=True, help="Assumption made by the AI result.")
-def ai_result_command(package_dir: Path, summary: str, claimed_fix: str, files_changed: tuple[str, ...], evidence_used: tuple[str, ...], related_assertion_ids: tuple[str, ...], verification_steps: tuple[str, ...], risks: tuple[str, ...], assumptions: tuple[str, ...]) -> None:
+def ai_result_command(package_dir: Path, summary: str, claimed_fix: str, files_changed: tuple[str, ...], evidence_used: tuple[str, ...], related_assertion_ids: tuple[str, ...], verification_steps: tuple[str, ...]) -> None:
     """Record an AI repair result into a diagnostic package."""
-    result = add_ai_result(package_dir, summary, claimed_fix, list(files_changed), list(evidence_used), list(related_assertion_ids), list(verification_steps), list(risks), list(assumptions))
-    click.echo(f"Recorded AI result: {result['result_id']}")
-    click.echo("Verification is still required before closing.")
+    result = add_ai_result(
+        package_dir=package_dir,
+        summary=summary,
+        claimed_fix=claimed_fix,
+        files_changed=list(files_changed),
+        evidence_used=list(evidence_used),
+        related_assertion_ids=list(related_assertion_ids),
+        verification_steps=list(verification_steps),
+    )
+    click.echo(f"Recorded AI repair result: {result.repair_id}")
 
 
 @main.command("diagnosis-history")
 @click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
-@click.option("--ai-pass", default="", help="AI pass summary.")
-@click.option("--user-correction", default="", help="Human correction.")
-@click.option("--evidence-id", "evidence_added", multiple=True, help="Evidence added in this round.")
-@click.option("--verification-attempt", default="", help="Verification attempt summary.")
-def diagnosis_history_command(package_dir: Path, ai_pass: str, user_correction: str, evidence_added: tuple[str, ...], verification_attempt: str) -> None:
-    """Record a diagnosis round."""
-    result = add_history_round(package_dir, ai_pass, user_correction, list(evidence_added), verification_attempt)
-    click.echo(f"Recorded diagnosis round: {result['round_id']}")
+@click.option("--ai-pass", "ai_pass_summary", required=True, help="AI diagnostic pass summary.")
+@click.option("--user-correction", default="", help="Human correction after the AI pass.")
+@click.option("--evidence-id", "evidence_ids", multiple=True, help="Evidence ID used in this pass.")
+def diagnosis_history_command(package_dir: Path, ai_pass_summary: str, user_correction: str, evidence_ids: tuple[str, ...]) -> None:
+    """Append an AI diagnosis history round."""
+    item = add_history_round(package_dir=package_dir, ai_pass_summary=ai_pass_summary, user_correction=user_correction, evidence_ids=list(evidence_ids))
+    click.echo(f"Recorded diagnosis history round: {item.round_id}")
 
 
 @main.command("assertion-check")
@@ -352,40 +357,46 @@ def view_command(package_dir: Path, host: str, port: int, no_open_browser: bool,
     serve_web_view(package_dir, host=host, port=port, open_browser=not no_open_browser)
 
 
+@main.command("workbench-note")
+@click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--note", required=True, help="Workbench note to append.")
+@click.option("--section", default="workbench-notes.md", show_default=True, help="Markdown file inside the package to append.")
+@click.option("--enable-write-back", is_flag=True, help="Actually write the note. Disabled by default.")
+@click.option("--json", "json_output", is_flag=True, help="Print JSON output.")
+def workbench_note_command(package_dir: Path, note: str, section: str, enable_write_back: bool, json_output: bool) -> None:
+    """Append a controlled local workbench note with backup and audit."""
+    result = append_workbench_note(package_dir, note=note, section=section, enable_write_back=enable_write_back)
+    if json_output:
+        click.echo(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+        return
+    click.echo(f"Write-back enabled: {result.enabled}")
+    click.echo(f"Wrote note: {result.wrote}")
+    if result.target_file:
+        click.echo(f"Target: {result.target_file}")
+    if result.backup_file:
+        click.echo(f"Backup: {result.backup_file}")
+    if result.audit_file:
+        click.echo(f"Audit: {result.audit_file}")
+    for warning in result.warnings:
+        click.echo(f"Warning: {warning}")
+
+
 @main.command("assert")
 @click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
 @click.option("--statement", required=True, help="Human-confirmed problem statement.")
 @click.option("--expected", "expected_behavior", default=None, help="Expected behavior.")
 @click.option("--actual", "actual_behavior", default=None, help="Actual behavior.")
 @click.option("--why", "why_user_thinks_it_is_wrong", default=None, help="Why the user believes this is wrong.")
-@click.option("--severity", default="error", show_default=True, help="Assertion severity.")
-@click.option("--file", "related_file", default=None, help="Related file or artifact.")
-@click.option("--next-ai", "next_ai_instruction", default=None, help="Instruction for the next AI debugging pass.")
-def assert_problem(package_dir: Path, statement: str, expected_behavior: str | None, actual_behavior: str | None, why_user_thinks_it_is_wrong: str | None, severity: str, related_file: str | None, next_ai_instruction: str | None) -> None:
-    """Add a human-confirmed problem to a diagnostic package."""
-    assertion = add_user_assertion(package_dir=package_dir, user_statement=statement, expected_behavior=expected_behavior, actual_behavior=actual_behavior, why_user_thinks_it_is_wrong=why_user_thinks_it_is_wrong, severity=severity, related_file=related_file, next_ai_instruction=next_ai_instruction)
-    click.echo(f"Added user assertion: {assertion.assertion_id}")
-
-
-@main.group("strategy")
-def strategy_group() -> None:
-    """Manage project diagnosis strategy."""
-
-
-@strategy_group.command("validate")
-@click.argument("project_root", type=click.Path(file_okay=False, path_type=Path), default=Path("."), required=False)
-@click.option("--json", "json_output", is_flag=True, help="Print JSON output.")
-def strategy_validate(project_root: Path, json_output: bool) -> None:
-    """Validate .doctorlink/diagnosis.yml."""
-    from doctor_link.core.diagnosis_strategy import load_diagnosis_strategy
-
-    result = load_diagnosis_strategy(project_root)
-    if json_output:
-        click.echo(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
-    else:
-        click.echo(result.to_markdown())
-    if not result.is_valid:
-        raise click.ClickException("Diagnosis strategy validation failed.")
+def assert_command(package_dir: Path, statement: str, expected_behavior: str | None, actual_behavior: str | None, why_user_thinks_it_is_wrong: str | None) -> None:
+    """Record a human-confirmed assertion into a diagnostic package."""
+    assertion = add_user_assertion(
+        package_dir=package_dir,
+        statement=statement,
+        expected_behavior=expected_behavior,
+        actual_behavior=actual_behavior,
+        why_user_thinks_it_is_wrong=why_user_thinks_it_is_wrong,
+    )
+    click.echo(f"Recorded user assertion: {assertion.assertion_id}")
 
 
 if __name__ == "__main__":
