@@ -13,6 +13,7 @@ Related files:
 - P7.1 Evidence Hardening: `docs/p7-evidence-hardening.md`
 - P7.2 Workbench Hardening: `docs/p7-workbench-hardening.md`
 - P7.3 AI Handoff Runtime: `docs/p7-ai-handoff-runtime.md`
+- P7.4 Operational Automation: `docs/p7-operational-automation.md`
 
 Current boundaries:
 
@@ -93,15 +94,15 @@ Current boundaries:
 
 ## P7.4 P4 operational automation hardening
 
-- [ ] Add CI report generation command
-- [ ] Add GitHub Actions markdown report artifact generation
-- [ ] Add failure triage summary
-- [ ] Add before / after regression score
-- [ ] Add test matrix aggregation report
-- [ ] Add project health trend support
-- [ ] Add CI artifact index generation
-- [ ] Add tests and fixtures for P7.4
-- [ ] Update documentation for P7.4
+- [x] Add CI report generation command
+- [x] Add GitHub Actions markdown report artifact generation
+- [x] Add failure triage summary
+- [x] Add before / after regression score
+- [x] Add test matrix aggregation report
+- [x] Add project health trend support
+- [x] Add CI artifact index generation
+- [x] Add tests and fixtures for P7.4
+- [x] Update documentation for P7.4
 
 ## P7.5 P5 release/distribution readiness execution plan
 

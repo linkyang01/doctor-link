@@ -16,6 +16,8 @@ P7.2 has implemented P2/P2+ local workbench product hardening for collapsible se
 
 P7.3 has implemented P3 AI tool runtime handoff for target tool profiles, compatibility checks, target-specific instructions, file inclusion policy enforcement, missing evidence warnings, privacy warnings, enhanced AI result ingestion, repair session IDs, and multi-round repair session management.
 
+P7.4 has implemented P4 operational automation hardening for CI report generation, GitHub Actions markdown summaries, failure triage, regression scoring, test matrix aggregation, project health trend generation, and CI artifact indexing.
+
 P6 is complete as a specification and schema closure. It does not mean Doctor link has implemented a Web platform, cloud service, account system, marketplace, live third-party integrations, real signing, real permission system, enterprise archive system, real knowledge base service, Adapter SDK runtime, or Plugin SDK runtime. These runtime gaps are now tracked under P7.
 
 ## Phase status
@@ -48,7 +50,7 @@ P6 is complete as a specification and schema closure. It does not mean Doctor li
 - [x] P7.1: P1/P1+ evidence hardening
 - [x] P7.2: P2/P2+ local workbench product hardening
 - [x] P7.3: P3 AI tool runtime handoff implementation
-- [ ] P7.4: P4 operational automation hardening
+- [x] P7.4: P4 operational automation hardening
 - [ ] P7.5: P5 release/distribution readiness execution plan
 - [ ] P7.6: P6 Adapter SDK runtime
 - [ ] P7.7: P6 Plugin SDK runtime
@@ -158,6 +160,19 @@ P7.3 adds:
 - enhanced AI result ingestion;
 - repair session id support;
 - multi-round repair session management.
+
+## P7.4 operational automation result
+
+P7.4 adds:
+
+- `doctor-link ci report` command;
+- CI report JSON and Markdown generation;
+- GitHub Actions step summary Markdown generation;
+- failure triage summary;
+- before / after regression score;
+- test matrix aggregation report;
+- project health trend support;
+- CI artifact index generation.
 
 ## Final non-local closure result
 
