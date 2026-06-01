@@ -18,6 +18,7 @@ Related files:
 - P7.6 Adapter Runtime: `docs/p7-adapter-runtime.md`
 - P7.7 Plugin Runtime: `docs/p7-plugin-runtime.md`
 - P7.8 Integrity and Privacy Gates: `docs/p7-integrity-privacy-gates.md`
+- P7.9 Knowledge and Archive Runtime: `docs/p7-knowledge-archive-runtime.md`
 
 Current boundaries:
 
@@ -173,23 +174,23 @@ Current boundaries:
 
 ## P7.9 P6 local knowledge base and enterprise archive runtime
 
-- [ ] Add local diagnostic knowledge index
-- [ ] Add recurring failure signature extraction
-- [ ] Add repair outcome aggregation
-- [ ] Add project health trend aggregation
-- [ ] Add knowledge export command
-- [ ] Add archive metadata record
-- [ ] Add retention policy check
-- [ ] Add audit trail append behavior
-- [ ] Add local archive export
-- [ ] Add `doctor-link knowledge build`
-- [ ] Add `doctor-link knowledge query`
-- [ ] Add `doctor-link knowledge export`
-- [ ] Add `doctor-link archive create`
-- [ ] Add `doctor-link archive inspect`
-- [ ] Add `doctor-link archive policy-check`
-- [ ] Add tests and fixtures for P7.9
-- [ ] Update documentation for P7.9
+- [x] Add local diagnostic knowledge index
+- [x] Add recurring failure signature extraction
+- [x] Add repair outcome aggregation
+- [x] Add project health trend aggregation
+- [x] Add knowledge export command
+- [x] Add archive metadata record
+- [x] Add retention policy check
+- [x] Add audit trail append behavior
+- [x] Add local archive export
+- [x] Add `doctor-link knowledge build`
+- [x] Add `doctor-link knowledge query`
+- [x] Add `doctor-link knowledge export`
+- [x] Add `doctor-link archive create`
+- [x] Add `doctor-link archive inspect`
+- [x] Add `doctor-link archive policy-check`
+- [x] Add tests and fixtures for P7.9
+- [x] Update documentation for P7.9
 
 ## P7.10 P7 final validation and closure
 

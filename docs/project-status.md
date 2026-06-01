@@ -26,7 +26,9 @@ P7.7 has implemented P6 Plugin SDK runtime for plugin manifest loading, permissi
 
 P7.8 has implemented P6 integrity/signing/privacy runtime gates for local integrity manifests, integrity verification, hash mismatch detection, missing file detection, unsafe path detection, unsigned manifest warnings, privacy policy loading, privacy scanning, redaction gates, export safety gates, tests, and documentation. Real signing and key management remain intentionally out of scope unless explicitly authorized later.
 
-P6 is complete as a specification and schema closure. It does not mean Doctor link has implemented a Web platform, cloud service, account system, marketplace, live third-party integrations, real signing, real permission system, enterprise archive system, or real knowledge base service. These runtime gaps are now tracked under P7.
+P7.9 has implemented P6 local knowledge base and enterprise archive runtime for local diagnostic knowledge indexing, recurring failure signature extraction, repair outcome aggregation, project health trend aggregation, knowledge export, archive metadata records, retention policy checks, audit trail append behavior, local archive export, CLI commands, tests, and documentation.
+
+P6 is complete as a specification and schema closure. It does not mean Doctor link has implemented a Web platform, cloud service, account system, marketplace, live third-party integrations, real signing, real permission system, hosted enterprise archive system, or hosted knowledge base service. These runtime gaps are now tracked under P7.
 
 ## Phase status
 
@@ -63,7 +65,7 @@ P6 is complete as a specification and schema closure. It does not mean Doctor li
 - [x] P7.6: P6 Adapter SDK runtime
 - [x] P7.7: P6 Plugin SDK runtime
 - [x] P7.8: P6 integrity/signing/privacy runtime gates
-- [ ] P7.9: P6 local knowledge base and enterprise archive runtime
+- [x] P7.9: P6 local knowledge base and enterprise archive runtime
 - [ ] P7.10: P7 final validation and closure
 
 ## Cloud validation result
@@ -241,6 +243,25 @@ P7.8 adds:
 - `doctor-link privacy export-gate` command;
 - local test signing boundary documentation.
 
+## P7.9 knowledge and archive runtime result
+
+P7.9 adds:
+
+- `doctor-link knowledge build` command;
+- `doctor-link knowledge query` command;
+- `doctor-link knowledge export` command;
+- local diagnostic knowledge index;
+- recurring failure signature extraction;
+- repair outcome aggregation;
+- project health trend aggregation;
+- `doctor-link archive create` command;
+- `doctor-link archive inspect` command;
+- `doctor-link archive policy-check` command;
+- archive metadata record;
+- retention policy check;
+- audit trail append behavior;
+- local archive export.
+
 ## Final non-local closure result
 
 The repository includes `docs/final-non-local-closure.md`, which records the final non-local closure result and confirms that all repository-side, non-local, non-release work has been completed except target-environment execution.
@@ -264,8 +285,8 @@ The following runtime capabilities remain P7 work until implemented and verified
 
 - [ ] Live third-party integration helpers
 - [ ] Real signing or key management implementation
-- [ ] Enterprise archive runtime
-- [ ] Real local knowledge base runtime
+- [ ] Hosted enterprise archive service
+- [ ] Hosted diagnostic knowledge base service
 
 ## Remaining optional validation
 
