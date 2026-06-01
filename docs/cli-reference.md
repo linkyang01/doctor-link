@@ -83,6 +83,14 @@ doctor-link adapter validate .doctorlink/adapters/demo-adapter/adapter.yml --jso
 doctor-link adapter run demo-adapter verification . --out DoctorReports/adapters --json
 ```
 
+## Plugin runtime
+
+```bash
+doctor-link plugin list . --json
+doctor-link plugin validate .doctorlink/plugins/demo-plugin/plugin.yml --json
+doctor-link plugin run demo-plugin verification . --out DoctorReports/plugins --json
+```
+
 ## Exit behavior
 
 Most commands print output paths and return non-zero when validation fails or inputs are invalid.
