@@ -91,6 +91,16 @@ doctor-link plugin validate .doctorlink/plugins/demo-plugin/plugin.yml --json
 doctor-link plugin run demo-plugin verification . --out DoctorReports/plugins --json
 ```
 
+## Integrity and privacy gates
+
+```bash
+doctor-link integrity manifest . --out DoctorReports/integrity-manifest.json --json
+doctor-link integrity verify . DoctorReports/integrity-manifest.json --json
+doctor-link privacy scan . --out DoctorReports/privacy-scan.json --json
+doctor-link privacy redaction-gate . --out DoctorReports/redaction-gate.json --json
+doctor-link privacy export-gate . --manifest DoctorReports/integrity-manifest.json --out DoctorReports/export-gate.json --json
+```
+
 ## Exit behavior
 
 Most commands print output paths and return non-zero when validation fails or inputs are invalid.

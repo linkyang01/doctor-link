@@ -12,6 +12,16 @@ from doctor_link.core.conformance import run_conformance_suite, write_conformanc
 from doctor_link.core.diagnosis_pipeline import run_diagnosis_compare, run_diagnosis_verify
 from doctor_link.core.diagnosis_workflow import create_after_package, create_before_package
 from doctor_link.core.distribution_readiness import write_distribution_readiness_report
+from doctor_link.core.integrity_privacy import (
+    export_safety_gate,
+    redaction_gate,
+    scan_privacy,
+    verify_integrity_manifest,
+    write_gate_result,
+    write_integrity_manifest,
+    write_integrity_verify,
+    write_privacy_scan,
+)
 from doctor_link.core.plugin_runtime import discover_plugins, run_plugin, validate_plugin_file
 from doctor_link.core.project_health import write_project_health
 from doctor_link.core.reproduction import load_reproduction_catalog, run_reproduction
@@ -404,6 +414,114 @@ def plugin_run(
     click.echo(f"Return code: {result.return_code}")
     if result.status != "passed":
         raise click.ClickException("Plugin run failed.")
+
+
+@main.group("integrity")
+def integrity_group() -> None:
+    """Generate and verify local integrity manifests."""
+
+
+@integrity_group.command("manifest")
+@click.argument("root", type=click.Path(file_okay=False, path_type=Path), default=Path("."), required=False)
+@click.option("--out", "output", type=click.Path(dir_okay=False, path_type=Path), default=Path("DoctorReports/integrity-manifest.json"), help="Integrity manifest output path.")
+@click.option("--include", "includes", multiple=True, help="Optional include glob. Can be passed multiple times.")
+@click.option("--exclude", "excludes", multiple=True, help="Optional exclude glob. Can be passed multiple times.")
+@click.option("--json", "json_output", is_flag=True, help="Print JSON output.")
+def integrity_manifest(root: Path, output: Path, includes: tuple[str, ...], excludes: tuple[str, ...], json_output: bool) -> None:
+    """Generate an unsigned local integrity manifest."""
+    manifest = write_integrity_manifest(root, output, list(includes) or None, list(excludes) or None)
+    if json_output:
+        click.echo(json.dumps(manifest.to_dict(), ensure_ascii=False, indent=2))
+        return
+    click.echo(f"Integrity manifest: {output}")
+    click.echo(f"Files: {len(manifest.files)}")
+    click.echo("Warning: unsigned manifest")
+
+
+@integrity_group.command("verify")
+@click.argument("root", type=click.Path(file_okay=False, path_type=Path))
+@click.argument("manifest", type=click.Path(exists=True, dir_okay=False, path_type=Path))
+@click.option("--out", "output", type=click.Path(dir_okay=False, path_type=Path), default=None, help="Optional verification report output path.")
+@click.option("--json", "json_output", is_flag=True, help="Print JSON output.")
+def integrity_verify(root: Path, manifest: Path, output: Path | None, json_output: bool) -> None:
+    """Verify hashes, missing files, and unsafe paths in an integrity manifest."""
+    result = verify_integrity_manifest(root, manifest)
+    if output:
+        write_integrity_verify(result, output)
+    if json_output:
+        click.echo(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+    else:
+        click.echo(f"Integrity verification status: {result.status}")
+        click.echo(f"Checked files: {result.checked_files}")
+        click.echo(f"Findings: {len(result.findings)}")
+    if result.status != "passed":
+        raise click.ClickException("Integrity verification blocked.")
+
+
+@main.group("privacy")
+def privacy_group() -> None:
+    """Run local privacy, redaction, and export safety gates."""
+
+
+@privacy_group.command("scan")
+@click.argument("root", type=click.Path(file_okay=False, path_type=Path), default=Path("."), required=False)
+@click.option("--policy", type=click.Path(exists=True, dir_okay=False, path_type=Path), default=None, help="Optional privacy policy file.")
+@click.option("--out", "output", type=click.Path(dir_okay=False, path_type=Path), default=None, help="Optional privacy scan report output path.")
+@click.option("--include", "includes", multiple=True, help="Optional include glob. Can be passed multiple times.")
+@click.option("--json", "json_output", is_flag=True, help="Print JSON output.")
+def privacy_scan(root: Path, policy: Path | None, output: Path | None, includes: tuple[str, ...], json_output: bool) -> None:
+    """Scan local files for configured privacy patterns."""
+    result = scan_privacy(root, policy, list(includes) or None)
+    if output:
+        write_privacy_scan(result, output)
+    if json_output:
+        click.echo(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+    else:
+        click.echo(f"Privacy scan status: {result.status}")
+        click.echo(f"Scanned files: {result.scanned_files}")
+        click.echo(f"Findings: {len(result.findings)}")
+    if result.status != "passed":
+        raise click.ClickException("Privacy scan blocked.")
+
+
+@privacy_group.command("redaction-gate")
+@click.argument("root", type=click.Path(file_okay=False, path_type=Path), default=Path("."), required=False)
+@click.option("--policy", type=click.Path(exists=True, dir_okay=False, path_type=Path), default=None, help="Optional privacy policy file.")
+@click.option("--out", "output", type=click.Path(dir_okay=False, path_type=Path), default=None, help="Optional redaction gate output path.")
+@click.option("--include", "includes", multiple=True, help="Optional include glob. Can be passed multiple times.")
+@click.option("--json", "json_output", is_flag=True, help="Print JSON output.")
+def privacy_redaction_gate(root: Path, policy: Path | None, output: Path | None, includes: tuple[str, ...], json_output: bool) -> None:
+    """Block when files still contain privacy findings requiring redaction."""
+    result = redaction_gate(root, policy, list(includes) or None)
+    if output:
+        write_gate_result(result, output)
+    if json_output:
+        click.echo(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+    else:
+        click.echo(f"Redaction gate status: {result.status}")
+        click.echo(f"Findings: {len(result.findings)}")
+    if result.status != "passed":
+        raise click.ClickException("Redaction gate blocked.")
+
+
+@privacy_group.command("export-gate")
+@click.argument("root", type=click.Path(file_okay=False, path_type=Path), default=Path("."), required=False)
+@click.option("--policy", type=click.Path(exists=True, dir_okay=False, path_type=Path), default=None, help="Optional privacy policy file.")
+@click.option("--manifest", type=click.Path(exists=True, dir_okay=False, path_type=Path), default=None, help="Optional integrity manifest to verify before export.")
+@click.option("--out", "output", type=click.Path(dir_okay=False, path_type=Path), default=None, help="Optional export gate output path.")
+@click.option("--json", "json_output", is_flag=True, help="Print JSON output.")
+def privacy_export_gate(root: Path, policy: Path | None, manifest: Path | None, output: Path | None, json_output: bool) -> None:
+    """Block unsafe local exports using privacy and optional integrity checks."""
+    result = export_safety_gate(root, policy, manifest)
+    if output:
+        write_gate_result(result, output)
+    if json_output:
+        click.echo(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+    else:
+        click.echo(f"Export safety gate status: {result.status}")
+        click.echo(f"Findings: {len(result.findings)}")
+    if result.status != "passed":
+        raise click.ClickException("Export safety gate blocked.")
 
 
 @main.command("health")

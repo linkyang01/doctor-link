@@ -17,6 +17,7 @@ Related files:
 - P7.5 Distribution Readiness: `docs/p7-distribution-readiness.md`
 - P7.6 Adapter Runtime: `docs/p7-adapter-runtime.md`
 - P7.7 Plugin Runtime: `docs/p7-plugin-runtime.md`
+- P7.8 Integrity and Privacy Gates: `docs/p7-integrity-privacy-gates.md`
 
 Current boundaries:
 
@@ -156,19 +157,19 @@ Current boundaries:
 
 ## P7.8 P6 integrity/signing/privacy runtime gates
 
-- [ ] Add integrity manifest generator
-- [ ] Add integrity verify command
-- [ ] Add hash mismatch detection
-- [ ] Add missing file detection
-- [ ] Add unsafe path detection
-- [ ] Add unsigned package warning
-- [ ] Add privacy policy loader
-- [ ] Add privacy scan command
-- [ ] Add redaction gate command
-- [ ] Add export safety gate command
-- [ ] Add local test signing plan if authorized
-- [ ] Add tests and fixtures for P7.8
-- [ ] Update documentation for P7.8
+- [x] Add integrity manifest generator
+- [x] Add integrity verify command
+- [x] Add hash mismatch detection
+- [x] Add missing file detection
+- [x] Add unsafe path detection
+- [x] Add unsigned package warning
+- [x] Add privacy policy loader
+- [x] Add privacy scan command
+- [x] Add redaction gate command
+- [x] Add export safety gate command
+- [x] Add local test signing plan if authorized
+- [x] Add tests and fixtures for P7.8
+- [x] Update documentation for P7.8
 
 ## P7.9 P6 local knowledge base and enterprise archive runtime
 

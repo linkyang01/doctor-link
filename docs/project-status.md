@@ -24,6 +24,8 @@ P7.6 has implemented P6 Adapter SDK runtime for adapter manifest loading, schema
 
 P7.7 has implemented P6 Plugin SDK runtime for plugin manifest loading, permission model enforcement, discovery, collector / renderer / handoff / verification extension points, local process boundary, plugin audit log, CLI commands, tests, and documentation.
 
+P7.8 has implemented P6 integrity/signing/privacy runtime gates for local integrity manifests, integrity verification, hash mismatch detection, missing file detection, unsafe path detection, unsigned manifest warnings, privacy policy loading, privacy scanning, redaction gates, export safety gates, tests, and documentation. Real signing and key management remain intentionally out of scope unless explicitly authorized later.
+
 P6 is complete as a specification and schema closure. It does not mean Doctor link has implemented a Web platform, cloud service, account system, marketplace, live third-party integrations, real signing, real permission system, enterprise archive system, or real knowledge base service. These runtime gaps are now tracked under P7.
 
 ## Phase status
@@ -60,7 +62,7 @@ P6 is complete as a specification and schema closure. It does not mean Doctor li
 - [x] P7.5: P5 distribution readiness checks
 - [x] P7.6: P6 Adapter SDK runtime
 - [x] P7.7: P6 Plugin SDK runtime
-- [ ] P7.8: P6 integrity/signing/privacy runtime gates
+- [x] P7.8: P6 integrity/signing/privacy runtime gates
 - [ ] P7.9: P6 local knowledge base and enterprise archive runtime
 - [ ] P7.10: P7 final validation and closure
 
@@ -223,6 +225,22 @@ P7.7 adds:
 - local process boundary label;
 - plugin audit records.
 
+## P7.8 integrity and privacy gates result
+
+P7.8 adds:
+
+- `doctor-link integrity manifest` command;
+- `doctor-link integrity verify` command;
+- hash mismatch detection;
+- missing file detection;
+- unsafe path detection;
+- unsigned manifest warning;
+- privacy policy loader;
+- `doctor-link privacy scan` command;
+- `doctor-link privacy redaction-gate` command;
+- `doctor-link privacy export-gate` command;
+- local test signing boundary documentation.
+
 ## Final non-local closure result
 
 The repository includes `docs/final-non-local-closure.md`, which records the final non-local closure result and confirms that all repository-side, non-local, non-release work has been completed except target-environment execution.
@@ -246,9 +264,6 @@ The following runtime capabilities remain P7 work until implemented and verified
 
 - [ ] Live third-party integration helpers
 - [ ] Real signing or key management implementation
-- [ ] Integrity verify runtime command
-- [ ] Privacy scan / redaction gate / export safety gate
-- [ ] Real permission system or local policy enforcement beyond current redaction behavior
 - [ ] Enterprise archive runtime
 - [ ] Real local knowledge base runtime
 
