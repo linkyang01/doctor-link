@@ -12,6 +12,7 @@ from doctor_link.core.conformance import run_conformance_suite, write_conformanc
 from doctor_link.core.diagnosis_pipeline import run_diagnosis_compare, run_diagnosis_verify
 from doctor_link.core.diagnosis_workflow import create_after_package, create_before_package
 from doctor_link.core.distribution_readiness import write_distribution_readiness_report
+from doctor_link.core.plugin_runtime import discover_plugins, run_plugin, validate_plugin_file
 from doctor_link.core.project_health import write_project_health
 from doctor_link.core.reproduction import load_reproduction_catalog, run_reproduction
 from doctor_link.core.schema_validator import validate_diagnostic_package, write_schema_validation_result
@@ -326,6 +327,83 @@ def adapter_run(
     click.echo(f"Return code: {result.return_code}")
     if result.status != "passed":
         raise click.ClickException("Adapter run failed.")
+
+
+@main.group("plugin")
+def plugin_group() -> None:
+    """Discover, validate, and run local plugins."""
+
+
+@plugin_group.command("list")
+@click.argument("project_root", type=click.Path(file_okay=False, path_type=Path), default=Path("."), required=False)
+@click.option("--plugins-dir", type=click.Path(file_okay=False, path_type=Path), default=None, help="Plugin directory override.")
+@click.option("--json", "json_output", is_flag=True, help="Print JSON output.")
+def plugin_list(project_root: Path, plugins_dir: Path | None, json_output: bool) -> None:
+    """List discovered local plugins."""
+    catalog = discover_plugins(project_root, plugins_dir)
+    if json_output:
+        click.echo(json.dumps(catalog.to_dict(), ensure_ascii=False, indent=2))
+        return
+    click.echo("# Plugins")
+    if not catalog.plugins:
+        click.echo("- None")
+    for plugin in catalog.plugins:
+        click.echo(f"- {plugin.plugin_id}: {plugin.name} ({plugin.version})")
+    for finding in catalog.findings:
+        click.echo(f"Finding: {finding.get('severity')} {finding.get('code')} {finding.get('message')}")
+
+
+@plugin_group.command("validate")
+@click.argument("manifest", type=click.Path(exists=True, dir_okay=False, path_type=Path))
+@click.option("--json", "json_output", is_flag=True, help="Print JSON output.")
+def plugin_validate(manifest: Path, json_output: bool) -> None:
+    """Validate a plugin manifest."""
+    result = validate_plugin_file(manifest)
+    if json_output:
+        click.echo(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+    else:
+        click.echo(f"Plugin validation status: {result.status}")
+        click.echo(f"Plugin: {result.plugin_id}")
+        click.echo(f"Findings: {len(result.findings)}")
+    if not result.valid:
+        raise click.ClickException("Plugin validation failed.")
+
+
+@plugin_group.command("run")
+@click.argument("plugin_id")
+@click.argument("extension_point")
+@click.argument("project_root", type=click.Path(file_okay=False, path_type=Path), default=Path("."), required=False)
+@click.option("--plugins-dir", type=click.Path(file_okay=False, path_type=Path), default=None, help="Plugin directory override.")
+@click.option("--out", "output", type=click.Path(file_okay=False, path_type=Path), default=None, help="Output directory for plugin run records.")
+@click.option("--timeout", default=60, show_default=True, type=int, help="Plugin command timeout in seconds.")
+@click.option("--json", "json_output", is_flag=True, help="Print JSON output.")
+def plugin_run(
+    plugin_id: str,
+    extension_point: str,
+    project_root: Path,
+    plugins_dir: Path | None,
+    output: Path | None,
+    timeout: int,
+    json_output: bool,
+) -> None:
+    """Run a configured local plugin extension point."""
+    result = run_plugin(
+        project_root,
+        plugin_id,
+        extension_point,
+        plugins_dir=plugins_dir,
+        output_dir=output,
+        timeout_seconds=timeout,
+    )
+    if json_output:
+        click.echo(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+        return
+    click.echo(f"Plugin run status: {result.status}")
+    click.echo(f"Plugin: {result.plugin_id}")
+    click.echo(f"Extension point: {result.extension_point}")
+    click.echo(f"Return code: {result.return_code}")
+    if result.status != "passed":
+        raise click.ClickException("Plugin run failed.")
 
 
 @main.command("health")
