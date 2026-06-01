@@ -6,6 +6,7 @@ from pathlib import Path
 import click
 
 from doctor_link.cli import main
+from doctor_link.core.adapter_runtime import discover_adapters, run_adapter, validate_adapter_file
 from doctor_link.core.ci_automation import write_ci_report
 from doctor_link.core.conformance import run_conformance_suite, write_conformance_report
 from doctor_link.core.diagnosis_pipeline import run_diagnosis_compare, run_diagnosis_verify
@@ -248,6 +249,83 @@ def distribution_check(project_root: Path, dist_dir: Path | None, output: Path |
         click.echo(f"Checksums: {out / 'checksums.sha256'}")
     if report.status != "passed":
         raise click.ClickException("Distribution readiness blocked.")
+
+
+@main.group("adapter")
+def adapter_group() -> None:
+    """Discover, validate, and run local adapters."""
+
+
+@adapter_group.command("list")
+@click.argument("project_root", type=click.Path(file_okay=False, path_type=Path), default=Path("."), required=False)
+@click.option("--adapters-dir", type=click.Path(file_okay=False, path_type=Path), default=None, help="Adapter directory override.")
+@click.option("--json", "json_output", is_flag=True, help="Print JSON output.")
+def adapter_list(project_root: Path, adapters_dir: Path | None, json_output: bool) -> None:
+    """List discovered local adapters."""
+    catalog = discover_adapters(project_root, adapters_dir)
+    if json_output:
+        click.echo(json.dumps(catalog.to_dict(), ensure_ascii=False, indent=2))
+        return
+    click.echo("# Adapters")
+    if not catalog.adapters:
+        click.echo("- None")
+    for adapter in catalog.adapters:
+        click.echo(f"- {adapter.adapter_id}: {adapter.name} ({adapter.version})")
+    for finding in catalog.findings:
+        click.echo(f"Finding: {finding.get('severity')} {finding.get('code')} {finding.get('message')}")
+
+
+@adapter_group.command("validate")
+@click.argument("manifest", type=click.Path(exists=True, dir_okay=False, path_type=Path))
+@click.option("--json", "json_output", is_flag=True, help="Print JSON output.")
+def adapter_validate(manifest: Path, json_output: bool) -> None:
+    """Validate an adapter manifest."""
+    result = validate_adapter_file(manifest)
+    if json_output:
+        click.echo(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+    else:
+        click.echo(f"Adapter validation status: {result.status}")
+        click.echo(f"Adapter: {result.adapter_id}")
+        click.echo(f"Findings: {len(result.findings)}")
+    if not result.valid:
+        raise click.ClickException("Adapter validation failed.")
+
+
+@adapter_group.command("run")
+@click.argument("adapter_id")
+@click.argument("capability")
+@click.argument("project_root", type=click.Path(file_okay=False, path_type=Path), default=Path("."), required=False)
+@click.option("--adapters-dir", type=click.Path(file_okay=False, path_type=Path), default=None, help="Adapter directory override.")
+@click.option("--out", "output", type=click.Path(file_okay=False, path_type=Path), default=None, help="Output directory for adapter run records.")
+@click.option("--timeout", default=60, show_default=True, type=int, help="Adapter command timeout in seconds.")
+@click.option("--json", "json_output", is_flag=True, help="Print JSON output.")
+def adapter_run(
+    adapter_id: str,
+    capability: str,
+    project_root: Path,
+    adapters_dir: Path | None,
+    output: Path | None,
+    timeout: int,
+    json_output: bool,
+) -> None:
+    """Run a configured local adapter capability."""
+    result = run_adapter(
+        project_root,
+        adapter_id,
+        capability,
+        adapters_dir=adapters_dir,
+        output_dir=output,
+        timeout_seconds=timeout,
+    )
+    if json_output:
+        click.echo(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+        return
+    click.echo(f"Adapter run status: {result.status}")
+    click.echo(f"Adapter: {result.adapter_id}")
+    click.echo(f"Capability: {result.capability}")
+    click.echo(f"Return code: {result.return_code}")
+    if result.status != "passed":
+        raise click.ClickException("Adapter run failed.")
 
 
 @main.command("health")

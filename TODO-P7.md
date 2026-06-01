@@ -15,6 +15,7 @@ Related files:
 - P7.3 AI Handoff Runtime: `docs/p7-ai-handoff-runtime.md`
 - P7.4 Operational Automation: `docs/p7-operational-automation.md`
 - P7.5 Distribution Readiness: `docs/p7-distribution-readiness.md`
+- P7.6 Adapter Runtime: `docs/p7-adapter-runtime.md`
 
 Current boundaries:
 
@@ -120,20 +121,20 @@ Current boundaries:
 
 ## P7.6 P6 Adapter SDK runtime
 
-- [ ] Add adapter manifest loader
-- [ ] Add adapter schema validation
-- [ ] Add adapter capability validation
-- [ ] Add adapter discovery
-- [ ] Add local adapter execution boundary
-- [ ] Add evidence collector adapter interface
-- [ ] Add verification adapter interface
-- [ ] Add handoff adapter interface
-- [ ] Add adapter audit records
-- [ ] Add `doctor-link adapter list`
-- [ ] Add `doctor-link adapter validate`
-- [ ] Add `doctor-link adapter run`
-- [ ] Add tests and fixtures for P7.6
-- [ ] Update documentation for P7.6
+- [x] Add adapter manifest loader
+- [x] Add adapter schema validation
+- [x] Add adapter capability validation
+- [x] Add adapter discovery
+- [x] Add local adapter execution boundary
+- [x] Add evidence collector adapter interface
+- [x] Add verification adapter interface
+- [x] Add handoff adapter interface
+- [x] Add adapter audit records
+- [x] Add `doctor-link adapter list`
+- [x] Add `doctor-link adapter validate`
+- [x] Add `doctor-link adapter run`
+- [x] Add tests and fixtures for P7.6
+- [x] Update documentation for P7.6
 
 ## P7.7 P6 Plugin SDK runtime
 
