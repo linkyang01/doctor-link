@@ -75,6 +75,14 @@ doctor-link ci report DoctorReports --out DoctorReports/ci --json
 doctor-link distribution check . --dist dist --out DoctorReports/distribution --json
 ```
 
+## Adapter runtime
+
+```bash
+doctor-link adapter list . --json
+doctor-link adapter validate .doctorlink/adapters/demo-adapter/adapter.yml --json
+doctor-link adapter run demo-adapter verification . --out DoctorReports/adapters --json
+```
+
 ## Exit behavior
 
 Most commands print output paths and return non-zero when validation fails or inputs are invalid.
