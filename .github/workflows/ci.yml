@@ -65,6 +65,10 @@ jobs:
           test -n "$(find dist -name '*.whl' -print -quit)"
           test -n "$(find dist -name '*.tar.gz' -print -quit)"
 
+      - name: Run P7 runtime validation
+        run: |
+          bash scripts/p7_runtime_validate.sh "$(pwd)"
+
       - name: Smoke test installed wheel
         run: |
           python -m venv .wheel-smoke
@@ -85,6 +89,7 @@ jobs:
             coverage.xml
             dist/**
             .doctorlink-e2e/**
+            .doctorlink-p7-runtime/**
             DoctorReports/**
           if-no-files-found: warn
 
@@ -118,11 +123,14 @@ jobs:
           python -m pip install dist/*.whl
           doctor-link --help
           bash scripts/validate_doctor_link.sh /tmp/DoctorLinkValidation
+          bash scripts/p7_runtime_validate.sh "$(pwd)"
 
       - name: Upload package artifacts
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: doctor-link-package-artifacts
-          path: dist/**
+          path: |
+            dist/**
+            .doctorlink-p7-runtime/**
           if-no-files-found: error
