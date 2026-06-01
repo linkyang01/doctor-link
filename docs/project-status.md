@@ -20,7 +20,9 @@ P7.4 has implemented P4 operational automation hardening for CI report generatio
 
 P7.5 has implemented P5 distribution readiness checks for local dry-run review, artifact checksums, wheel metadata verification, source archive metadata verification, distribution manifest generation, blocking checklist automation, target-environment capture, tests, and documentation.
 
-P6 is complete as a specification and schema closure. It does not mean Doctor link has implemented a Web platform, cloud service, account system, marketplace, live third-party integrations, real signing, real permission system, enterprise archive system, real knowledge base service, Adapter SDK runtime, or Plugin SDK runtime. These runtime gaps are now tracked under P7.
+P7.6 has implemented P6 Adapter SDK runtime for adapter manifest loading, schema validation, capability validation, discovery, local execution boundaries, evidence collector / verification / handoff capability interfaces, audit records, CLI commands, tests, and documentation.
+
+P6 is complete as a specification and schema closure. It does not mean Doctor link has implemented a Web platform, cloud service, account system, marketplace, live third-party integrations, real signing, real permission system, enterprise archive system, real knowledge base service, or Plugin SDK runtime. These runtime gaps are now tracked under P7.
 
 ## Phase status
 
@@ -54,7 +56,7 @@ P6 is complete as a specification and schema closure. It does not mean Doctor li
 - [x] P7.3: P3 AI tool runtime handoff implementation
 - [x] P7.4: P4 operational automation hardening
 - [x] P7.5: P5 distribution readiness checks
-- [ ] P7.6: P6 Adapter SDK runtime
+- [x] P7.6: P6 Adapter SDK runtime
 - [ ] P7.7: P6 Plugin SDK runtime
 - [ ] P7.8: P6 integrity/signing/privacy runtime gates
 - [ ] P7.9: P6 local knowledge base and enterprise archive runtime
@@ -190,6 +192,21 @@ P7.5 adds:
 - target environment capture;
 - local report JSON and Markdown generation.
 
+## P7.6 adapter runtime result
+
+P7.6 adds:
+
+- `doctor-link adapter list` command;
+- `doctor-link adapter validate` command;
+- `doctor-link adapter run` command;
+- adapter manifest loader;
+- adapter schema validation;
+- adapter capability validation;
+- adapter discovery across local adapter roots;
+- local adapter execution boundary;
+- evidence collector, verification, and handoff capability interfaces;
+- adapter audit records.
+
 ## Final non-local closure result
 
 The repository includes `docs/final-non-local-closure.md`, which records the final non-local closure result and confirms that all repository-side, non-local, non-release work has been completed except target-environment execution.
@@ -211,7 +228,6 @@ No release action has been performed.
 
 The following runtime capabilities remain P7 work until implemented and verified:
 
-- [ ] Adapter SDK runtime
 - [ ] Plugin SDK runtime
 - [ ] Live third-party integration helpers
 - [ ] Real signing or key management implementation
