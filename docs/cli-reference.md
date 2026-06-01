@@ -68,6 +68,13 @@ doctor-link diagnose verify <after_package> --json
 doctor-link health DoctorReports --json
 ```
 
+## CI and distribution readiness
+
+```bash
+doctor-link ci report DoctorReports --out DoctorReports/ci --json
+doctor-link distribution check . --dist dist --out DoctorReports/distribution --json
+```
+
 ## Exit behavior
 
 Most commands print output paths and return non-zero when validation fails or inputs are invalid.

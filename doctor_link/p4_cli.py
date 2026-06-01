@@ -10,6 +10,7 @@ from doctor_link.core.ci_automation import write_ci_report
 from doctor_link.core.conformance import run_conformance_suite, write_conformance_report
 from doctor_link.core.diagnosis_pipeline import run_diagnosis_compare, run_diagnosis_verify
 from doctor_link.core.diagnosis_workflow import create_after_package, create_before_package
+from doctor_link.core.distribution_readiness import write_distribution_readiness_report
 from doctor_link.core.project_health import write_project_health
 from doctor_link.core.reproduction import load_reproduction_catalog, run_reproduction
 from doctor_link.core.schema_validator import validate_diagnostic_package, write_schema_validation_result
@@ -220,6 +221,33 @@ def ci_report(reports_dir: Path, output: Path | None, json_output: bool) -> None
     click.echo(f"Report: {out / 'ci-report.md'}")
     click.echo(f"GitHub summary: {out / 'github-step-summary.md'}")
     click.echo(f"Artifact index: {out / 'ci-artifact-index.json'}")
+
+
+@main.group("distribution")
+def distribution_group() -> None:
+    """Run local distribution readiness checks."""
+
+
+@distribution_group.command("check")
+@click.argument("project_root", type=click.Path(file_okay=False, path_type=Path), default=Path("."), required=False)
+@click.option("--dist", "dist_dir", type=click.Path(file_okay=False, path_type=Path), default=None, help="Distribution artifact directory.")
+@click.option("--out", "output", type=click.Path(file_okay=False, path_type=Path), default=None, help="Output directory for distribution readiness artifacts.")
+@click.option("--json", "json_output", is_flag=True, help="Print JSON output.")
+def distribution_check(project_root: Path, dist_dir: Path | None, output: Path | None, json_output: bool) -> None:
+    """Generate local distribution readiness report without publishing."""
+    report = write_distribution_readiness_report(project_root, dist_dir=dist_dir, output_dir=output)
+    if json_output:
+        click.echo(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+    else:
+        out = Path(report.output_dir)
+        click.echo(f"Distribution readiness status: {report.status}")
+        click.echo(f"Blocking findings: {report.blocking_count}")
+        click.echo(f"Warnings: {report.warning_count}")
+        click.echo(f"Report: {out / 'distribution-report.md'}")
+        click.echo(f"Manifest: {out / 'distribution-manifest.json'}")
+        click.echo(f"Checksums: {out / 'checksums.sha256'}")
+    if report.status != "passed":
+        raise click.ClickException("Distribution readiness blocked.")
 
 
 @main.command("health")
