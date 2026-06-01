@@ -101,6 +101,18 @@ doctor-link privacy redaction-gate . --out DoctorReports/redaction-gate.json --j
 doctor-link privacy export-gate . --manifest DoctorReports/integrity-manifest.json --out DoctorReports/export-gate.json --json
 ```
 
+## Knowledge and archive runtime
+
+```bash
+doctor-link knowledge build DoctorReports --out DoctorReports/knowledge-index.json --json
+doctor-link knowledge query DoctorReports/knowledge-index.json "missing evidence" --json
+doctor-link knowledge export DoctorReports/knowledge-index.json DoctorReports/knowledge-export.json --json
+doctor-link archive create DoctorReports DoctorReports/archive --metadata owner=qa --json
+doctor-link archive inspect DoctorReports/archive --json
+doctor-link archive policy-check DoctorReports/archive --max-files 1000 --json
+doctor-link archive export DoctorReports/archive DoctorReports/archive.zip --json
+```
+
 ## Exit behavior
 
 Most commands print output paths and return non-zero when validation fails or inputs are invalid.
