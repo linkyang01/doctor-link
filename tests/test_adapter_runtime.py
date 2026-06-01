@@ -14,39 +14,42 @@ from doctor_link.core.adapter_runtime import (
 from doctor_link.p4_cli import main
 
 
-def _write_adapter(project_root: Path, adapter_id: str = "demo-adapter") -> Path:
+def _adapter_manifest_text(adapter_id: str = "demo-adapter", extra_capabilities: list[str] | None = None) -> str:
+    capabilities = ["evidence_collector", "verification", "handoff"] + (extra_capabilities or [])
+    lines = [
+        "schema: doctor-link-adapter-v1",
+        f"id: {adapter_id}",
+        "name: Demo Adapter",
+        "version: 0.1.0",
+        "description: Demo local adapter",
+        "capabilities:",
+    ]
+    lines.extend(f"  - {capability}" for capability in capabilities)
+    lines.extend(
+        [
+            "commands:",
+            "  evidence_collector:",
+            "    - python",
+            "    - -c",
+            "    - print('evidence-ok')",
+            "  verification:",
+            "    - python",
+            "    - -c",
+            "    - print('verify-ok')",
+            "  handoff:",
+            "    - python",
+            "    - -c",
+            "    - print('handoff-ok')",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def _write_adapter(project_root: Path, adapter_id: str = "demo-adapter", extra_capabilities: list[str] | None = None) -> Path:
     adapter_dir = project_root / ".doctorlink" / "adapters" / adapter_id
     adapter_dir.mkdir(parents=True)
     manifest = adapter_dir / "adapter.yml"
-    manifest.write_text(
-        "\n".join(
-            [
-                "schema: doctor-link-adapter-v1",
-                f"id: {adapter_id}",
-                "name: Demo Adapter",
-                "version: 0.1.0",
-                "description: Demo local adapter",
-                "capabilities:",
-                "  - evidence_collector",
-                "  - verification",
-                "  - handoff",
-                "commands:",
-                "  evidence_collector:",
-                "    - python",
-                "    - -c",
-                "    - print('evidence-ok')",
-                "  verification:",
-                "    - python",
-                "    - -c",
-                "    - print('verify-ok')",
-                "  handoff:",
-                "    - python",
-                "    - -c",
-                "    - print('handoff-ok')",
-            ]
-        ),
-        encoding="utf-8",
-    )
+    manifest.write_text(_adapter_manifest_text(adapter_id, extra_capabilities), encoding="utf-8")
     return manifest
 
 
@@ -63,9 +66,7 @@ def test_load_and_validate_adapter_manifest(tmp_path: Path) -> None:
 
 
 def test_validate_adapter_manifest_blocks_unknown_capability(tmp_path: Path) -> None:
-    manifest_path = _write_adapter(tmp_path)
-    text = manifest_path.read_text(encoding="utf-8")
-    manifest_path.write_text(text + "\n  - unknown_capability\n", encoding="utf-8")
+    manifest_path = _write_adapter(tmp_path, extra_capabilities=["unknown_capability"])
 
     result = validate_adapter_file(manifest_path)
 
