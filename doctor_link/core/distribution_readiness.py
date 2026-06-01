@@ -390,14 +390,35 @@ def _parse_metadata_text(text: str) -> dict[str, Any]:
 def _read_pyproject(path: Path) -> dict[str, Any]:
     if not path.exists():
         return {}
+    text = path.read_text(encoding="utf-8")
     try:
         import tomllib
-    except ModuleNotFoundError:  # pragma: no cover - Python 3.10 fallback is not needed in CI.
-        return {}
+    except ModuleNotFoundError:
+        return _read_project_table_fallback(text)
     try:
-        return tomllib.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return {}
+        return tomllib.loads(text)
+    except ValueError:
+        return _read_project_table_fallback(text)
+
+
+def _read_project_table_fallback(text: str) -> dict[str, Any]:
+    project: dict[str, Any] = {}
+    in_project = False
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("[") and line.endswith("]"):
+            in_project = line == "[project]"
+            continue
+        if not in_project or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        if key in REQUIRED_PYPROJECT_FIELDS:
+            project[key] = value
+    return {"project": project} if project else {}
 
 
 def _check(check_id: str, passed: bool, severity: str, message: str) -> dict[str, Any]:
