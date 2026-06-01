@@ -14,6 +14,7 @@ Related files:
 - P7.2 Workbench Hardening: `docs/p7-workbench-hardening.md`
 - P7.3 AI Handoff Runtime: `docs/p7-ai-handoff-runtime.md`
 - P7.4 Operational Automation: `docs/p7-operational-automation.md`
+- P7.5 Distribution Readiness: `docs/p7-distribution-readiness.md`
 
 Current boundaries:
 
@@ -106,16 +107,16 @@ Current boundaries:
 
 ## P7.5 P5 release/distribution readiness execution plan
 
-- [ ] Add release dry-run command or script
-- [ ] Add artifact checksum generation
-- [ ] Add wheel metadata verification
-- [ ] Add sdist metadata verification
-- [ ] Add release manifest generation
-- [ ] Add release blocking checklist automation
-- [ ] Add target-environment validation helper
-- [ ] Add tests and fixtures for P7.5
-- [ ] Update documentation for P7.5
-- [ ] Do not publish release without explicit authorization
+- [x] Add release dry-run command or script
+- [x] Add artifact checksum generation
+- [x] Add wheel metadata verification
+- [x] Add sdist metadata verification
+- [x] Add release manifest generation
+- [x] Add release blocking checklist automation
+- [x] Add target-environment validation helper
+- [x] Add tests and fixtures for P7.5
+- [x] Update documentation for P7.5
+- [x] Do not publish release without explicit authorization
 
 ## P7.6 P6 Adapter SDK runtime
 
