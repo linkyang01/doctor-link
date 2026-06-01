@@ -16,6 +16,7 @@ Related files:
 - P7.4 Operational Automation: `docs/p7-operational-automation.md`
 - P7.5 Distribution Readiness: `docs/p7-distribution-readiness.md`
 - P7.6 Adapter Runtime: `docs/p7-adapter-runtime.md`
+- P7.7 Plugin Runtime: `docs/p7-plugin-runtime.md`
 
 Current boundaries:
 
@@ -138,20 +139,20 @@ Current boundaries:
 
 ## P7.7 P6 Plugin SDK runtime
 
-- [ ] Add plugin manifest loader
-- [ ] Add plugin permission model enforcement
-- [ ] Add plugin discovery
-- [ ] Add collector plugin extension point
-- [ ] Add renderer plugin extension point
-- [ ] Add handoff plugin extension point
-- [ ] Add verification plugin extension point
-- [ ] Add plugin sandbox boundary
-- [ ] Add plugin audit log
-- [ ] Add `doctor-link plugin list`
-- [ ] Add `doctor-link plugin validate`
-- [ ] Add `doctor-link plugin run`
-- [ ] Add tests and fixtures for P7.7
-- [ ] Update documentation for P7.7
+- [x] Add plugin manifest loader
+- [x] Add plugin permission model enforcement
+- [x] Add plugin discovery
+- [x] Add collector plugin extension point
+- [x] Add renderer plugin extension point
+- [x] Add handoff plugin extension point
+- [x] Add verification plugin extension point
+- [x] Add plugin sandbox boundary
+- [x] Add plugin audit log
+- [x] Add `doctor-link plugin list`
+- [x] Add `doctor-link plugin validate`
+- [x] Add `doctor-link plugin run`
+- [x] Add tests and fixtures for P7.7
+- [x] Update documentation for P7.7
 
 ## P7.8 P6 integrity/signing/privacy runtime gates
 
