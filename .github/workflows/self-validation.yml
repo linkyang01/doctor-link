@@ -28,12 +28,16 @@ jobs:
       - name: Self validation
         run: |
           bash scripts/self_validate_doctor_link.sh DoctorLinkSelfValidation
+      - name: P7 runtime validation
+        run: |
+          bash scripts/p7_runtime_validate.sh "$(pwd)"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: self-validation
           path: |
             DoctorLinkSelfValidation/**
+            .doctorlink-p7-runtime/**
             coverage.xml
             dist/**
           if-no-files-found: warn
