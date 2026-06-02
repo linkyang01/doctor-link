@@ -38,6 +38,7 @@ jobs:
 
       - name: Run tests with coverage
         run: |
+          mkdir -p junit
           pytest -q --cov=doctor_link --cov-report=term-missing --cov-report=xml --junitxml=junit/test-results-${{ matrix.python-version }}.xml
 
       - name: Run CLI smoke tests
