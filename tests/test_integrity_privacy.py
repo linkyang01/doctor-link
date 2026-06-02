@@ -16,7 +16,7 @@ from doctor_link.core.integrity_privacy import (
     write_integrity_verify,
     write_privacy_scan,
 )
-from doctor_link.p4_cli import main
+from doctor_link.entrypoint import main
 
 
 def test_build_and_verify_integrity_manifest(tmp_path: Path) -> None:
@@ -76,6 +76,22 @@ def test_integrity_verify_detects_unsafe_path(tmp_path: Path) -> None:
 
     assert result.status == "blocked"
     assert any(item["code"] == "unsafe-path" for item in result.findings)
+
+
+def test_integrity_strict_detects_untracked_file(tmp_path: Path) -> None:
+    root = tmp_path / "root"
+    root.mkdir()
+    (root / "file.txt").write_text("tracked\n", encoding="utf-8")
+    manifest_path = tmp_path / "integrity.json"
+    write_integrity_manifest(root, manifest_path)
+    (root / "extra.txt").write_text("untracked\n", encoding="utf-8")
+
+    normal = verify_integrity_manifest(root, manifest_path)
+    strict = verify_integrity_manifest(root, manifest_path, strict=True)
+
+    assert normal.status == "passed"
+    assert strict.status == "blocked"
+    assert any(item["code"] == "untracked-file" for item in strict.findings)
 
 
 def test_privacy_scan_detects_default_patterns(tmp_path: Path) -> None:
@@ -173,3 +189,19 @@ def test_integrity_and_privacy_cli_commands(tmp_path: Path) -> None:
     assert result_redaction.exit_code == 0
     assert result_export.exit_code == 0
     assert '"status": "passed"' in result_verify.output
+
+
+def test_integrity_cli_strict_detects_untracked_file(tmp_path: Path) -> None:
+    root = tmp_path / "root"
+    root.mkdir()
+    (root / "safe.txt").write_text("safe\n", encoding="utf-8")
+    manifest_path = tmp_path / "integrity.json"
+    runner = CliRunner()
+
+    result_manifest = runner.invoke(main, ["integrity", "manifest", str(root), "--out", str(manifest_path), "--json"])
+    (root / "extra.txt").write_text("untracked\n", encoding="utf-8")
+    result_verify = runner.invoke(main, ["integrity", "verify", str(root), str(manifest_path), "--strict", "--json"])
+
+    assert result_manifest.exit_code == 0
+    assert result_verify.exit_code != 0
+    assert "untracked-file" in result_verify.output
