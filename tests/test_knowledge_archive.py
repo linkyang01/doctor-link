@@ -17,7 +17,7 @@ from doctor_link.core.knowledge_archive import (
     query_knowledge,
     write_knowledge_index,
 )
-from doctor_link.p4_cli import main
+from doctor_link.entrypoint import main
 
 
 def _write_report(root: Path, name: str, payload: dict[str, object]) -> Path:
@@ -79,6 +79,32 @@ def test_create_inspect_policy_and_export_archive(tmp_path: Path) -> None:
         assert "archive-record.json" in archive_zip.namelist()
 
 
+def test_create_archive_blocks_archive_inside_source(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    source.mkdir()
+    (source / "a.txt").write_text("a", encoding="utf-8")
+
+    try:
+        create_archive(source, source / "archive")
+    except ValueError as exc:
+        assert "archive_root" in str(exc)
+    else:  # pragma: no cover
+        raise AssertionError("Expected archive_root inside source_root to be blocked")
+
+
+def test_create_archive_blocks_archive_equal_to_source(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    source.mkdir()
+    (source / "a.txt").write_text("a", encoding="utf-8")
+
+    try:
+        create_archive(source, source)
+    except ValueError as exc:
+        assert "archive_root" in str(exc)
+    else:  # pragma: no cover
+        raise AssertionError("Expected archive_root equal to source_root to be blocked")
+
+
 def test_append_archive_audit(tmp_path: Path) -> None:
     archive = tmp_path / "archive"
     archive.mkdir()
@@ -117,3 +143,15 @@ def test_knowledge_and_archive_cli_commands(tmp_path: Path) -> None:
     assert archive_policy.exit_code == 0
     assert '"matched_count": 1' in query_result.output
     assert '"status": "passed"' in archive_policy.output
+
+
+def test_archive_create_cli_blocks_archive_inside_source(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    source.mkdir()
+    (source / "a.txt").write_text("a", encoding="utf-8")
+    runner = CliRunner()
+
+    result = runner.invoke(main, ["archive", "create", str(source), str(source / "archive"), "--json"])
+
+    assert result.exit_code != 0
+    assert "archive_root" in result.output
