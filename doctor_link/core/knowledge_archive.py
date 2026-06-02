@@ -117,6 +117,8 @@ def export_knowledge(index_path: Path, output: Path) -> KnowledgeIndex:
 def create_archive(source_root: Path, archive_root: Path, metadata: dict[str, Any] | None = None) -> ArchiveRecord:
     source_root = source_root.resolve()
     archive_root = archive_root.resolve()
+    if archive_root == source_root or _is_relative_to(archive_root, source_root):
+        raise ValueError("archive_root must not be the source root or inside the source root.")
     archive_root.mkdir(parents=True, exist_ok=True)
     files: list[dict[str, Any]] = []
     for source in sorted(path for path in source_root.rglob("*") if path.is_file()):
@@ -261,6 +263,14 @@ def _write_archive_record(archive_root: Path, record: ArchiveRecord) -> None:
         json.dumps(record.to_dict(), ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
+
+
+def _is_relative_to(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+    except ValueError:
+        return False
+    return True
 
 
 def _audit(event: str, details: dict[str, Any]) -> dict[str, Any]:

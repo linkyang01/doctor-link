@@ -81,7 +81,10 @@ def archive_group() -> None:
 def archive_create(source_root: Path, archive_root: Path, metadata_items: tuple[str, ...], json_output: bool) -> None:
     """Create a local archive from a source directory."""
     metadata = _metadata_dict(metadata_items)
-    record = create_archive(source_root, archive_root, metadata)
+    try:
+        record = create_archive(source_root, archive_root, metadata)
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
     if json_output:
         click.echo(json.dumps(record.to_dict(), ensure_ascii=False, indent=2))
         return

@@ -40,7 +40,7 @@ Repository = "https://github.com/linkyang01/doctor-link"
 Issues = "https://github.com/linkyang01/doctor-link/issues"
 
 [project.scripts]
-doctor-link = "doctor_link.p4_cli:main"
+doctor-link = "doctor_link.entrypoint:main"
 
 [tool.setuptools.packages.find]
 include = ["doctor_link*"]
