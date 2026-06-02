@@ -1,34 +1,36 @@
 # Doctor link Project Status
 
-Status date: 2026-06-01
+Status date: 2026-06-02
 
 ## Current status
 
-Doctor link has completed P0 through P5.10, has passed P5.10 cloud validation on GitHub Actions, has passed cloud self-validation, and has completed P6.1 through P6.11 as planning, schema, specification, conformance, ecosystem asset, and quality-closure documentation.
+Doctor link has completed P0 through P5.10, has passed P5.10 cloud validation on GitHub Actions, has passed cloud self-validation, has completed P6.1 through P6.11 as planning, schema, specification, conformance, ecosystem asset, and quality-closure documentation, and has completed P7.0 through P7.10 as local runtime implementation and final validation closure.
 
 All repository-side, non-local, non-release closure work has been completed. The only remaining unchecked non-P7 item is local or target-environment validation, which must be executed on the intended local machine, workstation, CI runner, customer delivery environment, or offline target environment.
 
-P7 has been opened as the runtime implementation and real-capability completion phase. P7.0 defines the real-capability gap audit, implementation roadmap, and acceptance criteria. P7 runtime work must not be considered complete with documentation alone.
+P7 was opened as the runtime implementation and real-capability completion phase. P7.10 adds final validation and closure through `scripts/p7_runtime_validate.sh`, CI integration, self-validation integration, final audit documentation, README updates, and project status closure.
 
-P7.1 has implemented P1/P1+ evidence hardening for command metadata, environment capture, log ingestion hardening, and evidence integrity indexing.
+P7.1 implemented P1/P1+ evidence hardening for command metadata, environment capture, log ingestion hardening, and evidence integrity indexing.
 
-P7.2 has implemented P2/P2+ local workbench product hardening for collapsible sections, local evidence filters, project health panel, verification state visualization, accessibility structure, and controlled CLI-only write-back with backup and audit.
+P7.2 implemented P2/P2+ local workbench product hardening for collapsible sections, local evidence filters, project health panel, verification state visualization, accessibility structure, and controlled CLI-only write-back with backup and audit.
 
-P7.3 has implemented P3 AI tool runtime handoff for target tool profiles, compatibility checks, target-specific instructions, file inclusion policy enforcement, missing evidence warnings, privacy warnings, enhanced AI result ingestion, repair session IDs, and multi-round repair session management.
+P7.3 implemented P3 AI tool runtime handoff for target tool profiles, compatibility checks, target-specific instructions, file inclusion policy enforcement, missing evidence warnings, privacy warnings, enhanced AI result ingestion, repair session IDs, and multi-round repair session management.
 
-P7.4 has implemented P4 operational automation hardening for CI report generation, GitHub Actions markdown summaries, failure triage, regression scoring, test matrix aggregation, project health trend generation, and CI artifact indexing.
+P7.4 implemented P4 operational automation hardening for CI report generation, GitHub Actions markdown summaries, failure triage, regression scoring, test matrix aggregation, project health trend generation, and CI artifact indexing.
 
-P7.5 has implemented P5 distribution readiness checks for local dry-run review, artifact checksums, wheel metadata verification, source archive metadata verification, distribution manifest generation, blocking checklist automation, target-environment capture, tests, and documentation.
+P7.5 implemented P5 distribution readiness checks for local dry-run review, artifact checksums, wheel metadata verification, source archive metadata verification, distribution manifest generation, blocking checklist automation, target-environment capture, tests, and documentation.
 
-P7.6 has implemented P6 Adapter SDK runtime for adapter manifest loading, schema validation, capability validation, discovery, local execution boundaries, evidence collector / verification / handoff capability interfaces, audit records, CLI commands, tests, and documentation.
+P7.6 implemented P6 Adapter SDK runtime for adapter manifest loading, schema validation, capability validation, discovery, local execution boundaries, evidence collector / verification / handoff capability interfaces, audit records, CLI commands, tests, and documentation.
 
-P7.7 has implemented P6 Plugin SDK runtime for plugin manifest loading, permission model enforcement, discovery, collector / renderer / handoff / verification extension points, local process boundary, plugin audit log, CLI commands, tests, and documentation.
+P7.7 implemented P6 Plugin SDK runtime for plugin manifest loading, permission model enforcement, discovery, collector / renderer / handoff / verification extension points, local process boundary, plugin audit log, CLI commands, tests, and documentation.
 
-P7.8 has implemented P6 integrity/signing/privacy runtime gates for local integrity manifests, integrity verification, hash mismatch detection, missing file detection, unsafe path detection, unsigned manifest warnings, privacy policy loading, privacy scanning, redaction gates, export safety gates, tests, and documentation. Real signing and key management remain intentionally out of scope unless explicitly authorized later.
+P7.8 implemented P6 integrity/signing/privacy runtime gates for local integrity manifests, integrity verification, hash mismatch detection, missing file detection, unsafe path detection, unsigned manifest warnings, privacy policy loading, privacy scanning, redaction gates, export safety gates, tests, and documentation. Real signing and key management remain intentionally out of scope unless explicitly authorized later.
 
-P7.9 has implemented P6 local knowledge base and enterprise archive runtime for local diagnostic knowledge indexing, recurring failure signature extraction, repair outcome aggregation, project health trend aggregation, knowledge export, archive metadata records, retention policy checks, audit trail append behavior, local archive export, CLI commands, tests, and documentation.
+P7.9 implemented P6 local knowledge base and enterprise archive runtime for local diagnostic knowledge indexing, recurring failure signature extraction, repair outcome aggregation, project health trend aggregation, knowledge export, archive metadata records, retention policy checks, audit trail append behavior, local archive export, CLI commands, tests, and documentation.
 
-P6 is complete as a specification and schema closure. It does not mean Doctor link has implemented a Web platform, cloud service, account system, marketplace, live third-party integrations, real signing, real permission system, hosted enterprise archive system, or hosted knowledge base service. These runtime gaps are now tracked under P7.
+P7.10 implements final validation and closure through P7 runtime E2E validation, CI coverage, self-validation coverage, final audit, README updates, and TODO closure.
+
+P6 and P7 are complete as repository-side local-first implementation work. This does not mean Doctor link has implemented a hosted Web platform, cloud service, account system, marketplace, live third-party integrations, real signing, real permission system, hosted enterprise archive system, hosted knowledge base service, release tag, GitHub Release, or PyPI publication.
 
 ## Phase status
 
@@ -66,7 +68,7 @@ P6 is complete as a specification and schema closure. It does not mean Doctor li
 - [x] P7.7: P6 Plugin SDK runtime
 - [x] P7.8: P6 integrity/signing/privacy runtime gates
 - [x] P7.9: P6 local knowledge base and enterprise archive runtime
-- [ ] P7.10: P7 final validation and closure
+- [x] P7.10: P7 final validation and closure
 
 ## Cloud validation result
 
@@ -94,6 +96,37 @@ Duration: 30 seconds
 
 The self-validation result confirms that Doctor link can use its own CLI to scan its source tree, generate a diagnostic package, collect evidence, record assertions and test results, verify outputs, build a handoff package, build a local web view, and generate a project health summary.
 
+## P7.10 final validation result
+
+P7.10 adds `scripts/p7_runtime_validate.sh` and integrates it into CI and self-validation workflows.
+
+The P7 runtime validation exercises:
+
+- strategy validation;
+- reproduction list and run;
+- test matrix list and run;
+- schema validation;
+- evidence collection;
+- user assertion recording;
+- AI result ingestion;
+- diagnosis history;
+- assertion compliance;
+- risk review;
+- verification;
+- handoff generation;
+- local workbench build;
+- workbench note write-back;
+- CI report generation;
+- distribution readiness check;
+- adapter list / validate / run;
+- plugin list / validate / run;
+- integrity manifest and verification;
+- privacy scan;
+- redaction gate;
+- export gate;
+- knowledge build / query / export;
+- archive create / inspect / policy-check / export.
+
 ## P6 specification closure
 
 P6 has completed:
@@ -106,13 +139,13 @@ P6 has completed:
 - Signing and integrity specification;
 - Privacy and security level specification;
 - Enterprise archive and governance model;
-- Cross-project diagnostic knowledge base specification;
+- Cross-project Diagnostic Knowledge Base specification;
 - Public ecosystem assets specification;
 - P6 quality and closure checklist.
 
 ## P7 runtime implementation scope
 
-P7 tracks:
+P7 completed:
 
 - P1/P1+ evidence hardening;
 - P2/P2+ local workbench product hardening;
@@ -125,146 +158,11 @@ P7 tracks:
 - P6 local knowledge base and enterprise archive runtime;
 - P7 final validation and closure.
 
-## P7.1 evidence hardening result
-
-P7.1 adds:
-
-- richer command capture metadata;
-- command duration and timeout metadata;
-- separated stdout and stderr output files when present;
-- improved environment capture with tool availability and project markers;
-- project top-level entry summary;
-- large log truncation manifest;
-- encoding-tolerant log ingestion;
-- binary log skipping;
-- media probe failure warnings;
-- stronger existing redaction path coverage through command stdout/stderr paths;
-- custom redaction pattern support through existing collect options;
-- evidence hash / integrity index generation.
-
-## P7.2 local workbench hardening result
-
-P7.2 adds:
-
-- collapsible static workbench sections;
-- dedicated local project health panel;
-- evidence search and type filtering;
-- improved assertion-to-evidence and evidence-to-assertion navigation;
-- explicit verification state visualization;
-- skip-link and semantic main/navigation accessibility structure;
-- controlled CLI-only local write-back;
-- disabled-by-default write-back behavior;
-- write-back audit log and backup behavior.
-
-## P7.3 AI handoff runtime result
-
-P7.3 adds:
-
-- target tool profile model;
-- Codex, Cursor, Continue, Aider, OpenHands, Claude Code, and generic profiles;
-- handoff compatibility checker;
-- target-tool-specific instruction generation;
-- file inclusion policy enforcement;
-- missing evidence warnings;
-- privacy warnings;
-- enhanced AI result ingestion;
-- repair session id support;
-- multi-round repair session management.
-
-## P7.4 operational automation result
-
-P7.4 adds:
-
-- `doctor-link ci report` command;
-- CI report JSON and Markdown generation;
-- GitHub Actions step summary Markdown generation;
-- failure triage summary;
-- before / after regression score;
-- test matrix aggregation report;
-- project health trend support;
-- CI artifact index generation.
-
-## P7.5 distribution readiness result
-
-P7.5 adds:
-
-- `doctor-link distribution check` command;
-- local distribution dry-run review;
-- artifact checksum generation;
-- wheel metadata verification;
-- source archive metadata verification;
-- distribution manifest generation;
-- blocking checklist automation;
-- target environment capture;
-- local report JSON and Markdown generation.
-
-## P7.6 adapter runtime result
-
-P7.6 adds:
-
-- `doctor-link adapter list` command;
-- `doctor-link adapter validate` command;
-- `doctor-link adapter run` command;
-- adapter manifest loader;
-- adapter schema validation;
-- adapter capability validation;
-- adapter discovery across local adapter roots;
-- local adapter execution boundary;
-- evidence collector, verification, and handoff capability interfaces;
-- adapter audit records.
-
-## P7.7 plugin runtime result
-
-P7.7 adds:
-
-- `doctor-link plugin list` command;
-- `doctor-link plugin validate` command;
-- `doctor-link plugin run` command;
-- plugin manifest loader;
-- plugin permission model enforcement;
-- plugin discovery across local plugin roots;
-- collector, renderer, handoff, and verification extension points;
-- local process boundary label;
-- plugin audit records.
-
-## P7.8 integrity and privacy gates result
-
-P7.8 adds:
-
-- `doctor-link integrity manifest` command;
-- `doctor-link integrity verify` command;
-- hash mismatch detection;
-- missing file detection;
-- unsafe path detection;
-- unsigned manifest warning;
-- privacy policy loader;
-- `doctor-link privacy scan` command;
-- `doctor-link privacy redaction-gate` command;
-- `doctor-link privacy export-gate` command;
-- local test signing boundary documentation.
-
-## P7.9 knowledge and archive runtime result
-
-P7.9 adds:
-
-- `doctor-link knowledge build` command;
-- `doctor-link knowledge query` command;
-- `doctor-link knowledge export` command;
-- local diagnostic knowledge index;
-- recurring failure signature extraction;
-- repair outcome aggregation;
-- project health trend aggregation;
-- `doctor-link archive create` command;
-- `doctor-link archive inspect` command;
-- `doctor-link archive policy-check` command;
-- archive metadata record;
-- retention policy check;
-- audit trail append behavior;
-- local archive export.
-
 ## Final non-local closure result
 
 The repository includes `docs/final-non-local-closure.md`, which records the final non-local closure result and confirms that all repository-side, non-local, non-release work has been completed except target-environment execution.
+
+The repository also includes `docs/p7-final-audit.md` and `docs/p7-self-validation.md` for P7 final closure.
 
 ## Release status
 
@@ -281,12 +179,18 @@ No release action has been performed.
 
 ## Runtime status
 
-The following runtime capabilities remain P7 work until implemented and verified:
+The following are intentionally out of scope unless authorized later:
 
-- [ ] Live third-party integration helpers
+- [ ] Hosted Web platform
+- [ ] Cloud synchronization
+- [ ] External account system
+- [ ] Telemetry
+- [ ] Marketplace
 - [ ] Real signing or key management implementation
+- [ ] Real RBAC or enterprise identity integration
 - [ ] Hosted enterprise archive service
 - [ ] Hosted diagnostic knowledge base service
+- [ ] GitHub Release, release tag, or PyPI publication
 
 ## Remaining optional validation
 
