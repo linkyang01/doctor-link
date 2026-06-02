@@ -19,6 +19,10 @@ It helps users, developers, and AI coding tools collect evidence, reproduce prob
 
 ## Current status
 
-Doctor link is in the foundation-building stage. The current priority is to stabilize the diagnostic protocol, standard diagnostic package, user assertion mechanism, problem map, AI task generation, and fix verification loop.
+Doctor link has completed P0-P6 and P7 local runtime implementation work. P7.10 adds final validation and closure through CI-covered runtime validation, including `scripts/p7_runtime_validate.sh`.
 
-Doctor link 当前处于地基建设阶段。当前优先级是稳定诊断协议、标准诊断包、用户确认问题机制、问题地图、AI 任务生成和修复验证闭环。
+Doctor link 已完成 P0-P6 和 P7 本地运行能力实现。P7.10 通过纳入 CI 的 runtime 验证完成最终验证与收口，包括 `scripts/p7_runtime_validate.sh`。
+
+Doctor link remains local-first and does not publish releases, create tags, upload packages, introduce hosted services, or add external account systems by default.
+
+Doctor link 仍坚持本地优先，默认不发布 release、不创建 tag、不上传包、不引入托管服务、不增加外部账号体系。

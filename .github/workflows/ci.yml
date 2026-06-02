@@ -38,7 +38,8 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          pytest -q --cov=doctor_link --cov-report=term-missing --cov-report=xml --junitxml=junit/test-results-${{ matrix.python-version }}.xml
+          set -o pipefail
+          pytest -q --cov=doctor_link --cov-report=term-missing --cov-report=xml 2>&1 | tee pytest-output.log
 
       - name: Run CLI smoke tests
         run: |
@@ -65,6 +66,10 @@ jobs:
           test -n "$(find dist -name '*.whl' -print -quit)"
           test -n "$(find dist -name '*.tar.gz' -print -quit)"
 
+      - name: Run P7 runtime validation
+        run: |
+          bash scripts/p7_runtime_validate.sh "$(pwd)"
+
       - name: Smoke test installed wheel
         run: |
           python -m venv .wheel-smoke
@@ -81,10 +86,11 @@ jobs:
         with:
           name: doctor-link-test-results-${{ matrix.python-version }}
           path: |
-            junit/test-results-${{ matrix.python-version }}.xml
+            pytest-output.log
             coverage.xml
             dist/**
             .doctorlink-e2e/**
+            .doctorlink-p7-runtime/**
             DoctorReports/**
           if-no-files-found: warn
 
@@ -118,11 +124,14 @@ jobs:
           python -m pip install dist/*.whl
           doctor-link --help
           bash scripts/validate_doctor_link.sh /tmp/DoctorLinkValidation
+          bash scripts/p7_runtime_validate.sh "$(pwd)"
 
       - name: Upload package artifacts
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: doctor-link-package-artifacts
-          path: dist/**
+          path: |
+            dist/**
+            .doctorlink-p7-runtime/**
           if-no-files-found: error
