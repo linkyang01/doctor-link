@@ -10,6 +10,8 @@ Doctor link does not replace Codex, Aider, OpenHands, Continue, Cursor, or other
 
 Doctor link has completed the P0-P6 protocol, schema, productization, and ecosystem planning work, and P7 has converted the planned local runtime capabilities into implemented, tested, and documented CLI behavior.
 
+P5: Productization and Release Readiness is complete. P6 implementation requires separate explicit authorization for hosted, external, release, signing-key, marketplace, or account-system behavior.
+
 P7.10 adds the final validation and closure layer, including a P7 runtime validation script and CI coverage for the P7 command surface.
 
 Doctor link remains local-first. It does not create a hosted platform, external account system, telemetry service, marketplace, GitHub Release, release tag, or PyPI publication.
