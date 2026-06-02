@@ -10,6 +10,8 @@ Doctor link 不替代 Codex、Aider、OpenHands、Continue、Cursor 或其它 AI
 
 Doctor link 已完成 P0-P6 的协议、Schema、产品化和生态规范工作，P7 已将前期规划中的本地运行能力转化为真实可执行、可测试、可文档化的 CLI 能力。
 
+P5：Productization and Release Readiness 已完成。P6 实现开发需要单独明确授权，尤其是托管服务、外部账号、发布、真实签名密钥、marketplace 或企业集成行为。
+
 P7.10 增加最终验证与收口层，包括 P7 runtime 验证脚本，以及覆盖 P7 命令面的 CI 校验。
 
 Doctor link 仍然坚持本地优先。它不创建托管平台、不引入外部账号体系、不做遥测、不提供 marketplace、不创建 GitHub Release、不打 release tag、不发布到 PyPI。
