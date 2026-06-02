@@ -19,6 +19,8 @@ Related files:
 - P7.7 Plugin Runtime: `docs/p7-plugin-runtime.md`
 - P7.8 Integrity and Privacy Gates: `docs/p7-integrity-privacy-gates.md`
 - P7.9 Knowledge and Archive Runtime: `docs/p7-knowledge-archive-runtime.md`
+- P7.10 Final Audit: `docs/p7-final-audit.md`
+- P7.10 Self-validation: `docs/p7-self-validation.md`
 
 Current boundaries:
 
@@ -194,17 +196,17 @@ Current boundaries:
 
 ## P7.10 P7 final validation and closure
 
-- [ ] Add P7 final audit
-- [ ] Add P7 runtime e2e validation script
-- [ ] Add P7 self-validation scenario
-- [ ] Ensure ruff passes
-- [ ] Ensure pytest passes
-- [ ] Ensure coverage does not regress materially
-- [ ] Ensure package build passes
-- [ ] Ensure `scripts/validate_doctor_link.sh` passes
-- [ ] Ensure `scripts/e2e_validate.sh` passes
-- [ ] Update README.zh-CN.md
-- [ ] Update README.en.md
-- [ ] Update `docs/project-status.md`
-- [ ] Mark TODO-P7 complete
+- [x] Add P7 final audit
+- [x] Add P7 runtime e2e validation script
+- [x] Add P7 self-validation scenario
+- [x] Ensure ruff passes
+- [x] Ensure pytest passes
+- [x] Ensure coverage does not regress materially
+- [x] Ensure package build passes
+- [x] Ensure `scripts/validate_doctor_link.sh` passes
+- [x] Ensure `scripts/e2e_validate.sh` passes
+- [x] Update README.zh-CN.md
+- [x] Update README.en.md
+- [x] Update `docs/project-status.md`
+- [x] Mark TODO-P7 complete
 - [ ] Close P7 Issue #95 after final authorization
