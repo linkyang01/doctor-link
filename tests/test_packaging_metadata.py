@@ -23,10 +23,10 @@ def test_pyproject_has_packaging_metadata() -> None:
     assert project["urls"]["Repository"] == "https://github.com/linkyang01/doctor-link"
 
 
-def test_console_script_uses_p4_entrypoint() -> None:
+def test_console_script_uses_explicit_entrypoint() -> None:
     scripts = _pyproject()["project"]["scripts"]
 
-    assert scripts["doctor-link"] == "doctor_link.p4_cli:main"
+    assert scripts["doctor-link"] == "doctor_link.entrypoint:main"
 
 
 def test_package_data_and_license_files_exist() -> None:
