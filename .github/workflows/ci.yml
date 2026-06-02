@@ -38,7 +38,8 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          pytest -q --cov=doctor_link --cov-report=term-missing --cov-report=xml
+          set -o pipefail
+          pytest -q --cov=doctor_link --cov-report=term-missing --cov-report=xml 2>&1 | tee pytest-output.log
 
       - name: Run CLI smoke tests
         run: |
@@ -85,6 +86,7 @@ jobs:
         with:
           name: doctor-link-test-results-${{ matrix.python-version }}
           path: |
+            pytest-output.log
             coverage.xml
             dist/**
             .doctorlink-e2e/**
