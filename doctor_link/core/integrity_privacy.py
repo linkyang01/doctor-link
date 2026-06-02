@@ -108,7 +108,7 @@ def write_integrity_manifest(root: Path, output: Path, include_globs: list[str] 
     return manifest
 
 
-def verify_integrity_manifest(root: Path, manifest_path: Path) -> IntegrityVerifyResult:
+def verify_integrity_manifest(root: Path, manifest_path: Path, strict: bool = False) -> IntegrityVerifyResult:
     root = root.resolve()
     payload = json.loads(manifest_path.read_text(encoding="utf-8"))
     findings: list[dict[str, Any]] = []
@@ -118,8 +118,11 @@ def verify_integrity_manifest(root: Path, manifest_path: Path) -> IntegrityVerif
         findings.append(_finding("warning", "unsigned-package", "Integrity manifest is unsigned."))
     checked = 0
     manifest_files = payload.get("files") if isinstance(payload.get("files"), list) else []
+    manifest_paths: set[str] = set()
     for item in manifest_files:
         rel_path = str(item.get("path") or "")
+        if rel_path:
+            manifest_paths.add(rel_path)
         if _unsafe_relative_path(rel_path):
             findings.append(_finding("blocking", "unsafe-path", f"Unsafe path in manifest: {rel_path}", path=rel_path))
             continue
@@ -135,6 +138,11 @@ def verify_integrity_manifest(root: Path, manifest_path: Path) -> IntegrityVerif
         expected = str(item.get("sha256") or "")
         if actual != expected:
             findings.append(_finding("blocking", "hash-mismatch", f"Hash mismatch: {rel_path}", path=rel_path))
+    if strict:
+        for path in _iter_files(root, include_globs=None, exclude_globs=DEFAULT_EXCLUDE_GLOBS):
+            rel = _safe_relative(path, root)
+            if rel not in manifest_paths:
+                findings.append(_finding("blocking", "untracked-file", f"File is not recorded in manifest: {rel}", path=rel))
     status = "passed" if not any(item["severity"] == "blocking" for item in findings) else "blocked"
     return IntegrityVerifyResult(status=status, root=str(root), checked_files=checked, findings=findings)
 
@@ -196,7 +204,7 @@ def export_safety_gate(root: Path, policy_path: Path | None = None, manifest_pat
     privacy = scan_privacy(root, policy_path)
     findings = list(privacy.findings)
     if manifest_path is not None:
-        integrity = verify_integrity_manifest(root, manifest_path)
+        integrity = verify_integrity_manifest(root, manifest_path, strict=True)
         findings.extend(integrity.findings)
     policy = PrivacyPolicy(**privacy.policy) if privacy.policy else PrivacyPolicy()
     has_blockers = any(item["severity"] == "blocking" for item in findings)
