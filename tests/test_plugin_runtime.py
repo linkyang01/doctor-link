@@ -11,7 +11,7 @@ from doctor_link.core.plugin_runtime import (
     run_plugin,
     validate_plugin_file,
 )
-from doctor_link.p4_cli import main
+from doctor_link.entrypoint import main
 
 
 def _plugin_manifest_text(
@@ -117,15 +117,17 @@ def test_discover_plugins(tmp_path: Path) -> None:
     assert catalog.findings == []
 
 
-def test_run_plugin_writes_audit_record(tmp_path: Path) -> None:
+def test_run_plugin_defaults_to_dry_run_audit_record(tmp_path: Path) -> None:
     _write_plugin(tmp_path)
     output_dir = tmp_path / "DoctorReports" / "plugins"
 
     result = run_plugin(tmp_path, "demo-plugin", "verification", output_dir=output_dir)
 
-    assert result.status == "passed"
-    assert result.return_code == 0
-    assert "verification-ok" in result.stdout
+    assert result.status == "dry-run"
+    assert result.return_code is None
+    assert result.stdout == ""
+    assert result.dry_run is True
+    assert result.explicit_user_approval is False
     assert (output_dir / "demo-plugin-verification-run.json").exists()
     audit_file = output_dir / "plugin-audit.jsonl"
     assert audit_file.exists()
@@ -134,6 +136,24 @@ def test_run_plugin_writes_audit_record(tmp_path: Path) -> None:
     assert audit["extension_point"] == "verification"
     assert audit["local_execution_boundary"] is True
     assert audit["sandbox_boundary"] == "local-process-boundary"
+    assert audit["dry_run"] is True
+    assert audit["explicit_user_approval"] is False
+
+
+def test_run_plugin_with_explicit_approval_executes_command(tmp_path: Path) -> None:
+    _write_plugin(tmp_path)
+    output_dir = tmp_path / "DoctorReports" / "plugins"
+
+    result = run_plugin(tmp_path, "demo-plugin", "verification", output_dir=output_dir, allow_run=True)
+
+    assert result.status == "passed"
+    assert result.return_code == 0
+    assert "verification-ok" in result.stdout
+    assert result.dry_run is False
+    assert result.explicit_user_approval is True
+    audit = json.loads((output_dir / "plugin-audit.jsonl").read_text(encoding="utf-8").splitlines()[0])
+    assert audit["dry_run"] is False
+    assert audit["explicit_user_approval"] is True
 
 
 def test_run_plugin_requires_run_permission(tmp_path: Path) -> None:
@@ -167,7 +187,7 @@ def test_plugin_validate_cli_json(tmp_path: Path) -> None:
     assert '"status": "passed"' in result.output
 
 
-def test_plugin_run_cli_json(tmp_path: Path) -> None:
+def test_plugin_run_cli_json_defaults_to_dry_run(tmp_path: Path) -> None:
     _write_plugin(tmp_path)
     runner = CliRunner()
 
@@ -177,5 +197,23 @@ def test_plugin_run_cli_json(tmp_path: Path) -> None:
     )
 
     assert result.exit_code == 0
+    assert '"status": "dry-run"' in result.output
+    assert '"dry_run": true' in result.output
+    assert '"explicit_user_approval": false' in result.output
+    assert "verification-ok" not in result.output
+
+
+def test_plugin_run_cli_json_allow_run_executes(tmp_path: Path) -> None:
+    _write_plugin(tmp_path)
+    runner = CliRunner()
+
+    result = runner.invoke(
+        main,
+        ["plugin", "run", "demo-plugin", "verification", str(tmp_path), "--allow-run", "--json"],
+    )
+
+    assert result.exit_code == 0
     assert '"status": "passed"' in result.output
+    assert '"dry_run": false' in result.output
+    assert '"explicit_user_approval": true' in result.output
     assert "verification-ok" in result.output
