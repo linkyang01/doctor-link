@@ -144,11 +144,11 @@ doctor-link distribution check "${ROOT_DIR}" --dist "${ROOT_DIR}/dist" --out "${
 
 doctor-link adapter list "${WORK_DIR}" --json > "${WORK_DIR}/adapter-list.json"
 doctor-link adapter validate "${WORK_DIR}/.doctorlink/adapters/p7-adapter/adapter.yml" --json > "${WORK_DIR}/adapter-validate.json"
-doctor-link adapter run p7-adapter verification "${WORK_DIR}" --out "${WORK_DIR}/adapters" --json > "${WORK_DIR}/adapter-run.json"
+doctor-link adapter run p7-adapter verification "${WORK_DIR}" --allow-run --out "${WORK_DIR}/adapters" --json > "${WORK_DIR}/adapter-run.json"
 
 doctor-link plugin list "${WORK_DIR}" --json > "${WORK_DIR}/plugin-list.json"
 doctor-link plugin validate "${WORK_DIR}/.doctorlink/plugins/p7-plugin/plugin.yml" --json > "${WORK_DIR}/plugin-validate.json"
-doctor-link plugin run p7-plugin verification "${WORK_DIR}" --out "${WORK_DIR}/plugins" --json > "${WORK_DIR}/plugin-run.json"
+doctor-link plugin run p7-plugin verification "${WORK_DIR}" --allow-run --out "${WORK_DIR}/plugins" --json > "${WORK_DIR}/plugin-run.json"
 
 doctor-link integrity manifest "${SAFE_DIR}" --out "${WORK_DIR}/integrity-manifest.json" --json > "${WORK_DIR}/integrity-manifest.stdout.json"
 doctor-link integrity verify "${SAFE_DIR}" "${WORK_DIR}/integrity-manifest.json" --out "${WORK_DIR}/integrity-verify.json" --json > "${WORK_DIR}/integrity-verify.stdout.json"

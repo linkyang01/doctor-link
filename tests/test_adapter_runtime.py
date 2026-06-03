@@ -11,7 +11,7 @@ from doctor_link.core.adapter_runtime import (
     run_adapter,
     validate_adapter_file,
 )
-from doctor_link.p4_cli import main
+from doctor_link.entrypoint import main
 
 
 def _adapter_manifest_text(adapter_id: str = "demo-adapter", extra_capabilities: list[str] | None = None) -> str:
@@ -85,15 +85,17 @@ def test_discover_adapters(tmp_path: Path) -> None:
     assert catalog.findings == []
 
 
-def test_run_adapter_writes_audit_record(tmp_path: Path) -> None:
+def test_run_adapter_defaults_to_dry_run_audit_record(tmp_path: Path) -> None:
     _write_adapter(tmp_path)
     output_dir = tmp_path / "DoctorReports" / "adapters"
 
     result = run_adapter(tmp_path, "demo-adapter", "verification", output_dir=output_dir)
 
-    assert result.status == "passed"
-    assert result.return_code == 0
-    assert "verify-ok" in result.stdout
+    assert result.status == "dry-run"
+    assert result.return_code is None
+    assert result.stdout == ""
+    assert result.dry_run is True
+    assert result.explicit_user_approval is False
     assert (output_dir / "demo-adapter-verification-run.json").exists()
     audit_file = output_dir / "adapter-audit.jsonl"
     assert audit_file.exists()
@@ -101,6 +103,24 @@ def test_run_adapter_writes_audit_record(tmp_path: Path) -> None:
     assert audit["adapter_id"] == "demo-adapter"
     assert audit["capability"] == "verification"
     assert audit["local_execution_boundary"] is True
+    assert audit["dry_run"] is True
+    assert audit["explicit_user_approval"] is False
+
+
+def test_run_adapter_with_explicit_approval_executes_command(tmp_path: Path) -> None:
+    _write_adapter(tmp_path)
+    output_dir = tmp_path / "DoctorReports" / "adapters"
+
+    result = run_adapter(tmp_path, "demo-adapter", "verification", output_dir=output_dir, allow_run=True)
+
+    assert result.status == "passed"
+    assert result.return_code == 0
+    assert "verify-ok" in result.stdout
+    assert result.dry_run is False
+    assert result.explicit_user_approval is True
+    audit = json.loads((output_dir / "adapter-audit.jsonl").read_text(encoding="utf-8").splitlines()[0])
+    assert audit["dry_run"] is False
+    assert audit["explicit_user_approval"] is True
 
 
 def test_adapter_list_cli_json(tmp_path: Path) -> None:
@@ -123,7 +143,7 @@ def test_adapter_validate_cli_json(tmp_path: Path) -> None:
     assert '"status": "passed"' in result.output
 
 
-def test_adapter_run_cli_json(tmp_path: Path) -> None:
+def test_adapter_run_cli_json_defaults_to_dry_run(tmp_path: Path) -> None:
     _write_adapter(tmp_path)
     runner = CliRunner()
 
@@ -133,5 +153,24 @@ def test_adapter_run_cli_json(tmp_path: Path) -> None:
     )
 
     assert result.exit_code == 0
+    assert '"status": "dry-run"' in result.output
+    assert '"return_code": null' in result.output
+    assert '"stdout": ""' in result.output
+    assert '"dry_run": true' in result.output
+    assert '"explicit_user_approval": false' in result.output
+
+
+def test_adapter_run_cli_json_allow_run_executes(tmp_path: Path) -> None:
+    _write_adapter(tmp_path)
+    runner = CliRunner()
+
+    result = runner.invoke(
+        main,
+        ["adapter", "run", "demo-adapter", "verification", str(tmp_path), "--allow-run", "--json"],
+    )
+
+    assert result.exit_code == 0
     assert '"status": "passed"' in result.output
+    assert '"dry_run": false' in result.output
+    assert '"explicit_user_approval": true' in result.output
     assert "verify-ok" in result.output

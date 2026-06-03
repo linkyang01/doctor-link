@@ -54,6 +54,8 @@ class AdapterRunResult:
     stdout: str = ""
     stderr: str = ""
     command: list[str] = field(default_factory=list)
+    dry_run: bool = True
+    explicit_user_approval: bool = False
     audit_record: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -156,6 +158,7 @@ def run_adapter(
     adapters_dir: Path | None = None,
     output_dir: Path | None = None,
     timeout_seconds: int = 60,
+    allow_run: bool = False,
 ) -> AdapterRunResult:
     catalog = discover_adapters(project_root, adapters_dir)
     manifest = next((item for item in catalog.adapters if item.adapter_id == adapter_id), None)
@@ -170,6 +173,26 @@ def run_adapter(
     if not command:
         raise ValueError(f"No command configured for capability: {capability}")
     started_at = utc_now_iso()
+    if not allow_run:
+        completed_at = utc_now_iso()
+        status = "dry-run"
+        audit = _audit_record(manifest, capability, command, status, started_at, completed_at, None, dry_run=True, explicit_user_approval=False)
+        result = AdapterRunResult(
+            adapter_id=manifest.adapter_id,
+            capability=capability,
+            status=status,
+            started_at=started_at,
+            completed_at=completed_at,
+            return_code=None,
+            stdout="",
+            stderr="",
+            command=command,
+            dry_run=True,
+            explicit_user_approval=False,
+            audit_record=audit,
+        )
+        _write_adapter_run(output_dir or project_root / "DoctorReports" / "adapters", result)
+        return result
     process = subprocess.run(
         command,
         cwd=str(project_root),
@@ -180,7 +203,7 @@ def run_adapter(
     )
     completed_at = utc_now_iso()
     status = "passed" if process.returncode == 0 else "failed"
-    audit = _audit_record(manifest, capability, command, status, started_at, completed_at, process.returncode)
+    audit = _audit_record(manifest, capability, command, status, started_at, completed_at, process.returncode, dry_run=False, explicit_user_approval=True)
     result = AdapterRunResult(
         adapter_id=manifest.adapter_id,
         capability=capability,
@@ -191,6 +214,8 @@ def run_adapter(
         stdout=process.stdout,
         stderr=process.stderr,
         command=command,
+        dry_run=False,
+        explicit_user_approval=True,
         audit_record=audit,
     )
     _write_adapter_run(output_dir or project_root / "DoctorReports" / "adapters", result)
@@ -245,7 +270,9 @@ def _audit_record(
     status: str,
     started_at: str,
     completed_at: str,
-    return_code: int,
+    return_code: int | None,
+    dry_run: bool,
+    explicit_user_approval: bool,
 ) -> dict[str, Any]:
     return {
         "schema": "doctor-link-adapter-audit-v1",
@@ -258,6 +285,8 @@ def _audit_record(
         "started_at": started_at,
         "completed_at": completed_at,
         "return_code": return_code,
+        "dry_run": dry_run,
+        "explicit_user_approval": explicit_user_approval,
         "local_execution_boundary": True,
         "external_network_policy": "not-managed-by-doctor-link",
     }
