@@ -198,9 +198,10 @@ def test_plugin_run_cli_json_defaults_to_dry_run(tmp_path: Path) -> None:
 
     assert result.exit_code == 0
     assert '"status": "dry-run"' in result.output
+    assert '"return_code": null' in result.output
+    assert '"stdout": ""' in result.output
     assert '"dry_run": true' in result.output
     assert '"explicit_user_approval": false' in result.output
-    assert "verification-ok" not in result.output
 
 
 def test_plugin_run_cli_json_allow_run_executes(tmp_path: Path) -> None:
