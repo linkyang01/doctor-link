@@ -41,6 +41,7 @@ doctor-link doctor-package <package_dir> --out DoctorReports/package.zip
 doctor-link view <package_dir>
 doctor-link view <package_dir> --build-only
 doctor-link view DoctorReports --build-only
+doctor-link workbench-note <package_dir> --note "Reviewed" --enable-write-back --json
 ```
 
 ## AI Coding collaboration
@@ -83,6 +84,12 @@ doctor-link adapter validate .doctorlink/adapters/demo-adapter/adapter.yml --jso
 doctor-link adapter run demo-adapter verification . --out DoctorReports/adapters --json
 ```
 
+`adapter run` is a dry-run by default. It validates the manifest and writes an audit/run record without executing the configured local command. To execute the adapter command, pass explicit approval:
+
+```bash
+doctor-link adapter run demo-adapter verification . --allow-run --out DoctorReports/adapters --json
+```
+
 ## Plugin runtime
 
 ```bash
@@ -91,11 +98,18 @@ doctor-link plugin validate .doctorlink/plugins/demo-plugin/plugin.yml --json
 doctor-link plugin run demo-plugin verification . --out DoctorReports/plugins --json
 ```
 
+`plugin run` is a dry-run by default. It validates the manifest and writes an audit/run record without executing the configured local command. To execute the plugin command, pass explicit approval:
+
+```bash
+doctor-link plugin run demo-plugin verification . --allow-run --out DoctorReports/plugins --json
+```
+
 ## Integrity and privacy gates
 
 ```bash
 doctor-link integrity manifest . --out DoctorReports/integrity-manifest.json --json
 doctor-link integrity verify . DoctorReports/integrity-manifest.json --json
+doctor-link integrity verify . DoctorReports/integrity-manifest.json --strict --json
 doctor-link privacy scan . --out DoctorReports/privacy-scan.json --json
 doctor-link privacy redaction-gate . --out DoctorReports/redaction-gate.json --json
 doctor-link privacy export-gate . --manifest DoctorReports/integrity-manifest.json --out DoctorReports/export-gate.json --json
@@ -107,11 +121,13 @@ doctor-link privacy export-gate . --manifest DoctorReports/integrity-manifest.js
 doctor-link knowledge build DoctorReports --out DoctorReports/knowledge-index.json --json
 doctor-link knowledge query DoctorReports/knowledge-index.json "missing evidence" --json
 doctor-link knowledge export DoctorReports/knowledge-index.json DoctorReports/knowledge-export.json --json
-doctor-link archive create DoctorReports DoctorReports/archive --metadata owner=qa --json
+doctor-link archive create DoctorReports-source DoctorReports/archive --metadata owner=qa --json
 doctor-link archive inspect DoctorReports/archive --json
 doctor-link archive policy-check DoctorReports/archive --max-files 1000 --json
 doctor-link archive export DoctorReports/archive DoctorReports/archive.zip --json
 ```
+
+`archive create` requires the archive output directory to be outside the source directory. This prevents recursive self-copying and archive pollution.
 
 ## Exit behavior
 

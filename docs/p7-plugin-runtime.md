@@ -1,12 +1,14 @@
 # P7.7 Plugin SDK Runtime
 
-Status: runtime implementation
+Status: runtime implementation with post-P7 hardening
 
 ## Scope
 
 P7.7 turns the Plugin SDK planning specification into a local-first runtime layer.
 
-The implementation supports discovering plugin manifests, validating plugin metadata, enforcing a basic permission model, and running configured local plugin commands under an explicit local process boundary.
+The implementation supports discovering plugin manifests, validating plugin metadata, validating permissions, validating extension points, and creating local plugin run records under an explicit local process boundary.
+
+Post-P7 hardening changes plugin execution semantics: `doctor-link plugin run` is a dry-run by default and does not execute the configured local command unless `--allow-run` is passed.
 
 ## Implemented runtime changes
 
@@ -28,13 +30,8 @@ id: demo-plugin
 name: Demo Plugin
 version: 0.1.0
 extension_points:
-  - collector
-  - renderer
-  - handoff
   - verification
 permissions:
-  - read_project
-  - write_reports
   - run_local_command
 commands:
   verification:
@@ -52,15 +49,13 @@ P7.7 supports four runtime extension point names:
 - `handoff`;
 - `verification`.
 
-### Permission model
+### Supported permissions
 
-Supported permissions:
+P7.7 supports these local permission names:
 
 - `read_project`;
 - `write_reports`;
 - `run_local_command`.
-
-`doctor-link plugin run` requires the plugin manifest to include `run_local_command`. Unsupported permissions are blocking validation findings.
 
 ### Plugin discovery
 
@@ -103,24 +98,24 @@ Validation checks:
 
 Blocking findings make the plugin invalid. Missing commands for declared extension points are warnings unless the permission model makes commands mandatory.
 
-### Local plugin execution
+### Local plugin dry-run
 
 Command:
 
 ```bash
-doctor-link plugin run demo-plugin verification .
+doctor-link plugin run demo-plugin verification . --json
 ```
 
-The run command:
+By default, the run command:
 
 - discovers the plugin;
 - validates the manifest;
 - verifies the requested extension point;
 - enforces `run_local_command` permission;
-- runs the configured local command from the project root;
-- captures stdout, stderr, return code, timestamps, and command arguments;
-- writes a local run record;
-- appends an audit record.
+- records the configured command;
+- does not execute the configured command;
+- writes a local run record with `status: dry-run`;
+- appends an audit record with `dry_run: true` and `explicit_user_approval: false`.
 
 Generated files are written to:
 
@@ -134,6 +129,21 @@ Example outputs:
 demo-plugin-verification-run.json
 plugin-audit.jsonl
 ```
+
+### Explicit local plugin execution
+
+To actually execute the configured local command, pass explicit approval:
+
+```bash
+doctor-link plugin run demo-plugin verification . --allow-run --json
+```
+
+With `--allow-run`, Doctor link:
+
+- runs the configured local command from the project root;
+- captures stdout, stderr, return code, timestamps, and command arguments;
+- writes a local run record;
+- appends an audit record with `dry_run: false` and `explicit_user_approval: true`.
 
 ### Local process boundary
 
@@ -150,6 +160,8 @@ The audit record includes:
 - status;
 - timestamps;
 - return code;
+- dry-run flag;
+- explicit user approval flag;
 - local execution boundary flag;
 - sandbox boundary label.
 
@@ -167,16 +179,22 @@ Validate a manifest:
 doctor-link plugin validate .doctorlink/plugins/demo-plugin/plugin.yml --json
 ```
 
-Run a plugin extension point:
+Create a dry-run record:
 
 ```bash
 doctor-link plugin run demo-plugin verification . --json
 ```
 
+Execute with explicit approval:
+
+```bash
+doctor-link plugin run demo-plugin verification . --allow-run --json
+```
+
 Run with explicit output directory:
 
 ```bash
-doctor-link plugin run demo-plugin collector . --out DoctorReports/plugins --json
+doctor-link plugin run demo-plugin collector . --allow-run --out DoctorReports/plugins --json
 ```
 
 ## Safety boundaries
@@ -191,17 +209,19 @@ P7.7 does not:
 - claim network isolation for child processes;
 - implement a hosted plugin marketplace.
 
-Users should review plugin manifests before running them.
+Plugin commands are local commands configured by the user. Users should review plugin manifests before running them with `--allow-run`.
 
 ## Validation
 
 P7.7 includes tests for:
 
 - plugin manifest loading;
-- plugin permission model enforcement;
+- schema validation;
+- permission validation;
+- extension point validation;
 - plugin discovery;
-- collector, renderer, handoff, and verification extension point declarations;
-- local plugin execution;
+- plugin dry-run records;
+- explicit plugin execution with `--allow-run`;
 - plugin audit records;
 - `doctor-link plugin list`;
 - `doctor-link plugin validate`;

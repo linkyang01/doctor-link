@@ -8,11 +8,11 @@ Doctor link does not replace Codex, Aider, OpenHands, Continue, Cursor, or other
 
 ## Current Status
 
-Doctor link has completed the P0-P6 protocol, schema, productization, and ecosystem planning work, and P7 has converted the planned local runtime capabilities into implemented, tested, and documented CLI behavior.
+Doctor link has completed the P0-P6 protocol, schema, productization, and ecosystem planning work. P7 converted the planned local runtime capabilities into implemented, tested, and documented CLI behavior. Post-P7 hardening fixes have also been completed.
 
 P5: Productization and Release Readiness is complete. P6 implementation requires separate explicit authorization for hosted, external, release, signing-key, marketplace, or account-system behavior.
 
-P7.10 adds the final validation and closure layer, including a P7 runtime validation script and CI coverage for the P7 command surface.
+P7.10 added the final validation and closure layer, including a P7 runtime validation script and CI coverage for the P7 command surface.
 
 Doctor link remains local-first. It does not create a hosted platform, external account system, telemetry service, marketplace, GitHub Release, release tag, or PyPI publication.
 
@@ -72,13 +72,16 @@ doctor-link distribution check . --dist dist --out DoctorReports/distribution --
 doctor-link adapter list . --json
 doctor-link adapter validate .doctorlink/adapters/demo-adapter/adapter.yml --json
 doctor-link adapter run demo-adapter verification . --json
+doctor-link adapter run demo-adapter verification . --allow-run --json
 
 doctor-link plugin list . --json
 doctor-link plugin validate .doctorlink/plugins/demo-plugin/plugin.yml --json
 doctor-link plugin run demo-plugin verification . --json
+doctor-link plugin run demo-plugin verification . --allow-run --json
 
 doctor-link integrity manifest . --out DoctorReports/integrity-manifest.json --json
 doctor-link integrity verify . DoctorReports/integrity-manifest.json --json
+doctor-link integrity verify . DoctorReports/integrity-manifest.json --strict --json
 doctor-link privacy scan . --out DoctorReports/privacy-scan.json --json
 doctor-link privacy redaction-gate . --out DoctorReports/redaction-gate.json --json
 doctor-link privacy export-gate . --manifest DoctorReports/integrity-manifest.json --out DoctorReports/export-gate.json --json
@@ -86,11 +89,13 @@ doctor-link privacy export-gate . --manifest DoctorReports/integrity-manifest.js
 doctor-link knowledge build DoctorReports --out DoctorReports/knowledge-index.json --json
 doctor-link knowledge query DoctorReports/knowledge-index.json "missing evidence" --json
 doctor-link knowledge export DoctorReports/knowledge-index.json DoctorReports/knowledge-export.json --json
-doctor-link archive create DoctorReports DoctorReports/archive --metadata owner=qa --json
+doctor-link archive create DoctorReports-source DoctorReports/archive --metadata owner=qa --json
 doctor-link archive inspect DoctorReports/archive --json
 doctor-link archive policy-check DoctorReports/archive --max-files 1000 --json
 doctor-link archive export DoctorReports/archive DoctorReports/archive.zip --json
 ```
+
+Adapter and Plugin `run` commands are dry-run by default. They validate manifests and write audit/run records without executing configured local commands. Use `--allow-run` only after reviewing the manifest and intentionally approving local command execution.
 
 ## Validation
 
@@ -134,6 +139,8 @@ Key user and product documents:
 - `docs/p6-quality-closure.md`
 - `docs/p7-final-audit.md`
 - `docs/p7-self-validation.md`
+- `docs/archive/completed-todos/README.md`
+- `docs/acceptance-review.md`
 
 ## Runtime Coverage
 
@@ -144,8 +151,8 @@ P7 implements local runtime support for:
 - AI handoff runtime;
 - CI and operational automation;
 - distribution readiness checks;
-- adapter runtime;
-- plugin runtime;
+- adapter runtime with dry-run default and explicit `--allow-run` execution;
+- plugin runtime with dry-run default and explicit `--allow-run` execution;
 - integrity and privacy gates;
 - local knowledge indexing;
 - local archive helpers.
