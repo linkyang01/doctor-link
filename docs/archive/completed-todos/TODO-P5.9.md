@@ -22,11 +22,11 @@ Boundary: P5.9 does not publish a release, create a GitHub Release, publish to P
 - [x] Review CLI entrypoint structure.
 - [x] Update README and tracking docs.
 - [x] Add P5.9 final audit.
-- [ ] Close or supersede duplicate P5.9 tracking issue after this closeout PR passes CI and merges.
+- [x] Close or supersede duplicate P5.9 tracking issue after this closeout PR passes CI and merges.
 
 ## Completion criteria
 
-P5.9 is considered complete when this closeout PR passes CI and merges. The remaining post-merge action is administrative issue cleanup only; no additional product code is required for P5.9.
+P5.9 is complete when its closeout PR passes CI and merges.
 
 ## Implementation evidence
 
@@ -37,4 +37,4 @@ P5.9 is considered complete when this closeout PR passes CI and merges. The rema
 
 ## Remaining boundary
 
-Publishing still requires separate explicit authorization. P6 implementation still requires separate explicit authorization.
+Publishing still requires separate explicit authorization.

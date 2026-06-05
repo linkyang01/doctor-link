@@ -119,7 +119,7 @@ Quality:
 
 ## P5.9: Release Hardening and Usability Validation
 
-Status: complete after closeout PR passes CI and merges.
+Status: complete.
 
 Primary Issue: #71
 Earlier tracker: #66
