@@ -10,6 +10,10 @@ REQUIRED_P5_FINAL_FILES = [
 ]
 
 
+TODO_ARCHIVE = Path("docs/archive/completed-todos")
+README_DIR = Path("docs/readme")
+
+
 def test_p5_final_release_readiness_files_exist() -> None:
     for path in REQUIRED_P5_FINAL_FILES:
         text = Path(path).read_text(encoding="utf-8")
@@ -27,9 +31,9 @@ def test_p5_release_drafts_do_not_authorize_publishing() -> None:
 
 
 def test_p5_tracking_files_are_marked_complete() -> None:
-    todo = Path("TODO.md").read_text(encoding="utf-8")
-    p3p5 = Path("TODO-P3-P5.md").read_text(encoding="utf-8")
-    p5 = Path("TODO-P5.md").read_text(encoding="utf-8")
+    todo = (TODO_ARCHIVE / "TODO.md").read_text(encoding="utf-8")
+    p3p5 = (TODO_ARCHIVE / "TODO-P3-P5.md").read_text(encoding="utf-8")
+    p5 = (TODO_ARCHIVE / "TODO-P5.md").read_text(encoding="utf-8")
 
     assert "- [x] P5: Productization and Release Readiness" in todo
     assert "Status: complete." in p3p5
@@ -39,8 +43,8 @@ def test_p5_tracking_files_are_marked_complete() -> None:
 
 
 def test_readmes_include_p5_status_and_p6_boundary() -> None:
-    english = Path("README.en.md").read_text(encoding="utf-8")
-    chinese = Path("README.zh-CN.md").read_text(encoding="utf-8")
+    english = (README_DIR / "README.en.md").read_text(encoding="utf-8")
+    chinese = (README_DIR / "README.zh-CN.md").read_text(encoding="utf-8")
 
     assert "P5: Productization and Release Readiness" in english
     assert "P5：Productization and Release Readiness" in chinese
