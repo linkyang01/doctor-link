@@ -1,14 +1,4 @@
-from __future__ import annotations
-
-from pathlib import Path
-
-import click
-
-from doctor_link.diagnose_now import diagnose_now as run_diagnose_now
+from doctor_link.diagnose_now import command
 from doctor_link.p4_cli import main
 
-
-@main.command("diagnose-now")
-@click.argument("library", required=False, default=".")
-def diagnose_now(library: str) -> None:
-    summary, _count = run_diagnose_now(Path(l
+main.add_command(command)
