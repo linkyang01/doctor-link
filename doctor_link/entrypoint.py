@@ -9,3 +9,4 @@ from doctor_link.hardening_cli import register_hardening_commands
 
 register_hardening_commands()
 
+__all__ = ["main"]
