@@ -8,10 +8,9 @@ from doctor_link.core.scanner import scan_library
 from doctor_link.core.test_planner import generate_test_plan
 
 
-@dataclass(slots=True)
+@dataclass
 class CreatedReport:
     package_dir: Path
 
 
-def create_report(project_folder: Path, out_dir: Path = Path("DoctorReports")) -> CreatedReport:
-    out_dir.mkdir(parents=True, exist_ok
+def create_report(project_folder: Path, out_dir: Path) ->
