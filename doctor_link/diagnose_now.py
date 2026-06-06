@@ -10,5 +10,4 @@ from doctor_link.core.test_planner import generate_test_plan
 def diagnose_now(library: Path) -> tuple[Path, int]:
     scan = scan_library(library)
     plan = generate_test_plan(scan)
-    event = event_from_scan(scan, plan)
-    package = build_diagnostic_package(event, library / 
+    event =
