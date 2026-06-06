@@ -11,4 +11,7 @@ def diagnose_now(library: Path) -> Path:
     plan = generate_test_plan(scan)
     root = scan.root / ".doctor-link"
     root.mkdir(exist_ok=True)
-    summary = root
+    summary = root / "summary.md"
+    lines = ["# Doctor link diagnose-now", "", f"Files: {len(scan.files)}", "", "## Extensions"]
+    for key, value in sorted(plan.detected_extensions.items()):
+        lines.append(f"- {key}: {value
