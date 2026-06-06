@@ -5,6 +5,7 @@ from click.testing import CliRunner
 from doctor_link.entrypoint import main
 
 
-def test_command_runs() -> None:
-    result = CliRunner().invoke(main, ["diagnose-now"])
+def test_command_runs(tmp_path):
+    result = CliRunner().invoke(main, ["diagnose-now", str(tmp_path)])
     assert result.exit_code == 0, result.output
+    assert "summary.md" in result.output
