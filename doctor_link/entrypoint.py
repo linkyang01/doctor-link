@@ -7,6 +7,5 @@ from doctor_link import diagnose_now_cli as _diagnose_now_cli  # noqa: F401
 from doctor_link import knowledge_archive_cli as _knowledge_archive_cli  # noqa: F401
 from doctor_link.hardening_cli import register_hardening_commands
 
-register_hardening_commands(main)
+register_hardening_commands()
 
-__all__ = ["main"]
