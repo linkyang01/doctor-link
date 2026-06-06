@@ -1,10 +1,16 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import click
 
 from doctor_link.p4_cli import main
+from doctor_link.core.package_builder import build_diagnostic_package, event_from_scan
+from doctor_link.core.scanner import scan_library
+from doctor_link.core.test_planner import generate_test_plan
 
 
 @main.command("diagnose-now")
-def diagnose_now() -> None:
-    click.echo("ok")
+@click.argument("library", type=click.Path(exists=True, file_okay=False, path_type=Path), default=Path("."), required=False)
+@click.option("--out", "output", type=click.Path(path_type=Path), default=Path("DoctorReports"), help="Output directory.")
+def diagnose_now(library: Path, output: Path) -> None:
