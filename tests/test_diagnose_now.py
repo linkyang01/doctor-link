@@ -8,3 +8,4 @@ def test_diagnose_now_writes_file_count(tmp_path):
     text = summary.read_text(encoding="utf-8")
     assert summary.name == "summary.md"
     assert "Files: 2" in text
+    assert "## Extensions" in text
