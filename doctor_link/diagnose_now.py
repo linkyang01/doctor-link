@@ -2,14 +2,11 @@ from pathlib import Path
 
 
 def diagnose_now(library: Path) -> Path:
-    files = []
-    for p in library.rglob("*"):
-        if not p.is_file():
-            continue
-        if ".doctor-link" in p.relative_to(library).parts:
-            continue
-        files.append(p)
-    counts = {}
-    for p in files:
-        e = p.suffix[1:] or "no-extension"
-        counts
+    root = library / ".doctor-link"
+    files = [p for p in library.rglob("*") if p.is_file() and root not in p.parents]
+    text = "# Doctor link diagnose-now\n\nFiles: " + str(len(files))
+    text += "\n\n## Extensions\n\n## Recommendations\n- Add fixture coverage.\n"
+    root.mkdir(exist_ok=True)
+    out = root / "summary.md"
+    out.write_text(text, encoding="utf-8")
+    return out
