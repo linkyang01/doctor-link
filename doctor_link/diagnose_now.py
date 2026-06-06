@@ -1,19 +1,19 @@
-from __future__ import annotations
-
 from pathlib import Path
-
-from doctor_link.core.scanner import scan_library
-from doctor_link.core.test_planner import generate_test_plan
 
 
 def diagnose_now(library: Path) -> Path:
-    scan = scan_library(library)
-    plan = generate_test_plan(scan)
-    root = scan.root / ".doctor-link"
+    files = [p for p in library.rglob("*") if p.is_file()]
+    counts: dict[str, int] = {}
+    for p in files:
+        k = p.suffix[1:] or "no-extension"
+        counts[k] = counts.get(k, 0) + 1
+    text = "# Doctor link diagnose-now\n\nFiles: " + str(len(files))
+    text += "\n\n## Extensions\n"
+    for k in sorted(counts):
+        text += "- " + k + ": " + str(counts[k]) + "\n"
+    text += "\n## Recommendations\n- Add fixture coverage.\n"
+    root = library / ".doctor-link"
     root.mkdir(exist_ok=True)
-    summary = root / "summary.md"
-    lines = ["# Doctor link diagnose-now", "", f"Files: {len(scan.files)}", "", "## Extensions"]
-    for key, value in sorted(plan.detected_extensions.items()):
-        lines.append(f"- {key}: {value}")
-    summary.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    return summary
+    out = root / "summary.md"
+    out.write_text(text, encoding="utf-8")
+    return out
