@@ -8,4 +8,5 @@ def diagnose_now(library: Path) -> Path:
     root = scan.root / ".doctor-link"
     root.mkdir(exist_ok=True)
     p = root / "summary.md"
-    text = f"# Doctor link diagnose-now\n\nFiles: {len(scan.files)}\n\n## Recommendations\n- Add fixture coverage.\n
+    text = "# Doctor link diagnose-now\n\n"
+    text += "Files: " + str(len(scan.files)) + "
