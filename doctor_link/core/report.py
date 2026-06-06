@@ -13,4 +13,4 @@ class CreatedReport:
     package_dir: Path
 
 
-def create_report(project_folder: Path, out_dir: Path) ->
+def
