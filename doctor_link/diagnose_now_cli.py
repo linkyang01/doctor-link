@@ -11,5 +11,4 @@ from doctor_link.p4_cli import main
 @main.command("diagnose-now")
 @click.argument("library", required=False, default=".")
 def diagnose_now(library: str) -> None:
-    summary, count = run_diagnose_now(Path(library))
-    click.echo(f"files: {count
+    summary, _count = run_diagnose_now(Path(l
