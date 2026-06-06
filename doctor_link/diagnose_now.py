@@ -1,12 +1,14 @@
 from pathlib import Path
 
-from doctor_link.core.scanner import scan_library
-
 
 def diagnose_now(library: Path) -> Path:
-    scan = scan_library(library)
-    root = scan.root / ".doctor-link"
+    files = [p for p in library.rglob("*") if p.is_file()]
+    root = library / ".doctor-link"
     root.mkdir(exist_ok=True)
-    p = root / "summary.md"
-    text = "# Doctor link diagnose-now\n\n"
-    text += "Files: " + str(len(scan.files)) + "
+    summary = root / "summary.md"
+    text = "# Doctor link diagnose-now\n\nFiles: "
+    text += str(len(files))
+    text += "\n\n## Extensions\n"
+    text += "\n## Recommendations\n- Add fixture coverage.\n"
+    summary.write_text(text, encoding="utf-8")
+    return summary
