@@ -11,4 +11,4 @@ from doctor_link.p4_cli import main
 
 
 @main.command("diagnose-now")
-@click.argument("library", required=False, type=click.Path(file_okay=False, path_type=Path), default=".")
+@click
