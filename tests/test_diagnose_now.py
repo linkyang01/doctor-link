@@ -1,13 +1,11 @@
 from doctor_link.diagnose_now import diagnose_now
 
 
-def test_diagnose_now_writes_summary(tmp_path):
+def test_diagnose_now_repeat(tmp_path):
     (tmp_path / "a.txt").write_text("a", encoding="utf-8")
-    summary = diagnose_now(tmp_path)
-    text = summary.read_text(encoding="utf-8")
-    assert summary.name == "summary.md"
+    diagnose_now(tmp_path)
+    out = diagnose_now(tmp_path)
+    text = out.read_text(encoding="utf-8")
+    assert out.name == "summary.md"
+    assert "Files: 1" in text
     assert "## Recommendations" in text
-
-
-def test_repeat_count(tmp_path):
-    (tmp_path / "a.txt").write_text("a", encoding="utf-
