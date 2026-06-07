@@ -15,4 +15,5 @@ def test_json(tmp_path):
 
 
 def test_output(tmp_path):
-    out = tmp_path / "report
+    out = tmp_path / "r"
+    r = Cli
