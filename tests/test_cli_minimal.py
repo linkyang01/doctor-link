@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from click.testing import CliRunner
 
 from doctor_link.entrypoint import main
