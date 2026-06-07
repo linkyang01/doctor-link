@@ -9,4 +9,6 @@ def test_diagnose_now_writes_summary(tmp_path):
     assert "## Recommendations" in text
 
 
-def test_diagnose_now_ignores_
+def test_repeat_run_keeps_count(tmp_path):
+    (tmp_path / "a.txt").write_text("a", encoding="utf-8")
+    first = diagnose_now(tmp_path).
