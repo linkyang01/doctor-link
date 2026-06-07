@@ -11,6 +11,11 @@ from doctor_link.p4_cli import main
 
 @main.command("diagnose-now")
 @click.argument("library", default=".", required=False)
-@click.option("--json", "as_json", is_flag=True)
-@click.option("--output", type=click.Path(file_okay=False, path_type=str))
-def diagnose_now(library: str
+@click.option("--json", "j", is_flag=True)
+@click.option("--output", "o", type=click.Path(file_okay=False, path_type=str))
+def diagnose_now(library: str, j: bool, o: str | None) -> None:
+    path = run(Path(library), Path(o) if o else None)
+    if j:
+        click.echo(json.dumps({"summary": str(path)}))
+    else:
+        click.echo(str(path))
