@@ -13,4 +13,4 @@ def test_command_runs(tmp_path):
 
 def test_json(tmp_path):
     r = CliRunner().invoke(main, ["diagnose-now", "--json", str(tmp_path)])
-    assert r.exit_code == 0, r.output
+    assert r.exit_code == 0
