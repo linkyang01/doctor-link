@@ -8,4 +8,5 @@ def test_diagnose_now_repeat(tmp_path):
     text = out.read_text(encoding="utf-8")
     assert out.name == "summary.md"
     assert "Files: 1" in text
+    assert "- txt: 1" in text
     assert "## Recommendations" in text
