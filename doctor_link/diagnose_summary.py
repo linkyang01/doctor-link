@@ -1,5 +1,7 @@
 from pathlib import Path
 
+NL = "\n"
+
 
 def build_summary(files: list[Path]) -> str:
     counts: dict[str, int] = {}
@@ -9,4 +11,4 @@ def build_summary(files: list[Path]) -> str:
     lines = ["# Doctor link diagnose-now", "", "Files: " + str(len(files)), "", "## Extensions"]
     lines += ["- " + key + ": " + str(counts[key]) for key in sorted(counts)]
     lines += ["", "## Recommendations", "- Add fixture coverage."]
-    return chr
+    return NL.join(lines) + NL
