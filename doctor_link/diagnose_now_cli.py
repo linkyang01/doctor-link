@@ -10,5 +10,6 @@ from doctor_link.p4_cli import main
 
 @main.command("diagnose-now")
 @click.argument("library", default=".", required=False)
-@click.option("--json", "as_json", is_flag=True)
-def diagnose_now(library: str, as_json: bool) ->
+def diagnose_now(library: str) -> None:
+    summary = run(Path(library))
+    click.echo(str(summary))
