@@ -7,3 +7,6 @@ def test_diagnose_now_writes_summary(tmp_path):
     text = summary.read_text(encoding="utf-8")
     assert summary.name == "summary.md"
     assert "## Recommendations" in text
+
+
+def test_diagnose_now_ignores_
