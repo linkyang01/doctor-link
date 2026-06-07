@@ -14,4 +14,3 @@ def test_command_runs(tmp_path):
 
 
 def test_command_json_output(tmp_path):
-    result = CliRunner().invoke(main
