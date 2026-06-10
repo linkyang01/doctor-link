@@ -9,6 +9,10 @@ Doctor link 是一个面向软件项目的人机协同诊断层。
 - [English](docs/readme/README.en.md)
 - [中文](docs/readme/README.zh-CN.md)
 
+## CLI docs
+
+- [diagnose-now](docs/diagnose-now.md) - quick local diagnosis, summary output, `--output`, and `--json`
+
 ## Current status
 
 Doctor link has completed P0-P7 local runtime implementation and post-P7 hardening work. The repository remains local-first and does not publish releases, create tags, upload packages, introduce hosted services, or add external account systems by default.
