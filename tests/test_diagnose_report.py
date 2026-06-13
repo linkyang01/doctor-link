@@ -8,4 +8,4 @@ def test_build_report_counts_extensions():
     report = build_report(files)
     assert report["files"] == 4
     assert report["extensions"] == {"md": 1, "none": 1, "txt": 2}
-    assert report["recommendations"]
+    assert report["recommendations"] == ["Add fixture coverage."]
