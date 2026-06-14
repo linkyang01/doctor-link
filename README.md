@@ -11,7 +11,7 @@ Doctor link 是一个面向软件项目的人机协同诊断层。
 
 ## CLI docs
 
-- [diagnose-now](docs/diagnose-now.md) - quick local diagnosis, summary output, `--output`, and `--json`
+- [diagnose-now](docs/diagnose-now.md) - quick local diagnosis, summary output, `--output`, `--json`, and `--report-json`
 
 ## Current status
 
