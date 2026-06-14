@@ -51,3 +51,34 @@ You can combine JSON output with a custom output directory:
 ```bash
 doctor-link diagnose-now /path/to/library --output /path/to/report --json
 ```
+
+## Report JSON output
+
+Use `--report-json` when you need the structured diagnosis report as well as the summary path.
+
+```bash
+doctor-link diagnose-now /path/to/library --report-json
+```
+
+Example output:
+
+```json
+{
+  "summary": "/path/to/library/.doctor-link/summary.md",
+  "report": {
+    "files": 1,
+    "extensions": {
+      "txt": 1
+    },
+    "recommendations": ["Add fixture coverage."]
+  }
+}
+```
+
+`--report-json` still writes `summary.md`. It does not change the default output or the existing `--json` output.
+
+You can combine report JSON output with a custom output directory:
+
+```bash
+doctor-link diagnose-now /path/to/library --output /path/to/report --report-json
+```
