@@ -1,0 +1,3 @@
+2026-06-29T10:00:01Z GET /health 200
+2026-06-29T10:00:02Z GET /users 500 KeyError users_endpoint
+2026-06-29T10:00:03Z GET /users 500 KeyError users_endpoint
