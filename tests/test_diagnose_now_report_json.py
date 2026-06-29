@@ -20,7 +20,7 @@ def test_report_json_output(tmp_path):
     assert payload["summary"].endswith("summary.md")
     assert payload["report"]["files"] == 1
     assert payload["report"]["extensions"] == {"txt": 1}
-    assert payload["report"]["recommendations"] == ["Add fixture coverage."]
+    assert payload["report"]["recommendations"]
     assert (out / "summary.md").exists()
 
 

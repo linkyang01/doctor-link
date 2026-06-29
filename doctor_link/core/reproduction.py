@@ -70,12 +70,17 @@ def load_reproduction_catalog(project_root: Path) -> ReproductionCatalog:
         if kind not in {"manual", "command", "test"}:
             warnings.append(f"{item.get('id', index)} uses unknown kind {kind}; treating as manual")
             kind = "manual"
+        command_value = item.get("command") or ""
+        if isinstance(command_value, list):
+            command_text = " && ".join(str(part) for part in command_value)
+        else:
+            command_text = str(command_value)
         entries.append(
             ReproductionEntry(
-                reproduction_id=str(item.get("id") or f"repro-{index}"),
+                reproduction_id=str(item.get("id") or item.get("reproduction_id") or f"repro-{index}"),
                 title=str(item.get("title") or item.get("name") or f"Reproduction {index}"),
                 kind=kind,
-                command=str(item.get("command") or ""),
+                command=command_text,
                 description=str(item.get("description") or ""),
                 expected=str(item.get("expected") or ""),
                 related_assertion_ids=[str(value) for value in item.get("related_assertion_ids", []) or []],

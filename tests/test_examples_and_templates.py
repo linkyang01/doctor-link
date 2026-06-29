@@ -13,6 +13,10 @@ EXAMPLE_CONFIGS = [
     "examples/shop-service-multi-bug/.doctorlink/diagnosis.yml",
     "examples/shop-service-multi-bug/.doctorlink/reproduce.yml",
     "examples/shop-service-multi-bug/.doctorlink/test-matrix.yml",
+    "examples/python-api-bug/.doctorlink/diagnosis.yml",
+    "examples/python-api-bug/.doctorlink/reproduce.yml",
+    "examples/python-api-bug/.doctorlink/test-matrix.yml",
+    "examples/media-playback-library/.doctorlink/diagnosis.yml",
 ]
 
 EXAMPLE_ARTIFACTS = [
