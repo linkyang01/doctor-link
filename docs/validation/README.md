@@ -14,5 +14,6 @@ Certification status:
 ```text
 Cloud CI Certified
 Release Candidate Ready
-Local / Target Environment Validation Pending
+Local Mac Validation Recorded (2026-06-29)
+Additional Target-Environment Validation Optional
 ```
