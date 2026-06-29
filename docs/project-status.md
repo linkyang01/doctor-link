@@ -1,6 +1,6 @@
 # Doctor link Project Status
 
-Status date: 2026-06-03
+Status date: 2026-06-29
 
 ## Current status
 
@@ -14,9 +14,9 @@ Post-P7 hardening has also been completed:
 - Adapter and Plugin run commands default to dry-run and require `--allow-run` for actual local command execution;
 - completed TODO trackers are archived under `docs/archive/completed-todos/`.
 
-Doctor link is now documented as Cloud CI Certified and Release Candidate Ready, with Local / Target Environment Validation Pending. The certification package is maintained under `docs/validation/`.
+Doctor link is now documented as Cloud CI Certified, Release Candidate Ready, and locally validated on the developer Mac (2026-06-29). The certification package is maintained under `docs/validation/`.
 
-All repository-side, non-local, non-release closure work has been completed. The only remaining unchecked non-P7 item is local or target-environment validation, which must be executed on the intended local machine, workstation, CI runner, customer delivery environment, or offline target environment.
+All repository-side, non-local, non-release closure work has been completed. Local Mac validation has been recorded in `docs/p5.10-local-validation.md`. Validation on additional target environments (offline workstation, customer delivery, production-like) remains optional when those environments differ from the recorded Mac setup.
 
 P7 was opened as the runtime implementation and real-capability completion phase. P7.10 adds final validation and closure through `scripts/p7_runtime_validate.sh`, CI integration, self-validation integration, final audit documentation, README updates, and project status closure.
 
@@ -46,7 +46,8 @@ P6 and P7 are complete as repository-side local-first implementation work. This 
 
 - [x] Cloud CI Certified
 - [x] Release Candidate Ready
-- [ ] Local / Target Environment Validation Pending
+- [x] Local Mac Validation Recorded (2026-06-29)
+- [ ] Additional target-environment validation (optional)
 - [ ] GitHub Release created
 - [ ] Release tag created
 - [ ] PyPI publication performed
@@ -71,7 +72,7 @@ Certification documents:
 - [x] P5.9: Release Hardening and Usability Validation
 - [x] P5.10: Cloud Validation on GitHub Actions
 - [x] Self Validation: Doctor link validates itself on GitHub Actions
-- [ ] P5.10: Local or target-environment validation
+- [x] P5.10: Local Mac validation (2026-06-29)
 - [x] P6.1: Diagnostic Package Schema v1
 - [x] P6.2: Compatibility and Conformance Test Suite
 - [x] P6.3: Adapter SDK Planning Specification

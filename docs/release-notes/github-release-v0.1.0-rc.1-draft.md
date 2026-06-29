@@ -31,12 +31,12 @@ Doctor link v0.1.0-rc.1 is a cloud-CI-certified release candidate for a local-fi
 ```text
 Cloud CI Certified
 Release Candidate Ready
-Local / Target Environment Validation Pending
+Local Mac Validation Recorded (2026-06-29)
 ```
 
-This pre-release candidate is suitable for internal review, local source installation tests, CLI workflow validation, and AI coding diagnostic workflow evaluation.
+This pre-release candidate is suitable for internal review, local source installation tests, CLI workflow validation, and AI coding diagnostic workflow evaluation. Local Mac validation passed on 2026-06-29.
 
-It is not yet certified for production deployment, customer environment acceptance, PyPI publication, or stable public release.
+It is not yet certified for production deployment, customer environment acceptance, PyPI publication, or stable public release on environments other than the recorded Mac setup.
 
 ### Validation evidence
 
