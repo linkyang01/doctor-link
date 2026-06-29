@@ -10,7 +10,6 @@ from doctor_link.core.ai_handoff import (
     add_ai_result,
     add_history_round,
     build_assertion_compliance,
-    build_handoff_package,
     build_risk_review,
 )
 from doctor_link.core.ai_task_generator import generate_ai_task
@@ -196,169 +195,103 @@ def vly_proof(library: Path, output: Path | None, json_output: bool, package_dir
     """Build a Vly Core Proof readiness report from a test library."""
     adapter = VlyAdapter()
     scan_result = scan_library(library)
-    report = adapter.build_core_proof(scan_result)
-    if package_dir is not None:
-        evidence = adapter.write_core_proof(package_dir, report)
-        click.echo(f"Recorded Vly Core Proof evidence: {evidence.evidence_id}")
-    text = json.dumps(report.to_dict(), ensure_ascii=False, indent=2) if json_output else report.to_markdown()
+    report = adapter.build_proof_report(scan_result)
+    text = json.dumps(report, ensure_ascii=False, indent=2) if json_output else adapter.render_markdown(report)
     if output is not None:
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(text, encoding="utf-8")
-        click.echo(f"Generated Vly Core Proof report: {output}")
-    elif package_dir is None:
+        click.echo(f"Generated Vly proof report: {output}")
+    else:
         click.echo(text)
-
-
-@main.command("compare")
-@click.argument("before_report", type=click.Path(exists=True, dir_okay=False, path_type=Path))
-@click.argument("after_report", type=click.Path(exists=True, dir_okay=False, path_type=Path))
-@click.option("--out", "output", type=click.Path(path_type=Path), default=Path("DoctorReports/comparison"), help="Output directory for comparison files.")
-@click.option("--package-dir", type=click.Path(exists=True, file_okay=False, path_type=Path), default=None, help="Optional after diagnostic package to update with comparison evidence.")
-def compare_reports(before_report: Path, after_report: Path, output: Path, package_dir: Path | None) -> None:
-    """Compare before and after doctor-report.json files."""
-    comparison = write_report_comparison(before_report, after_report, output)
-    click.echo(f"Generated report comparison: {output}")
-    click.echo(f"Verification status: {comparison.status}")
     if package_dir is not None:
-        evidence = write_report_comparison_to_package(before_report, package_dir)
-        click.echo(f"Recorded report comparison evidence: {evidence.evidence_id}")
-
-
-@main.command("doctor-package")
-@click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
-@click.option("--out", "output", type=click.Path(path_type=Path), default=None, help="Output zip path.")
-@click.option("--exclude-attachments", is_flag=True, help="Exclude evidence/attachments from the zip.")
-@click.option("--exclude-logs", is_flag=True, help="Exclude evidence/logs from the zip.")
-@click.option("--exclude-screenshots", is_flag=True, help="Exclude evidence/screenshots from the zip.")
-@click.option("--max-file-size", type=int, default=None, help="Skip files larger than this size in bytes.")
-def doctor_package(package_dir: Path, output: Path | None, exclude_attachments: bool, exclude_logs: bool, exclude_screenshots: bool, max_file_size: int | None) -> None:
-    """Export a diagnostic package as a zip handoff package."""
-    config = load_config(package_dir)
-    package_config = merge_package_cli(config.package, output=output, exclude_attachments=exclude_attachments, exclude_logs=exclude_logs, exclude_screenshots=exclude_screenshots, max_file_size=max_file_size)
-    output_zip = output or Path(package_config.output_dir) / f"{package_dir.name}.zip"
-    result = export_package(package_dir=package_dir, output_zip=output_zip, options=PackageExportOptions(exclude_attachments=package_config.exclude_attachments, exclude_logs=package_config.exclude_logs, exclude_screenshots=package_config.exclude_screenshots, max_file_size=package_config.max_file_size))
-    click.echo(f"Generated diagnostic package zip: {result.output_zip}")
-    click.echo(f"Included files: {len(result.included_files)}")
-    click.echo(f"Skipped files: {len(result.skipped_files)}")
-    if not result.validation.is_valid:
-        click.echo("Warning: diagnostic package is missing required files.")
-
-
-@main.command("handoff")
-@click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
-@click.option("--tool", default="generic", show_default=True, type=click.Choice(sorted(SUPPORTED_TOOLS)), help="Target AI Coding tool profile.")
-@click.option("--out", "output", type=click.Path(path_type=Path), default=None, help="Optional output directory.")
-def handoff_command(package_dir: Path, tool: str, output: Path | None) -> None:
-    """Generate an AI Coding handoff package."""
-    result = build_handoff_package(package_dir=package_dir, tool=tool, output_dir=output)
-    click.echo(f"Generated AI handoff package: {result.output_dir}")
-    click.echo(f"Manifest: {result.manifest_path}")
-    click.echo(f"Instruction: {result.instruction_path}")
-    click.echo(f"Included files: {len(result.included_files)}")
-    click.echo(f"Missing files: {len(result.missing_files)}")
-    if result.compatibility_path:
-        click.echo(f"Compatibility: {result.compatibility_path}")
-
-
-@main.command("ai-result")
-@click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
-@click.option("--summary", required=True, help="AI repair summary.")
-@click.option("--claimed-fix", default="", help="Claimed fix text.")
-@click.option("--file", "files_changed", multiple=True, help="Changed file. Can be repeated.")
-@click.option("--evidence-id", "evidence_used", multiple=True, help="Evidence ID used by the AI result.")
-@click.option("--assertion-id", "related_assertion_ids", multiple=True, help="Related user assertion ID.")
-@click.option("--verification-step", "verification_steps", multiple=True, help="Required verification step.")
-@click.option("--risk", "risks", multiple=True, help="Known risk.")
-@click.option("--assumption", "assumptions", multiple=True, help="Assumption made by the AI result.")
-@click.option("--repair-session-id", default=None, help="Repair session id to attach this result to.")
-@click.option("--tool", default="generic", show_default=True, type=click.Choice(sorted(SUPPORTED_TOOLS)), help="AI tool that produced this result.")
-def ai_result_command(package_dir: Path, summary: str, claimed_fix: str, files_changed: tuple[str, ...], evidence_used: tuple[str, ...], related_assertion_ids: tuple[str, ...], verification_steps: tuple[str, ...], risks: tuple[str, ...], assumptions: tuple[str, ...], repair_session_id: str | None, tool: str) -> None:
-    """Record an AI repair result into a diagnostic package."""
-    result = add_ai_result(package_dir, summary, claimed_fix, list(files_changed), list(evidence_used), list(related_assertion_ids), list(verification_steps), list(risks), list(assumptions), repair_session_id=repair_session_id, tool=tool)
-    click.echo(f"Recorded AI result: {result['result_id']}")
-    click.echo(f"Repair session: {result['repair_session_id']}")
-    click.echo("Verification is still required before closing.")
-
-
-@main.command("diagnosis-history")
-@click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
-@click.option("--ai-pass", default="", help="AI pass summary.")
-@click.option("--user-correction", default="", help="Human correction.")
-@click.option("--evidence-id", "evidence_added", multiple=True, help="Evidence added in this round.")
-@click.option("--verification-attempt", default="", help="Verification attempt summary.")
-@click.option("--repair-session-id", default=None, help="Repair session id to attach this round to.")
-@click.option("--tool", default="generic", show_default=True, type=click.Choice(sorted(SUPPORTED_TOOLS)), help="AI tool used in this round.")
-def diagnosis_history_command(package_dir: Path, ai_pass: str, user_correction: str, evidence_added: tuple[str, ...], verification_attempt: str, repair_session_id: str | None, tool: str) -> None:
-    """Record a diagnosis round."""
-    result = add_history_round(package_dir, ai_pass, user_correction, list(evidence_added), verification_attempt, repair_session_id=repair_session_id, tool=tool)
-    click.echo(f"Recorded diagnosis round: {result['round_id']}")
-    click.echo(f"Repair session: {result['repair_session_id']}")
-
-
-@main.command("assertion-check")
-@click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
-@click.option("--json", "json_output", is_flag=True, help="Print JSON output.")
-def assertion_check_command(package_dir: Path, json_output: bool) -> None:
-    """Check whether user assertions are covered by AI result records."""
-    result = build_assertion_compliance(package_dir)
-    if json_output:
-        click.echo(json.dumps(result, ensure_ascii=False, indent=2))
-        return
-    click.echo(f"Assertion compliance status: {result['status']}")
-    click.echo(f"Missing assertions: {len(result['missing_assertion_ids'])}")
-    if result.get("missing_assertion_ids"):
-        for assertion_id in result["missing_assertion_ids"]:
-            click.echo(f"  - {assertion_id}")
-
-
-@main.command("risk-review")
-@click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
-@click.option("--file", "files_changed", multiple=True, help="Changed file. Can be repeated.")
-@click.option("--boundary", "boundary", multiple=True, help="Allowed path prefix. Can be repeated.")
-@click.option("--risk-level", default="unknown", type=click.Choice(["low", "medium", "high", "unknown"]), help="Initial risk level.")
-def risk_review_command(package_dir: Path, files_changed: tuple[str, ...], boundary: tuple[str, ...], risk_level: str) -> None:
-    """Generate a repair risk review."""
-    result = build_risk_review(package_dir, list(files_changed), list(boundary), risk_level)
-    click.echo(f"Repair risk level: {result['risk_level']}")
-    click.echo(f"Outside boundary files: {len(result['outside_boundary'])}")
+        adapter.attach_proof_to_package(package_dir, report)
+        click.echo(f"Attached Vly proof evidence to package: {package_dir}")
 
 
 @main.command("collect")
 @click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
-@click.option("--project-root", type=click.Path(file_okay=False, path_type=Path), default=None, help="Project root to collect environment evidence for.")
-@click.option("--logs", "log_patterns", multiple=True, help="Log file glob pattern. Can be repeated.")
-@click.option("--command", "commands", multiple=True, help="Command to execute and capture. Can be repeated.")
+@click.option("--project-root", type=click.Path(file_okay=False, path_type=Path), default=None, help="Optional project root for relative log patterns.")
+@click.option("--log", "log_patterns", multiple=True, help="Log glob pattern. Can be repeated.")
+@click.option("--command", "commands", multiple=True, help="Shell command to capture. Can be repeated.")
 @click.option("--probe", "probes", multiple=True, type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Media file to probe. Can be repeated.")
-@click.option("--attachment", "attachments", multiple=True, type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Attachment file to copy. Can be repeated.")
-@click.option("--note", default=None, help="Human note for this collection run.")
-@click.option("--ffprobe", "ffprobe_binary", default="ffprobe", show_default=True, help="ffprobe executable.")
-@click.option("--timeout", "command_timeout_seconds", default=30, show_default=True, help="Command timeout in seconds.")
-@click.option("--no-redact", is_flag=True, help="Disable automatic redaction for collected logs and command output.")
-@click.option("--redact-email", is_flag=True, help="Also redact email addresses from collected text evidence.")
-@click.option("--redact-phone", is_flag=True, help="Also redact phone numbers from collected text evidence.")
-@click.option("--redact-pattern", "custom_patterns", multiple=True, help="Custom regular expression to redact. Can be repeated.")
-def collect_command(package_dir: Path, project_root: Path | None, log_patterns: tuple[str, ...], commands: tuple[str, ...], probes: tuple[Path, ...], attachments: tuple[Path, ...], note: str | None, ffprobe_binary: str, command_timeout_seconds: int, no_redact: bool, redact_email: bool, redact_phone: bool, custom_patterns: tuple[str, ...]) -> None:
-    """Collect environment, logs, commands, probes, and attachments into a diagnostic package."""
-    config = load_config(package_dir)
-    collect_config = merge_collect_cli(config.collect, project_root=project_root, log_patterns=log_patterns, commands=commands, probes=probes, attachments=attachments, no_redact=no_redact, redact_email=redact_email, redact_phone=redact_phone, custom_patterns=custom_patterns)
-    result = collect_into_package(package_dir=package_dir, project_root=Path(collect_config.project_root) if collect_config.project_root else None, log_patterns=collect_config.logs, commands=collect_config.commands, probes=[Path(item) for item in collect_config.probes], attachments=[Path(item) for item in collect_config.attachments], note=note, ffprobe_binary=ffprobe_binary, command_timeout_seconds=command_timeout_seconds, redact=collect_config.redact, redaction_options=RedactionOptions(redact_email=collect_config.redact_email, redact_phone=collect_config.redact_phone, custom_patterns=collect_config.redact_patterns))
-    click.echo(f"Collected evidence items: {len(result.evidence)}")
-    click.echo(f"Added timeline steps: {len(result.timeline_steps)}")
-    click.echo(f"Warnings: {len(result.warnings)}")
-    if result.redaction_report is not None:
-        click.echo(f"Redactions: {result.redaction_report.get('total_replacements', 0)}")
+@click.option("--attach", "attachments", multiple=True, type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Attachment file to copy into evidence. Can be repeated.")
+@click.option("--note", default=None, help="Collector note.")
+@click.option("--redact", is_flag=True, help="Enable redaction for collected text evidence.")
+@click.option("--redact-email", is_flag=True, help="Redact email addresses when redaction is enabled.")
+@click.option("--redact-phone", is_flag=True, help="Redact phone numbers when redaction is enabled.")
+@click.option("--redact-pattern", "redact_patterns", multiple=True, help="Custom redaction regex pattern. Can be repeated.")
+def collect_command(
+    package_dir: Path,
+    project_root: Path | None,
+    log_patterns: tuple[str, ...],
+    commands: tuple[str, ...],
+    probes: tuple[Path, ...],
+    attachments: tuple[Path, ...],
+    note: str | None,
+    redact: bool,
+    redact_email: bool,
+    redact_phone: bool,
+    redact_patterns: tuple[str, ...],
+) -> None:
+    """Collect evidence into a diagnostic package."""
+    config = load_config(project_root or package_dir.parent)
+    merged = merge_collect_cli(
+        config.collect,
+        project_root=project_root,
+        log_patterns=list(log_patterns),
+        commands=list(commands),
+        redact=redact,
+        redact_email=redact_email,
+        redact_phone=redact_phone,
+        redact_patterns=list(redact_patterns),
+    )
+    result = collect_into_package(
+        package_dir=package_dir,
+        project_root=project_root,
+        log_patterns=merged.logs,
+        commands=merged.commands,
+        probes=[str(path) for path in probes],
+        attachments=[str(path) for path in attachments],
+        note=note,
+        redact=merged.redact,
+        redaction_options=RedactionOptions(
+            redact_email=merged.redact_email,
+            redact_phone=merged.redact_phone,
+            custom_patterns=merged.redact_patterns,
+        ),
+    )
+    click.echo(f"Collected evidence into package: {package_dir}")
+    click.echo(f"Evidence items added: {len(result.evidence_ids)}")
+
+
+@main.command("assert")
+@click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--statement", required=True, help="Human-confirmed issue statement.")
+@click.option("--severity", default="medium", show_default=True, help="Issue severity.")
+@click.option("--evidence-id", "evidence_ids", multiple=True, help="Related evidence ID. Can be repeated.")
+def assert_command(package_dir: Path, statement: str, severity: str, evidence_ids: tuple[str, ...]) -> None:
+    """Add a human-confirmed issue assertion to a diagnostic package."""
+    assertion = add_user_assertion(
+        package_dir=package_dir,
+        statement=statement,
+        severity=severity,
+        evidence_ids=list(evidence_ids),
+    )
+    click.echo(f"Recorded user assertion: {assertion.assertion_id}")
 
 
 @main.command("verify")
 @click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
-@click.option("--write-back", is_flag=True, help="Write verification result back into doctor-report.json, summary.md, and ai-task.md.")
-def verify_command(package_dir: Path, write_back: bool) -> None:
-    """Generate a verification plan and result for a diagnostic package."""
-    config = load_config(package_dir)
-    verify_config = merge_verify_cli(config.verification, write_back=write_back)
-    result = run_verification(package_dir, write_back=verify_config.write_back)
-    click.echo(f"Generated verification plan: {package_dir / 'verification-plan.md'}")
-    click.echo(f"Generated verification result: {package_dir / 'verification-result.json'}")
+@click.option("--write-back", is_flag=True, help="Write verification results back into the package.")
+@click.option("--json", "json_output", is_flag=True, help="Print JSON output.")
+def verify_command(package_dir: Path, write_back: bool, json_output: bool) -> None:
+    """Run verification planning for a diagnostic package."""
+    config = load_config(package_dir.parent)
+    merged = merge_verify_cli(config.verify)
+    result = run_verification(package_dir, write_back=write_back, config=merged)
+    if json_output:
+        click.echo(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+        return
     click.echo(f"Verification status: {result.status}")
     if result.missing_evidence:
         click.echo("Missing evidence:")
@@ -366,83 +299,179 @@ def verify_command(package_dir: Path, write_back: bool) -> None:
             click.echo(f"  - {item}")
     if result.next_commands:
         click.echo("Next commands:")
-        for command in result.next_commands:
-            click.echo(f"  {command}")
+        for item in result.next_commands:
+            click.echo(f"  - {item}")
+
+
+@main.command("compare")
+@click.argument("before", type=click.Path(exists=True, dir_okay=False, path_type=Path))
+@click.argument("after", type=click.Path(exists=True, dir_okay=False, path_type=Path))
+@click.option("--package-dir", type=click.Path(exists=True, file_okay=False, path_type=Path), default=None, help="Optional package to write comparison results into.")
+@click.option("--out", "output", type=click.Path(path_type=Path), default=None, help="Optional output directory.")
+def compare_command(before: Path, after: Path, package_dir: Path | None, output: Path | None) -> None:
+    """Compare two diagnostic reports."""
+    if package_dir is not None:
+        paths = write_report_comparison_to_package(before, after, package_dir)
+        for path in paths:
+            click.echo(f"Generated: {path}")
+        return
+    paths = write_report_comparison(before, after, output or Path("DoctorReports"))
+    for path in paths:
+        click.echo(f"Generated: {path}")
+
+
+@main.command("doctor-package")
+@click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--out", "output", type=click.Path(path_type=Path), required=True, help="Output zip path.")
+@click.option("--include-web", is_flag=True, help="Include generated web view assets if present.")
+def doctor_package_command(package_dir: Path, output: Path, include_web: bool) -> None:
+    """Export a diagnostic package archive."""
+    options = PackageExportOptions(include_web_assets=include_web)
+    path = export_package(package_dir, output, options=options)
+    click.echo(f"Exported diagnostic package: {path}")
 
 
 @main.command("view")
-@click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
-@click.option("--host", default="127.0.0.1", show_default=True, help="Host for the local web server.")
-@click.option("--port", default=8765, show_default=True, type=int, help="Port for the local web server. Use 0 for any available port.")
-@click.option("--no-open-browser", is_flag=True, help="Do not automatically open the browser.")
-@click.option("--build-only", is_flag=True, help="Build static HTML without starting the local server.")
-def view_command(package_dir: Path, host: str, port: int, no_open_browser: bool, build_only: bool) -> None:
-    """Open a local read-only diagnostic package browser."""
+@click.argument("target", type=click.Path(exists=True, path_type=Path))
+@click.option("--build-only", is_flag=True, help="Build the local HTML workbench without starting a server.")
+@click.option("--host", default="127.0.0.1", show_default=True, help="Server host when not using --build-only.")
+@click.option("--port", default=8765, show_default=True, type=int, help="Server port when not using --build-only.")
+def view_command(target: Path, build_only: bool, host: str, port: int) -> None:
+    """Build or serve the local diagnostic workbench."""
     if build_only:
-        result = build_web_view(package_dir)
-        click.echo(f"Generated package web view: {result.index_path}")
+        result = build_web_view(target)
+        click.echo(f"Built local workbench: {result.index_path}")
         return
-    serve_web_view(package_dir, host=host, port=port, open_browser=not no_open_browser)
+    serve_web_view(target, host=host, port=port)
 
 
 @main.command("workbench-note")
 @click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
 @click.option("--note", required=True, help="Workbench note to append.")
-@click.option("--section", default="workbench-notes.md", show_default=True, help="Markdown file inside the package to append.")
-@click.option("--enable-write-back", is_flag=True, help="Actually write the note. Disabled by default.")
+@click.option("--enable-write-back", is_flag=True, help="Enable controlled write-back with backup and audit.")
 @click.option("--json", "json_output", is_flag=True, help="Print JSON output.")
-def workbench_note_command(package_dir: Path, note: str, section: str, enable_write_back: bool, json_output: bool) -> None:
-    """Append a controlled local workbench note with backup and audit."""
-    result = append_workbench_note(package_dir, note=note, section=section, enable_write_back=enable_write_back)
+def workbench_note_command(package_dir: Path, note: str, enable_write_back: bool, json_output: bool) -> None:
+    """Append a workbench note to a diagnostic package."""
+    result = append_workbench_note(package_dir, note=note, enable_write_back=enable_write_back)
     if json_output:
-        click.echo(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+        click.echo(json.dumps(result, ensure_ascii=False, indent=2))
         return
-    click.echo(f"Write-back enabled: {result.enabled}")
-    click.echo(f"Wrote note: {result.wrote}")
-    if result.target_file:
-        click.echo(f"Target: {result.target_file}")
-    if result.backup_file:
-        click.echo(f"Backup: {result.backup_file}")
-    if result.audit_file:
-        click.echo(f"Audit: {result.audit_file}")
-    for warning in result.warnings:
-        click.echo(f"Warning: {warning}")
+    click.echo(f"Appended workbench note: {result['note_id']}")
 
 
-@main.command("assert")
+@main.command("ai-result")
 @click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
-@click.option("--statement", required=True, help="Human-confirmed problem statement.")
-@click.option("--expected", "expected_behavior", default=None, help="Expected behavior.")
-@click.option("--actual", "actual_behavior", default=None, help="Actual behavior.")
-@click.option("--why", "why_user_thinks_it_is_wrong", default=None, help="Why the user believes this is wrong.")
-@click.option("--severity", default="error", show_default=True, help="Assertion severity.")
-@click.option("--file", "related_file", default=None, help="Related file or artifact.")
-@click.option("--next-ai", "next_ai_instruction", default=None, help="Instruction for the next AI debugging pass.")
-def assert_problem(package_dir: Path, statement: str, expected_behavior: str | None, actual_behavior: str | None, why_user_thinks_it_is_wrong: str | None, severity: str, related_file: str | None, next_ai_instruction: str | None) -> None:
-    """Add a human-confirmed problem to a diagnostic package."""
-    assertion = add_user_assertion(package_dir=package_dir, user_statement=statement, expected_behavior=expected_behavior, actual_behavior=actual_behavior, why_user_thinks_it_is_wrong=why_user_thinks_it_is_wrong, severity=severity, related_file=related_file, next_ai_instruction=next_ai_instruction)
-    click.echo(f"Added user assertion: {assertion.assertion_id}")
+@click.option("--summary", required=True, help="AI repair summary.")
+@click.option("--claimed-fix", required=True, help="Claimed fix description.")
+@click.option("--tool", default=None, type=click.Choice(sorted(SUPPORTED_TOOLS)), help="AI tool profile.")
+@click.option("--repair-session-id", default=None, help="Optional repair session ID.")
+@click.option("--file", "files_changed", multiple=True, help="Changed file path. Can be repeated.")
+@click.option("--evidence-id", "evidence_used", multiple=True, help="Evidence ID cited by AI. Can be repeated.")
+@click.option("--assertion-id", "related_assertion_ids", multiple=True, help="Related assertion ID. Can be repeated.")
+@click.option("--verification-step", "verification_steps", multiple=True, help="Verification step. Can be repeated.")
+@click.option("--risk", "risks", multiple=True, help="Risk note. Can be repeated.")
+@click.option("--assumption", "assumptions", multiple=True, help="Assumption note. Can be repeated.")
+def ai_result_command(
+    package_dir: Path,
+    summary: str,
+    claimed_fix: str,
+    tool: str | None,
+    repair_session_id: str | None,
+    files_changed: tuple[str, ...],
+    evidence_used: tuple[str, ...],
+    related_assertion_ids: tuple[str, ...],
+    verification_steps: tuple[str, ...],
+    risks: tuple[str, ...],
+    assumptions: tuple[str, ...],
+) -> None:
+    """Record an AI repair result into a diagnostic package."""
+    result = add_ai_result(
+        package_dir,
+        summary=summary,
+        claimed_fix=claimed_fix,
+        tool=tool or "generic",
+        repair_session_id=repair_session_id,
+        files_changed=list(files_changed),
+        evidence_ids=list(evidence_used),
+        related_assertion_ids=list(related_assertion_ids),
+        verification_commands=list(verification_steps),
+        risks=list(risks),
+        assumptions=list(assumptions),
+    )
+    click.echo(f"Recorded AI result: {result['result_id']}")
+    if result.get("repair_session_id"):
+        click.echo(f"Repair session: {result['repair_session_id']}")
 
 
-@main.group("strategy")
-def strategy_group() -> None:
-    """Manage project diagnosis strategy."""
+@main.command("diagnosis-history")
+@click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--ai-pass", required=True, help="AI pass summary.")
+@click.option("--user-correction", default=None, help="Optional user correction.")
+@click.option("--tool", default=None, type=click.Choice(sorted(SUPPORTED_TOOLS)), help="AI tool profile.")
+@click.option("--repair-session-id", default=None, help="Optional repair session ID.")
+@click.option("--evidence-id", "evidence_added", multiple=True, help="Evidence added in this round. Can be repeated.")
+@click.option("--verification-attempt", default=None, help="Verification attempt summary.")
+def diagnosis_history_command(
+    package_dir: Path,
+    ai_pass: str,
+    user_correction: str | None,
+    tool: str | None,
+    repair_session_id: str | None,
+    evidence_added: tuple[str, ...],
+    verification_attempt: str | None,
+) -> None:
+    """Record a diagnosis history round."""
+    result = add_history_round(
+        package_dir,
+        ai_pass=ai_pass,
+        user_correction=user_correction,
+        tool=tool or "generic",
+        repair_session_id=repair_session_id,
+        evidence_added=list(evidence_added),
+        verification_attempt=verification_attempt,
+    )
+    click.echo(f"Recorded diagnosis round: {result['round_id']}")
+    if result.get("repair_session_id"):
+        click.echo(f"Repair session: {result['repair_session_id']}")
 
 
-@strategy_group.command("validate")
-@click.argument("project_root", type=click.Path(file_okay=False, path_type=Path), default=Path("."), required=False)
+@main.command("assertion-check")
+@click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
 @click.option("--json", "json_output", is_flag=True, help="Print JSON output.")
-def strategy_validate(project_root: Path, json_output: bool) -> None:
-    """Validate .doctorlink/diagnosis.yml."""
-    from doctor_link.core.diagnosis_strategy import load_diagnosis_strategy
-
-    result = load_diagnosis_strategy(project_root)
+def assertion_check_command(package_dir: Path, json_output: bool) -> None:
+    """Build an assertion compliance report."""
+    report = build_assertion_compliance(package_dir)
     if json_output:
-        click.echo(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
-    else:
-        click.echo(result.to_markdown())
-    if not result.is_valid:
-        raise click.ClickException("Diagnosis strategy validation failed.")
+        click.echo(json.dumps(report, ensure_ascii=False, indent=2))
+        return
+    click.echo(f"Assertion compliance status: {report.get('summary', 'needs_review')}")
+
+
+@main.command("risk-review")
+@click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--file", "files_changed", multiple=True, help="Changed file path. Can be repeated.")
+@click.option("--boundary", "boundary", multiple=True, help="Investigation boundary path prefix. Can be repeated.")
+def risk_review_command(package_dir: Path, files_changed: tuple[str, ...], boundary: tuple[str, ...]) -> None:
+    """Build a repair risk review report."""
+    file_path = files_changed[0] if files_changed else "unknown"
+    boundary_value = ", ".join(boundary) if boundary else "unspecified"
+    report = build_risk_review(package_dir, file_path=file_path, boundary=boundary_value)
+    click.echo(f"Repair risk review generated for: {file_path}")
+    click.echo(f"Risks listed: {len(report.get('risks', []))}")
+
+
+@main.command("strategy")
+@click.argument("library", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--json", "json_output", is_flag=True, help="Print JSON output.")
+def strategy_group(library: Path, json_output: bool) -> None:
+    """Validate diagnosis strategy configuration."""
+    project, strategy = project_context_from_library(library)
+    payload = {"project": project, "strategy": strategy.to_dict()}
+    if json_output:
+        click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+    click.echo(f"Project: {project}")
+    click.echo(f"Strategy: {strategy.name}")
 
 
 if __name__ == "__main__":
