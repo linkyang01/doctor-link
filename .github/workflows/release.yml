@@ -74,8 +74,13 @@ jobs:
             dist/*
 
       - name: Publish to PyPI
-        if: inputs.publish_pypi == 'true' && secrets.PYPI_API_TOKEN != ''
+        if: inputs.publish_pypi == 'true'
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        run: python -m twine upload dist/*
+        run: |
+          if [ -z "${TWINE_PASSWORD}" ]; then
+            echo "PYPI_API_TOKEN secret is not configured; skipping PyPI upload."
+            exit 0
+          fi
+          python -m twine upload dist/*
