@@ -5,7 +5,7 @@ from pathlib import Path
 
 import click
 
-from doctor_link.core.ai_handoff import SUPPORTED_TOOLS
+from doctor_link.core.ai_handoff import DEFAULT_HANDOFF_TOOL, SUPPORTED_TOOLS
 from doctor_link.core.friendly_errors import friendly_path_error
 from doctor_link.diagnose_report import build_report
 from doctor_link.diagnose_workflow import files_for_report, run_diagnose_workflow
@@ -20,7 +20,7 @@ from doctor_link.p4_cli import main
 @click.option("--output", "output", type=click.Path(file_okay=False, path_type=str), default=None)
 @click.option("--full", is_flag=True, help="Run the full diagnostic workflow (report, collect, verify, view).")
 @click.option("--handoff", is_flag=True, help="Generate an AI handoff package (implies --full).")
-@click.option("--tool", default="cursor", show_default=True, type=click.Choice(sorted(SUPPORTED_TOOLS)), help="AI handoff tool profile when --handoff is set.")
+@click.option("--tool", default=DEFAULT_HANDOFF_TOOL, show_default=True, type=click.Choice(sorted(SUPPORTED_TOOLS)), help="AI handoff tool profile when --handoff is set.")
 @click.option("--no-collect", is_flag=True, help="Skip automatic evidence collection in full workflow.")
 @click.option("--reports", "reports_dir", type=click.Path(file_okay=False, path_type=Path), default=None, help="DoctorReports output directory for --full.")
 def diagnose_now_command(

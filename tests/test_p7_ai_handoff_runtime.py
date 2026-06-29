@@ -5,7 +5,7 @@ from pathlib import Path
 
 from click.testing import CliRunner
 
-from doctor_link.cli import main
+from doctor_link.entrypoint import main
 from doctor_link.core.ai_handoff import (
     SUPPORTED_TOOLS,
     add_ai_result,
@@ -90,6 +90,34 @@ def test_p7_grok_handoff_writes_tool_specific_instruction(tmp_path: Path) -> Non
     assert manifest["display_name"] == "Grok Build"
     instruction = Path(result.instruction_path).read_text(encoding="utf-8")
     assert "Doctor link Handoff for Grok Build" in instruction
+
+
+def test_p7_windsurf_handoff_writes_tool_specific_instruction(tmp_path: Path) -> None:
+    package_dir = _package(tmp_path)
+
+    result = build_handoff_package(package_dir, tool="windsurf")
+
+    output = Path(result.output_dir)
+    assert (output / "WINDSURF_TASK.md").exists()
+    manifest = json.loads(Path(result.manifest_path).read_text(encoding="utf-8"))
+    assert manifest["tool"] == "windsurf"
+    assert manifest["display_name"] == "Windsurf"
+    instruction = Path(result.instruction_path).read_text(encoding="utf-8")
+    assert "Doctor link Handoff for Windsurf" in instruction
+
+
+def test_p7_cline_handoff_writes_tool_specific_instruction(tmp_path: Path) -> None:
+    package_dir = _package(tmp_path)
+
+    result = build_handoff_package(package_dir, tool="cline")
+
+    output = Path(result.output_dir)
+    assert (output / "CLINE_TASK.md").exists()
+    manifest = json.loads(Path(result.manifest_path).read_text(encoding="utf-8"))
+    assert manifest["tool"] == "cline"
+    assert manifest["display_name"] == "Cline"
+    instruction = Path(result.instruction_path).read_text(encoding="utf-8")
+    assert "Doctor link Handoff for Cline" in instruction
 
 
 def test_p7_handoff_enforces_file_inclusion_policy(tmp_path: Path) -> None:

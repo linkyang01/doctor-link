@@ -5,7 +5,7 @@ from pathlib import Path
 
 from click.testing import CliRunner
 
-from doctor_link.cli import main
+from doctor_link.entrypoint import main
 from doctor_link.core.models import DiagnosticEvent
 from doctor_link.core.package_builder import build_diagnostic_package
 
@@ -36,6 +36,53 @@ def test_handoff_cli_generates_tool_package(tmp_path: Path) -> None:
     manifest = json.loads((output / "handoff-manifest.json").read_text(encoding="utf-8"))
     assert manifest["tool"] == "codex"
     assert "ai-task.md" in manifest["included_files"]
+
+
+def test_handoff_cli_json_output(tmp_path: Path) -> None:
+    package_dir = _package(tmp_path)
+    runner = CliRunner()
+
+    result = runner.invoke(
+        main,
+        ["handoff", str(package_dir), "--tool", "grok", "--json"],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["tool"] == "grok"
+    assert payload["manifest_path"]
+    assert payload["instruction_path"]
+
+
+def test_handoff_list_command() -> None:
+    runner = CliRunner()
+    result = runner.invoke(main, ["handoff", "list"])
+    assert result.exit_code == 0, result.output
+    assert "grok" in result.output
+    assert "windsurf" in result.output
+    assert "cline" in result.output
+
+
+def test_handoff_list_json_output() -> None:
+    runner = CliRunner()
+    result = runner.invoke(main, ["handoff", "list", "--json"])
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    tools = {item["tool"] for item in payload["profiles"]}
+    assert "codex" in tools
+    assert "grok" in tools
+
+
+def test_handoff_check_command(tmp_path: Path) -> None:
+    package_dir = _package(tmp_path)
+    runner = CliRunner()
+
+    result = runner.invoke(main, ["handoff", "check", str(package_dir), "--tool", "cursor", "--json"])
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["tool"] == "cursor"
+    assert "status" in payload
 
 
 def test_handoff_cli_rejects_unknown_tool(tmp_path: Path) -> None:

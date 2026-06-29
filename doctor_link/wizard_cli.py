@@ -5,7 +5,7 @@ from pathlib import Path
 
 import click
 
-from doctor_link.core.ai_handoff import SUPPORTED_TOOLS
+from doctor_link.core.ai_handoff import DEFAULT_HANDOFF_TOOL, SUPPORTED_TOOLS
 from doctor_link.core.friendly_errors import friendly_path_error
 from doctor_link.diagnose_workflow import run_diagnose_workflow
 from doctor_link.p4_cli import main
@@ -43,12 +43,12 @@ def wizard_command(
         default=True,
     )
 
-    handoff_tool = "generic"
+    handoff_tool = DEFAULT_HANDOFF_TOOL
     if build_handoff:
         if tool is None:
             handoff_tool = click.prompt(
                 "Which AI tool profile should the handoff package target?",
-                default="cursor",
+                default=DEFAULT_HANDOFF_TOOL,
                 type=click.Choice(sorted(SUPPORTED_TOOLS)),
             )
         else:

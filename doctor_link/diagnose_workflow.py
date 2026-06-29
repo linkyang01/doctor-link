@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from doctor_link.core.ai_handoff import build_handoff_package
+from doctor_link.core.ai_handoff import DEFAULT_HANDOFF_TOOL, build_handoff_package
 from doctor_link.core.collector import collect_into_package
 from doctor_link.core.config_loader import load_config, merge_collect_cli
 from doctor_link.core.diagnosis_strategy import project_context_from_library
@@ -48,7 +48,7 @@ def run_diagnose_workflow(
     reports_dir: Path | None = None,
     collect_evidence: bool = True,
     handoff: bool = False,
-    handoff_tool: str = "cursor",
+    handoff_tool: str = DEFAULT_HANDOFF_TOOL,
     quick_scan: bool = True,
     full_pipeline: bool = True,
 ) -> DiagnoseWorkflowResult:
@@ -140,7 +140,7 @@ def _build_next_steps(result: DiagnoseWorkflowResult) -> list[str]:
     if result.handoff_dir:
         steps.append(f"Give this AI handoff folder to your coding tool: {result.handoff_dir}")
     elif result.package_dir:
-        steps.append(f"Generate AI handoff: doctor-link handoff {result.package_dir} --tool cursor")
+        steps.append(f"Generate AI handoff: doctor-link handoff {result.package_dir} --tool {DEFAULT_HANDOFF_TOOL}")
     if result.missing_evidence:
         steps.append(f"Verification status: {result.verification_status} ({len(result.missing_evidence)} missing item(s))")
         for command in result.next_commands[:3]:

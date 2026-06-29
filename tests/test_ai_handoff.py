@@ -12,6 +12,7 @@ from doctor_link.core.ai_handoff import (
     build_assertion_compliance,
     build_handoff_package,
     build_risk_review,
+    list_handoff_profiles,
 )
 from doctor_link.core.models import DiagnosticEvent
 from doctor_link.core.package_builder import build_diagnostic_package
@@ -24,6 +25,13 @@ def _package(tmp_path: Path) -> Path:
     )
     assert package.root_dir is not None
     return package.root_dir
+
+
+def test_list_handoff_profiles_covers_supported_tools() -> None:
+    profiles = list_handoff_profiles()
+    tools = {item["tool"] for item in profiles}
+    assert tools == SUPPORTED_TOOLS
+    assert any(item["tool"] == "grok" for item in profiles)
 
 
 def test_build_handoff_package_for_each_supported_tool(tmp_path: Path) -> None:
