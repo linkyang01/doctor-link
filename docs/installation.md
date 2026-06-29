@@ -2,7 +2,7 @@
 
 Doctor link is a Python CLI project. This guide explains how to clone the repository, install it locally, run the CLI, and validate that the project works on a local machine.
 
-Install from source by default. For `v0.1.0-rc.1`, you can also install from the GitHub Release wheel asset. PyPI publication is optional and only available after `PYPI_API_TOKEN` is configured for the Release workflow or local `scripts/publish_pypi.sh`.
+Install from source by default. For `v0.1.1`, you can also install from the GitHub Release wheel asset. PyPI publication is optional and only available after `PYPI_API_TOKEN` is configured for the Release workflow or local `scripts/publish_pypi.sh`.
 
 ## 1. Requirements
 

@@ -10,11 +10,15 @@ on:
       tag:
         description: Git tag to create or update
         required: true
-        default: v0.1.0-rc.1
+        default: v0.1.1
+      body_path:
+        description: Release notes markdown path in the repository
+        required: true
+        default: docs/validation/v0.1.1-release-notes.md
       prerelease:
         description: Mark GitHub release as pre-release
         required: true
-        default: "true"
+        default: "false"
       publish_pypi:
         description: Upload wheel to PyPI when PYPI_API_TOKEN is configured
         required: true
@@ -69,7 +73,7 @@ jobs:
           name: Doctor link ${{ inputs.tag }}
           prerelease: ${{ inputs.prerelease == 'true' }}
           generate_release_notes: false
-          body_path: docs/validation/v0.1.0-rc.1-release-notes.md
+          body_path: ${{ inputs.body_path }}
           files: |
             dist/*
 

@@ -46,7 +46,8 @@ P6 and P7 are complete as repository-side local-first implementation work. GitHu
 
 - [x] Cloud CI Certified
 - [x] Release Candidate Ready
-- [x] First public GitHub Release (`v0.1.0-rc.1`, Latest, 2026-06-29)
+- [x] First public GitHub Release (`v0.1.0-rc.1`, 2026-06-29)
+- [x] GitHub Release `v0.1.1` (Latest, 2026-06-29)
 - [x] Local Mac Validation Recorded (2026-06-29)
 - [ ] Additional target-environment validation (optional, e.g. Windows)
 - [x] Release tag published (`v0.1.0-rc.1`)
