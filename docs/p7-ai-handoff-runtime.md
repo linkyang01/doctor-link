@@ -18,6 +18,9 @@ Doctor link now has runtime handoff profiles for:
 - Aider
 - OpenHands
 - Claude Code
+- Grok Build
+- Windsurf
+- Cline
 - Generic Markdown/JSON
 
 Each profile defines:
@@ -139,10 +142,13 @@ A repair session tracks:
 ### Handoff
 
 ```bash
+doctor-link handoff list
+doctor-link handoff check <package_dir> --tool grok --json
 doctor-link handoff <package_dir> --tool claude-code
+doctor-link handoff <package_dir> --tool claude-code --json
 ```
 
-The command now prints the compatibility report path in addition to manifest and instruction paths.
+`handoff list` shows supported profiles. `handoff check` runs compatibility pre-check without copying files. Generate still accepts the shorthand `handoff <package_dir>` and prints the compatibility report path in addition to manifest and instruction paths.
 
 ### AI result
 

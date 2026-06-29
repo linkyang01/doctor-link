@@ -14,7 +14,7 @@ P5: Productization and Release Readiness is complete. P6 implementation requires
 
 P7.10 added the final validation and closure layer, including a P7 runtime validation script and CI coverage for the P7 command surface.
 
-Doctor link remains local-first. The first public GitHub Release (`v0.1.0-rc.1`, Latest, 2026-06-29) is published with wheel and sdist assets. It does not create a hosted platform, external account system, telemetry service, or marketplace. PyPI publication is optional.
+Doctor link remains local-first. The latest public GitHub Release (`v0.1.2`, Latest, 2026-06-29) is published with wheel and sdist assets. It does not create a hosted platform, external account system, telemetry service, or marketplace. PyPI publication is optional.
 
 ## Common Commands
 
@@ -25,6 +25,7 @@ doctor-link scan <library>
 doctor-link plan <library>
 doctor-link report <library> --out DoctorReports
 doctor-link verify <package_dir> --write-back
+doctor-link handoff list
 doctor-link handoff <package_dir> --tool codex --out DoctorReports/handoff
 doctor-link ci report DoctorReports --out DoctorReports/ci --json
 doctor-link distribution check . --dist dist --out DoctorReports/distribution --json

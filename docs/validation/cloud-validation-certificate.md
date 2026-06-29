@@ -6,7 +6,7 @@ Status: Cloud CI Certified / Release Candidate Ready
 
 This certificate records GitHub Actions cloud validation for Doctor link.
 
-It does not claim target customer environment validation, production validation, PyPI publication, hosted service readiness, or enterprise deployment acceptance. Local Mac validation is recorded separately (2026-06-29). GitHub Release `v0.1.0-rc.1` is published (Latest, 2026-06-29).
+It does not claim target customer environment validation, production validation, PyPI publication, hosted service readiness, or enterprise deployment acceptance. Local Mac validation is recorded separately (2026-06-29). GitHub Release `v0.1.2` is published (Latest, 2026-06-29).
 
 ## Project
 
@@ -14,7 +14,7 @@ It does not claim target customer environment validation, production validation,
 - Repository: `linkyang01/doctor-link`
 - Validation type: GitHub Actions Cloud Validation
 - Validation scope: repository-side CI and package validation
-- Published release: `v0.1.0-rc.1` (Latest, 2026-06-29)
+- Published release: `v0.1.2` (Latest, 2026-06-29)
 - Local Mac validation: recorded (2026-06-29); additional target environments optional
 
 ## Cloud Validation Evidence

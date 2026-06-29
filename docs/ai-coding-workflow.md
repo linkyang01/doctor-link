@@ -8,11 +8,12 @@ Doctor link prepares diagnostic context for AI Coding tools. It does not replace
 2. Add user-confirmed issues with `doctor-link assert`.
 3. Collect evidence with `doctor-link collect`.
 4. Run verification planning with `doctor-link verify`.
-5. Generate AI handoff with `doctor-link handoff`.
-6. Paste the generated task into an AI Coding tool.
-7. Record the AI repair result with `doctor-link ai-result`.
-8. Run `doctor-link assertion-check` and `doctor-link risk-review`.
-9. Re-run verification.
+5. List profiles with `doctor-link handoff list` and pre-check with `doctor-link handoff check`.
+6. Generate AI handoff with `doctor-link handoff`.
+7. Paste the generated task into an AI Coding tool.
+8. Record the AI repair result with `doctor-link ai-result`.
+9. Run `doctor-link assertion-check` and `doctor-link risk-review`.
+10. Re-run verification.
 
 ## Handoff profiles
 
@@ -32,7 +33,10 @@ Supported handoff profiles include:
 Example:
 
 ```bash
+doctor-link handoff list
+doctor-link handoff check "$PACKAGE_DIR" --tool grok --json
 doctor-link handoff "$PACKAGE_DIR" --tool codex --out DoctorReports/handoff
+doctor-link handoff "$PACKAGE_DIR" --tool codex --json
 ```
 
 ## Human-confirmed issue rule

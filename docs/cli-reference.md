@@ -44,15 +44,30 @@ doctor-link view DoctorReports --build-only
 doctor-link workbench-note <package_dir> --note "Reviewed" --enable-write-back --json
 ```
 
+## No-code guided workflow
+
+```bash
+doctor-link wizard --folder . --summary "startup issue" --tool cursor --handoff --json
+doctor-link diagnose-now . --full --handoff --tool grok --json
+doctor-link home --reports DoctorReports
+```
+
 ## AI Coding collaboration
 
 ```bash
+doctor-link handoff list
+doctor-link handoff list --json
+doctor-link handoff check <package_dir> --tool grok --json
 doctor-link handoff <package_dir> --tool codex --out DoctorReports/handoff
+doctor-link handoff <package_dir> --tool codex --json
+doctor-link handoff generate <package_dir> --tool codex --out DoctorReports/handoff
 doctor-link ai-result <package_dir> --summary "AI repair summary" --claimed-fix "claimed fix"
 doctor-link diagnosis-history <package_dir> --ai-pass "round 1" --user-correction "human correction"
 doctor-link assertion-check <package_dir>
 doctor-link risk-review <package_dir> --file doctor_link/cli.py --boundary doctor_link/
 ```
+
+Supported `--tool` profiles: `aider`, `claude-code`, `cline`, `codex`, `continue`, `cursor`, `generic`, `grok`, `openhands`, `windsurf`. Default for guided handoff generation: `cursor`.
 
 ## Automated diagnosis pipeline
 

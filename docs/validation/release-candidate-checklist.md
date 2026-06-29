@@ -1,6 +1,6 @@
 # Doctor link Release Candidate Checklist
 
-Status: `v0.1.0-rc.1 published (Latest Release, 2026-06-29)`
+Status: `v0.1.2 published (Latest Release, 2026-06-29)`
 
 ## Repository and CI
 

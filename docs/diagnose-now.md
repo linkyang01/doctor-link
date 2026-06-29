@@ -1,84 +1,75 @@
 # diagnose-now
 
-Run a quick diagnosis for a local media library and write a summary file.
+Run a quick diagnosis for a local project folder, or run the full guided workflow in one command.
 
-## Default usage
+## Quick scan (default)
 
 ```bash
-doctor-link diagnose-now /path/to/library
+doctor-link diagnose-now /path/to/project
 ```
 
 This writes:
 
 ```text
-/path/to/library/.doctor-link/summary.md
+/path/to/project/.doctor-link/summary.md
 ```
 
-The summary includes:
-
-- file count
-- extension counts
-- basic recommendations
+The summary includes file count, extension counts, and basic recommendations.
 
 ## Custom output directory
 
 ```bash
-doctor-link diagnose-now /path/to/library --output /path/to/report
+doctor-link diagnose-now /path/to/project --output /path/to/report
 ```
-
-This writes:
-
-```text
-/path/to/report/summary.md
-```
-
-The output directory is excluded from the scan so repeated runs do not change the file count.
 
 ## JSON output
 
 ```bash
-doctor-link diagnose-now /path/to/library --json
+doctor-link diagnose-now /path/to/project --json
 ```
 
-Example output:
+Use `--report-json` when you also need the structured diagnosis report.
 
-```json
-{"summary": "/path/to/library/.doctor-link/summary.md"}
-```
-
-You can combine JSON output with a custom output directory:
+## Full guided workflow
 
 ```bash
-doctor-link diagnose-now /path/to/library --output /path/to/report --json
+doctor-link diagnose-now /path/to/project --full --summary "startup issue"
 ```
 
-## Report JSON output
+This generates a diagnostic package, collects evidence, runs verification planning, and builds the local HTML report.
 
-Use `--report-json` when you need the structured diagnosis report as well as the summary path.
+## AI handoff in one command
 
 ```bash
-doctor-link diagnose-now /path/to/library --report-json
+doctor-link diagnose-now /path/to/project --handoff --tool grok --summary "startup issue"
 ```
 
-Example output:
+`--handoff` implies `--full`. Supported `--tool` values match `doctor-link handoff list`.
 
-```json
-{
-  "summary": "/path/to/library/.doctor-link/summary.md",
-  "report": {
-    "files": 1,
-    "extensions": {
-      "txt": 1
-    },
-    "recommendations": ["Add fixture coverage."]
-  }
-}
-```
+Default handoff profile: `cursor`.
 
-`--report-json` still writes `summary.md`. It does not change the default output or the existing `--json` output.
-
-You can combine report JSON output with a custom output directory:
+## Useful flags
 
 ```bash
-doctor-link diagnose-now /path/to/library --output /path/to/report --report-json
+doctor-link diagnose-now . --full --no-collect
+doctor-link diagnose-now . --handoff --tool codex --reports DoctorReports --json
+```
+
+| Flag | Purpose |
+|------|---------|
+| `--full` | Run the complete diagnostic workflow |
+| `--handoff` | Generate an AI handoff package (implies `--full`) |
+| `--tool` | Handoff profile when `--handoff` is set |
+| `--no-collect` | Skip automatic evidence collection |
+| `--reports` | DoctorReports output directory |
+| `--json` | Print workflow result as JSON |
+| `--report-json` | Include structured report in JSON output |
+
+## Related commands
+
+```bash
+doctor-link wizard --folder . --tool cursor --handoff
+doctor-link handoff list
+doctor-link handoff check <package_dir> --tool grok --json
+doctor-link home
 ```

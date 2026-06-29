@@ -1,6 +1,6 @@
 # P8 No-code User Experience and Guided Workflow
 
-Status: largely complete (v0.1.0-rc.1 + v0.1.1 polish)
+Status: largely complete (v0.1.0-rc.1 + v0.1.1 + v0.1.2 polish)
 
 ## Purpose
 
