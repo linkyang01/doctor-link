@@ -1,0 +1,10 @@
+project: media-playback-library
+project_type: vly
+symptom: "Validate playback sample library readiness before Core Proof"
+failure_stage: library_completeness
+investigation_boundary:
+  - samples/
+do_not_change:
+  - ../
+default_commands:
+  - doctor-link vly-proof .
