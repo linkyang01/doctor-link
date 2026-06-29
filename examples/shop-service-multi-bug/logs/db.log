@@ -1,0 +1,4 @@
+2026-06-29 10:03:01 ERROR connection pool exhausted active=2 waiting=47
+2026-06-29 10:03:02 ERROR query timeout table=orders elapsed_ms=15000
+2026-06-29 10:03:04 WARN  slow query sql="SELECT * FROM users" ms=8200
+2026-06-29 10:03:06 ERROR deadlock detected txn=0x9f2a

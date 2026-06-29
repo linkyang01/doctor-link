@@ -1,0 +1,4 @@
+2026-06-29 10:01:01 ERROR login timeout user=alice duration_ms=1
+2026-06-29 10:01:02 ERROR login timeout user=bob duration_ms=1
+2026-06-29 10:01:05 WARN  token validation failed token=expired
+2026-06-29 10:01:08 ERROR brute force detected ip=10.0.0.55 attempts=12

@@ -1,0 +1,4 @@
+2026-06-29 10:02:01 ERROR GET /users/404 returned 500 expected=404
+2026-06-29 10:02:03 ERROR POST /orders inventory=-3 sku=PHONE-12
+2026-06-29 10:02:05 WARN  rate limit exceeded client=mobile-app-v2
+2026-06-29 10:02:10 ERROR upstream timeout service=payment-gateway ms=30001
