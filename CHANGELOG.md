@@ -49,12 +49,31 @@ Post-release documentation alignment and wizard handoff polish.
 - Project status, validation certificates, and README files reflect the published GitHub Release (`v0.1.0-rc.1`, Latest).
 - P8 no-code UX roadmap marked largely complete.
 
-## Unreleased
+## [0.1.2] - 2026-06-29
+
+AI handoff expansion and guided-workflow CLI polish.
 
 ### Added
 
 - AI handoff profiles for `grok` (Grok Build), `windsurf` (Windsurf), and `cline` (Cline).
 - `doctor-link diagnose-now --tool` to select an AI handoff profile (aligned with `wizard --tool`).
+- `doctor-link handoff list` to list supported handoff profiles.
+- `doctor-link handoff check` to pre-check compatibility without generating a package.
+- `doctor-link handoff generate --json` (and shorthand `doctor-link handoff <package> --json`) for scripted output.
+
+### Changed
+
+- Default handoff tool for guided workflows (`wizard`, `diagnose-now`, `handoff generate`) is now `cursor`.
+- CLI reference, diagnose-now guide, and project status docs reflect `v0.1.2` as Latest.
+
+### Fixed
+
+- Restored `doctor_link/core/ai_handoff.py` after a corrupted remote placeholder blocked handoff generation.
+
+## Unreleased
+
+### Added
+
 - P0 diagnostic foundation.
 - P1 evidence collection primitives.
 - P1+ CLI evidence pipeline.

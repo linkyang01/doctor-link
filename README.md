@@ -12,7 +12,7 @@ Doctor link 是一个面向软件项目的人机协同诊断层。
 ## Install (GitHub Release)
 
 ```bash
-pip install https://github.com/linkyang01/doctor-link/releases/download/v0.1.1/doctor_link-0.1.1-py3-none-any.whl
+pip install https://github.com/linkyang01/doctor-link/releases/download/v0.1.2/doctor_link-0.1.2-py3-none-any.whl
 doctor-link --version
 ```
 
@@ -25,9 +25,9 @@ From source: `pip install -e .` after cloning this repository.
 
 ## Current status
 
-Doctor link has completed P0-P7 local runtime implementation, post-P7 hardening, and public GitHub Releases (`v0.1.1` Latest). The project remains local-first: no hosted platform, account system, or telemetry. PyPI publication is optional and not required for GitHub distribution.
+Doctor link has completed P0-P7 local runtime implementation, post-P7 hardening, and public GitHub Releases (`v0.1.2` Latest). The project remains local-first: no hosted platform, account system, or telemetry. PyPI publication is optional and not required for GitHub distribution.
 
-Doctor link 已完成 P0-P7 本地运行能力、Post-P7 加固，并发布 GitHub 正式版（`v0.1.1`，Latest）。项目仍坚持本地优先：无托管平台、账号体系或遥测。PyPI 为可选项，GitHub Release 即可安装使用。
+Doctor link 已完成 P0-P7 本地运行能力、Post-P7 加固，并发布 GitHub 正式版（`v0.1.2`，Latest）。项目仍坚持本地优先：无托管平台、账号体系或遥测。PyPI 为可选项，GitHub Release 即可安装使用。
 
 ## Main project areas
 
