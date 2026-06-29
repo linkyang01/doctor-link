@@ -1,0 +1,17 @@
+project: shop-service-multi-bug
+version: 1
+symptom: "Multiple production incidents: login failures, wrong API errors, DB pool exhaustion, cache storms"
+failure_stage: multi_subsystem
+investigation_boundary:
+  - src/auth/
+  - src/api/
+  - src/db/
+  - src/cache/
+  - logs/
+  - config/app.yml
+do_not_change:
+  - deployment/k8s/
+  - third-party payment SDK
+default_commands:
+  - doctor-link reproduce list .
+  - doctor-link test run .
