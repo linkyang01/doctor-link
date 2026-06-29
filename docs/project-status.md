@@ -14,7 +14,7 @@ Post-P7 hardening has also been completed:
 - Adapter and Plugin run commands default to dry-run and require `--allow-run` for actual local command execution;
 - completed TODO trackers are archived under `docs/archive/completed-todos/`.
 
-Doctor link is now documented as Cloud CI Certified, Release Candidate Ready, and locally validated on the developer Mac (2026-06-29). The certification package is maintained under `docs/validation/`.
+Doctor link is now documented as Cloud CI Certified, Release Candidate Ready (`v0.1.0-rc.1`), and locally validated on the developer Mac (2026-06-29). The certification package is maintained under `docs/validation/`.
 
 All repository-side, non-local, non-release closure work has been completed. Local Mac validation has been recorded in `docs/p5.10-local-validation.md`. Validation on additional target environments (offline workstation, customer delivery, production-like) remains optional when those environments differ from the recorded Mac setup.
 
@@ -49,7 +49,7 @@ P6 and P7 are complete as repository-side local-first implementation work. This 
 - [x] Local Mac Validation Recorded (2026-06-29)
 - [ ] Additional target-environment validation (optional)
 - [ ] GitHub Release created
-- [ ] Release tag created
+- [x] Release tag prepared locally (`v0.1.0-rc.1`)
 - [ ] PyPI publication performed
 
 Certification documents:
