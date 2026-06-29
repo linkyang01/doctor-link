@@ -9,6 +9,8 @@ from typing import Any
 
 from doctor_link.core.models import utc_now_iso
 
+DEFAULT_HANDOFF_TOOL = "cursor"
+
 SUPPORTED_TOOLS = {
     "codex",
     "cursor",
@@ -209,6 +211,20 @@ PROFILES: dict[str, HandoffProfile] = {
 }
 
 
+def list_handoff_profiles() -> list[dict[str, Any]]:
+    return [
+        {
+            "tool": key,
+            "display_name": profile.display_name,
+            "instruction_file": profile.instruction_file,
+            "preferred_context": profile.preferred_context,
+            "max_recommended_files": profile.max_recommended_files,
+            "notes": profile.notes,
+        }
+        for key, profile in sorted(PROFILES.items())
+    ]
+
+
 def get_handoff_profile(tool: str) -> HandoffProfile:
     tool_key = tool.lower().strip()
     if tool_key not in PROFILES:
@@ -216,7 +232,7 @@ def get_handoff_profile(tool: str) -> HandoffProfile:
     return PROFILES[tool_key]
 
 
-def build_handoff_package(package_dir: Path, tool: str = "generic", output_dir: Path | None = None) -> HandoffPackage:
+def build_handoff_package(package_dir: Path, tool: str = DEFAULT_HANDOFF_TOOL, output_dir: Path | None = None) -> HandoffPackage:
     package_dir = package_dir.resolve()
     if not package_dir.is_dir():
         raise FileNotFoundError(f"Diagnostic package not found: {package_dir}")
@@ -250,151 +266,195 @@ def build_handoff_package(package_dir: Path, tool: str = "generic", output_dir: 
     compatibility.optional_missing = [item for item in profile.optional_files if not (package_dir / item).exists()]
     compatibility.status = _compatibility_status(compatibility)
 
-    instruction = _render_instruction(package_dir, profile, included, missing or compatibility.required_missing, compatibility)
+    instruction = _render_instruction(package_dir, profile, included, compatibility)
     instruction_path = out / profile.instruction_file
     instruction_path.write_text(instruction, encoding="utf-8")
-    compatibility_path = out / "handoff-compatibility.json"
-    compatibility_path.write_text(json.dumps(compatibility.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
+
     manifest = {
         "tool": tool_key,
         "display_name": profile.display_name,
-        "profile": profile.to_dict(),
-        "source_package": str(package_dir),
-        "instruction_file": profile.instruction_file,
+        "package_dir": str(package_dir),
+        "output_dir": str(out),
+        "generated_at": utc_now_iso(),
         "included_files": included,
-        "missing_files": missing or compatibility.required_missing,
-        "optional_missing_files": compatibility.optional_missing,
-        "skipped_files": compatibility.skipped_files,
+        "missing_files": missing,
         "compatibility_status": compatibility.status,
-        "compatibility_file": "handoff-compatibility.json",
-        "missing_evidence_warnings": compatibility.missing_evidence_warnings,
-        "privacy_warnings": compatibility.privacy_warnings,
-        "notes": profile.notes,
-        "human_assertion_rule": "Do not dismiss user-confirmed problems as normal behavior without evidence.",
+        "instruction_file": profile.instruction_file,
     }
     manifest_path = out / "handoff-manifest.json"
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
-    return HandoffPackage(tool_key, str(out), str(manifest_path), str(instruction_path), included, missing or compatibility.required_missing, str(compatibility_path))
+    compatibility_path = out / "handoff-compatibility.json"
+    compatibility_path.write_text(json.dumps(compatibility.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
+
+    _report_update(package_dir, "ai_handoff", {"tool": tool_key, "output_dir": str(out), "generated_at": manifest["generated_at"]})
+    return HandoffPackage(
+        tool=tool_key,
+        output_dir=str(out),
+        manifest_path=str(manifest_path),
+        instruction_path=str(instruction_path),
+        included_files=included,
+        missing_files=missing,
+        compatibility_path=str(compatibility_path),
+    )
 
 
-def check_handoff_compatibility(package_dir: Path, tool: str = "generic") -> HandoffCompatibilityReport:
+def check_handoff_compatibility(package_dir: Path, tool: str = DEFAULT_HANDOFF_TOOL) -> HandoffCompatibilityReport:
+    package_dir = package_dir.resolve()
+    if not package_dir.is_dir():
+        raise FileNotFoundError(f"Diagnostic package not found: {package_dir}")
     profile = get_handoff_profile(tool)
-    report = HandoffCompatibilityReport(tool=profile.tool, status="ready")
-    report.required_missing = [item for item in profile.required_files if not (package_dir / item).exists()]
-    report.optional_missing = [item for item in profile.optional_files if not (package_dir / item).exists()]
-    report.missing_evidence_warnings = _missing_evidence_warnings(package_dir)
-    report.privacy_warnings = _privacy_warnings(package_dir, profile)
-    report.guidance = _profile_guidance(profile)
+    required_missing = [item for item in profile.required_files if not (package_dir / item).exists()]
+    optional_missing = [item for item in profile.optional_files if not (package_dir / item).exists()]
+    included: list[str] = []
+    skipped: list[dict[str, str]] = []
+    for relative in _candidate_handoff_files(package_dir, profile):
+        source = package_dir / relative
+        if not source.exists():
+            continue
+        allowed, reason = _allowed_by_profile(relative, profile)
+        if allowed:
+            included.append(relative)
+        else:
+            skipped.append({"path": relative, "reason": reason})
+    report = HandoffCompatibilityReport(
+        tool=profile.tool,
+        status="pending",
+        required_missing=required_missing,
+        optional_missing=optional_missing,
+        included_files=included,
+        skipped_files=skipped,
+        missing_evidence_warnings=_missing_evidence_warnings(package_dir),
+        privacy_warnings=_privacy_warnings(package_dir, profile),
+        guidance=_profile_guidance(profile),
+    )
     report.status = _compatibility_status(report)
     return report
 
 
-def add_ai_result(
-    package_dir: Path,
-    summary: str,
-    claimed_fix: str = "",
-    files_changed: list[str] | None = None,
-    evidence_used: list[str] | None = None,
-    related_assertion_ids: list[str] | None = None,
-    verification_steps: list[str] | None = None,
-    risks: list[str] | None = None,
-    assumptions: list[str] | None = None,
-    repair_session_id: str | None = None,
-    tool: str = "generic",
-) -> dict[str, Any]:
+def add_ai_result(package_dir: Path, summary: str, claimed_fix: str, tool: str = DEFAULT_HANDOFF_TOOL, evidence_ids: list[str] | None = None, files_changed: list[str] | None = None, verification_commands: list[str] | None = None, repair_session_id: str | None = None) -> dict[str, Any]:
     package_dir = package_dir.resolve()
-    items = _load_list(package_dir / "ai-repair-result.json")
-    session_id = repair_session_id or _next_repair_session_id(package_dir)
-    record = {
-        "result_id": f"ai_result_{len(items) + 1:03d}",
-        "repair_session_id": session_id,
+    result_id = f"ai_result_{len(_load_list(package_dir / 'ai-repair-result.json')) + 1:03d}"
+    payload = {
+        "result_id": result_id,
         "tool": tool,
         "summary": summary,
         "claimed_fix": claimed_fix,
+        "evidence_ids": evidence_ids or [],
         "files_changed": files_changed or [],
-        "evidence_used": evidence_used or [],
-        "related_assertion_ids": related_assertion_ids or [],
-        "verification_steps": verification_steps or [],
-        "risks": risks or [],
-        "assumptions": assumptions or [],
-        "verified": False,
-        "created_at": utc_now_iso(),
-        "notice": "Run verification before closing.",
+        "verification_commands": verification_commands or [],
+        "recorded_at": utc_now_iso(),
+        "status": "open_verification_required",
     }
-    items.append(record)
-    (package_dir / "ai-repair-result.json").write_text(json.dumps(items, ensure_ascii=False, indent=2), encoding="utf-8")
-    (package_dir / "ai-repair-result.md").write_text(_md("AI Repair Results", items), encoding="utf-8")
-    _upsert_repair_session(package_dir, session_id, tool, record)
-    _report_update(package_dir, "ai_repair_results", items)
-    _report_update(package_dir, "ai_repair_sessions", _load_list(package_dir / "ai-repair-sessions.json"))
-    return record
-
-
-def add_history_round(
-    package_dir: Path,
-    ai_pass: str = "",
-    user_correction: str = "",
-    evidence_added: list[str] | None = None,
-    verification_attempt: str = "",
-    repair_session_id: str | None = None,
-    tool: str = "generic",
-) -> dict[str, Any]:
-    package_dir = package_dir.resolve()
-    items = _load_list(package_dir / "diagnosis-history.json")
+    results = _load_list(package_dir / "ai-repair-result.json")
+    results.append(payload)
+    (package_dir / "ai-repair-result.json").write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
+    (package_dir / "ai-repair-result.md").write_text(_md("AI Repair Results", results), encoding="utf-8")
     session_id = repair_session_id or _latest_or_next_repair_session_id(package_dir)
-    record = {
-        "round_id": f"round_{len(items) + 1:03d}",
-        "repair_session_id": session_id,
+    _upsert_repair_session(package_dir, session_id, tool, payload)
+    _report_update(package_dir, "latest_ai_result", payload)
+    return payload
+
+
+def add_history_round(package_dir: Path, ai_pass: str, user_correction: str | None = None, tool: str = DEFAULT_HANDOFF_TOOL, repair_session_id: str | None = None) -> dict[str, Any]:
+    package_dir = package_dir.resolve()
+    round_id = f"history_round_{len(_load_list(package_dir / 'diagnosis-history.json')) + 1:03d}"
+    payload = {
+        "round_id": round_id,
         "tool": tool,
         "ai_pass": ai_pass,
         "user_correction": user_correction,
-        "evidence_added": evidence_added or [],
-        "verification_attempt": verification_attempt,
-        "created_at": utc_now_iso(),
+        "recorded_at": utc_now_iso(),
     }
-    items.append(record)
-    (package_dir / "diagnosis-history.json").write_text(json.dumps(items, ensure_ascii=False, indent=2), encoding="utf-8")
-    (package_dir / "diagnosis-history.md").write_text(_md("Diagnosis History", items), encoding="utf-8")
-    _append_session_round(package_dir, session_id, tool, record)
-    _report_update(package_dir, "diagnosis_history", items)
-    _report_update(package_dir, "ai_repair_sessions", _load_list(package_dir / "ai-repair-sessions.json"))
-    return record
+    history = _load_list(package_dir / "diagnosis-history.json")
+    history.append(payload)
+    (package_dir / "diagnosis-history.json").write_text(json.dumps(history, ensure_ascii=False, indent=2), encoding="utf-8")
+    (package_dir / "diagnosis-history.md").write_text(_md("Diagnosis History", history), encoding="utf-8")
+    session_id = repair_session_id or _latest_or_next_repair_session_id(package_dir)
+    _append_session_round(package_dir, session_id, tool, payload)
+    _report_update(package_dir, "latest_history_round", payload)
+    return payload
 
 
 def build_assertion_compliance(package_dir: Path) -> dict[str, Any]:
-    assertions = _load_any(package_dir / "user-assertions.json", [])
-    results = _load_list(package_dir / "ai-repair-result.json")
-    ids = [_assertion_id(item, i) for i, item in enumerate(assertions if isinstance(assertions, list) else [], start=1)]
-    covered = sorted({str(value) for item in results for value in (item.get("related_assertion_ids") or [])})
-    missing = [value for value in ids if value not in covered]
-    report = {"status": "needs_attention" if missing else "covered", "assertion_ids": ids, "covered_assertion_ids": covered, "missing_assertion_ids": missing}
+    package_dir = package_dir.resolve()
+    assertions = _load_list(package_dir / "user-assertions.json")
+    compliance = _load_any(package_dir / "assertion-compliance-report.json", {})
+    if not isinstance(compliance, dict):
+        compliance = {}
+    items: list[dict[str, Any]] = []
+    for index, assertion in enumerate(assertions, start=1):
+        assertion_id = _assertion_id(assertion, index)
+        items.append({
+            "assertion_id": assertion_id,
+            "statement": assertion.get("statement") if isinstance(assertion, dict) else str(assertion),
+            "status": "needs_review",
+            "notes": "Human-confirmed issue must not be dismissed without evidence.",
+        })
+    report = {
+        "generated_at": utc_now_iso(),
+        "assertion_count": len(items),
+        "items": items,
+        "summary": "All user-confirmed assertions require explicit evidence before closure.",
+    }
     (package_dir / "assertion-compliance-report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-    (package_dir / "assertion-compliance-report.md").write_text(_md("Assertion Compliance Report", [report]), encoding="utf-8")
+    lines = ["# Assertion Compliance Report", "", report["summary"], ""]
+    for item in items:
+        lines.append(f"## {item['assertion_id']}")
+        lines.append(f"- statement: {item['statement']}")
+        lines.append(f"- status: {item['status']}")
+        lines.append(f"- notes: {item['notes']}")
+        lines.append("")
+    (package_dir / "assertion-compliance-report.md").write_text("\n".join(lines), encoding="utf-8")
     _report_update(package_dir, "assertion_compliance", report)
     return report
 
 
-def build_risk_review(package_dir: Path, files_changed: list[str] | None = None, boundary: list[str] | None = None, risk_level: str = "unknown") -> dict[str, Any]:
-    files = files_changed or []
-    allowed = boundary or []
-    outside = [item for item in files if allowed and not any(item.startswith(prefix) for prefix in allowed)]
-    report = {"risk_level": "high" if outside else risk_level, "files_changed": files, "boundary": allowed, "outside_boundary": outside}
+def build_risk_review(package_dir: Path, file_path: str, boundary: str) -> dict[str, Any]:
+    package_dir = package_dir.resolve()
+    report = {
+        "generated_at": utc_now_iso(),
+        "file_path": file_path,
+        "boundary": boundary,
+        "risks": [
+            "Patch may exceed investigation boundary if unrelated files are edited.",
+            "AI repair may claim success without rerunning verification commands.",
+            "Sensitive evidence may leak if copied outside the package.",
+        ],
+        "mitigations": [
+            "Restrict edits to files listed in investigation-boundary.md.",
+            "Require verification-result.json updates before closure.",
+            "Review privacy warnings in handoff-compatibility.json before sharing.",
+        ],
+    }
     (package_dir / "repair-risk-review.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-    (package_dir / "repair-risk-review.md").write_text(_md("Repair Risk Review", [report]), encoding="utf-8")
+    lines = [
+        "# Repair Risk Review",
+        "",
+        f"- file_path: {file_path}",
+        f"- boundary: {boundary}",
+        "",
+        "## Risks",
+        *[f"- {item}" for item in report["risks"]],
+        "",
+        "## Mitigations",
+        *[f"- {item}" for item in report["mitigations"]],
+        "",
+    ]
+    (package_dir / "repair-risk-review.md").write_text("\n".join(lines), encoding="utf-8")
     _report_update(package_dir, "repair_risk_review", report)
     return report
 
 
-def _render_instruction(package_dir: Path, profile: HandoffProfile, included: list[str], missing: list[str], compatibility: HandoffCompatibilityReport) -> str:
-    ai_task = _read(package_dir / "ai-task.md", "Missing ai-task.md")
-    boundary = _read(package_dir / "investigation-boundary.md", "Missing investigation-boundary.md")
-    checklist = _read(package_dir / "fix-verification-checklist.md", "Missing fix-verification-checklist.md")
-    evidence = _read(package_dir / "evidence-list.md", "Missing evidence-list.md")
-    assertions = _read(package_dir / "user-assertions.json", "Missing user-assertions.json")
-    included_lines = [f"- {item}" for item in included] if included else ["- None"]
-    missing_lines = [f"- {item}" for item in missing] if missing else ["- None"]
-    note_lines = [f"- {note}" for note in profile.notes]
-    privacy_lines = [f"- {item}" for item in compatibility.privacy_warnings] if compatibility.privacy_warnings else ["- None detected in copied text candidates. Still review before external sharing."]
+def _render_instruction(package_dir: Path, profile: HandoffProfile, included: list[str], compatibility: HandoffCompatibilityReport) -> str:
+    ai_task = _read(package_dir / "ai-task.md", "No ai-task.md found.")
+    boundary = _read(package_dir / "investigation-boundary.md", "No investigation-boundary.md found.")
+    checklist = _read(package_dir / "fix-verification-checklist.md", "No fix-verification-checklist.md found.")
+    evidence = _read(package_dir / "evidence-list.md", "No evidence-list.md found.")
+    assertions = _read(package_dir / "user-assertions.json", "[]")
+    included_lines = [f"- {item}" for item in included] if included else ["- None copied."]
+    missing_lines = [f"- {item}" for item in compatibility.required_missing] if compatibility.required_missing else ["- None."]
+    note_lines = [f"- {item}" for item in profile.notes]
+    privacy_lines = [f"- {item}" for item in compatibility.privacy_warnings] if compatibility.privacy_warnings else ["- No obvious sensitive patterns in copied text candidates. Still review before external sharing."]
     missing_evidence_lines = [f"- {item}" for item in compatibility.missing_evidence_warnings] if compatibility.missing_evidence_warnings else ["- None detected."]
     guidance_lines = [f"- {item}" for item in compatibility.guidance]
     lines = [
