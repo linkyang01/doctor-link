@@ -18,6 +18,9 @@ from doctor_link.core.collector import collect_into_package
 from doctor_link.core.config_loader import load_config, merge_collect_cli, merge_package_cli, merge_verify_cli
 from doctor_link.core.environment_collector import collect_environment
 from doctor_link.core.media_probe import probe_media, summarize_media_probe
+from doctor_link import __version__
+from doctor_link.core.diagnosis_strategy import project_context_from_library
+from doctor_link.core.friendly_errors import friendly_path_error, wrap_io_error
 from doctor_link.core.package_builder import build_diagnostic_package, event_from_scan
 from doctor_link.core.package_exporter import PackageExportOptions, export_package
 from doctor_link.core.redactor import RedactionOptions
@@ -28,12 +31,13 @@ from doctor_link.core.report_generator import generate_basic_report
 from doctor_link.core.test_recorder import record_test_result
 from doctor_link.core.user_assertion_manager import add_user_assertion
 from doctor_link.core.verification_runner import run_verification
-from doctor_link.core.vly_adapter import build_vly_core_proof_matrix, write_vly_core_proof_to_package
+from doctor_link.adapters.vly import VlyAdapter
 from doctor_link.core.web_server import build_web_view, serve_web_view
 from doctor_link.core.workbench_writeback import append_workbench_note
 
 
 @click.group()
+@click.version_option(version=__version__, prog_name="doctor-link")
 def main() -> None:
     """Doctor link: diagnostic and AI collaboration CLI."""
 
@@ -74,10 +78,16 @@ def plan(library: Path) -> None:
 @click.option("--out", "output", type=click.Path(path_type=Path), default=Path("DoctorReports"), help="Output directory.")
 def report(library: Path, output: Path) -> None:
     """Generate a standard Doctor link diagnostic package."""
-    output.mkdir(parents=True, exist_ok=True)
+    if not library.exists() or not library.is_dir():
+        raise friendly_path_error(library, kind="folder")
+    try:
+        output.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        raise wrap_io_error(exc, output) from exc
+    project, strategy = project_context_from_library(library)
     scan_result = scan_library(library)
     test_plan = generate_test_plan(scan_result)
-    event = event_from_scan(scan_result, test_plan, project="Doctor link")
+    event = event_from_scan(scan_result, test_plan, project=project, strategy=strategy)
     package = build_diagnostic_package(event, output)
     click.echo(f"Generated diagnostic package: {package.root_dir}")
 
@@ -184,10 +194,11 @@ def record_command(
 @click.option("--package-dir", type=click.Path(exists=True, file_okay=False, path_type=Path), default=None, help="Optional diagnostic package to update with this proof as evidence.")
 def vly_proof(library: Path, output: Path | None, json_output: bool, package_dir: Path | None) -> None:
     """Build a Vly Core Proof readiness report from a test library."""
+    adapter = VlyAdapter()
     scan_result = scan_library(library)
-    report = build_vly_core_proof_matrix(scan_result)
+    report = adapter.build_core_proof(scan_result)
     if package_dir is not None:
-        evidence = write_vly_core_proof_to_package(package_dir, report)
+        evidence = adapter.write_core_proof(package_dir, report)
         click.echo(f"Recorded Vly Core Proof evidence: {evidence.evidence_id}")
     text = json.dumps(report.to_dict(), ensure_ascii=False, indent=2) if json_output else report.to_markdown()
     if output is not None:
@@ -286,11 +297,18 @@ def diagnosis_history_command(package_dir: Path, ai_pass: str, user_correction: 
 
 @main.command("assertion-check")
 @click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
-def assertion_check_command(package_dir: Path) -> None:
+@click.option("--json", "json_output", is_flag=True, help="Print JSON output.")
+def assertion_check_command(package_dir: Path, json_output: bool) -> None:
     """Check whether user assertions are covered by AI result records."""
     result = build_assertion_compliance(package_dir)
+    if json_output:
+        click.echo(json.dumps(result, ensure_ascii=False, indent=2))
+        return
     click.echo(f"Assertion compliance status: {result['status']}")
     click.echo(f"Missing assertions: {len(result['missing_assertion_ids'])}")
+    if result.get("missing_assertion_ids"):
+        for assertion_id in result["missing_assertion_ids"]:
+            click.echo(f"  - {assertion_id}")
 
 
 @main.command("risk-review")
@@ -343,7 +361,13 @@ def verify_command(package_dir: Path, write_back: bool) -> None:
     click.echo(f"Generated verification result: {package_dir / 'verification-result.json'}")
     click.echo(f"Verification status: {result.status}")
     if result.missing_evidence:
-        click.echo(f"Missing evidence: {len(result.missing_evidence)}")
+        click.echo("Missing evidence:")
+        for item in result.missing_evidence:
+            click.echo(f"  - {item}")
+    if result.next_commands:
+        click.echo("Next commands:")
+        for command in result.next_commands:
+            click.echo(f"  {command}")
 
 
 @main.command("view")
