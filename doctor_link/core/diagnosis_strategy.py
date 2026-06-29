@@ -9,7 +9,12 @@ import yaml
 
 @dataclass
 class DiagnosisStrategy:
+    project: str | None = None
     project_type: str = "generic"
+    symptom: str | None = None
+    failure_stage: str | None = None
+    investigation_boundary: list[str] = field(default_factory=list)
+    do_not_change: list[str] = field(default_factory=list)
     default_commands: list[str] = field(default_factory=list)
     evidence_rules: list[str] = field(default_factory=list)
     verification_rules: list[str] = field(default_factory=list)
@@ -52,6 +57,14 @@ class StrategyValidationResult:
         lines.extend(_section("Errors", self.errors))
         lines.extend(_section("Warnings", self.warnings))
         return "\n".join(lines)
+
+
+def project_context_from_library(library: Path) -> tuple[str, DiagnosisStrategy]:
+    """Resolve display project name and strategy from a library directory."""
+    result = load_diagnosis_strategy(library)
+    strategy = result.strategy or DiagnosisStrategy()
+    project = strategy.project or library.name or "Doctor link"
+    return project, strategy
 
 
 def load_diagnosis_strategy(start_dir: Path | None = None) -> StrategyValidationResult:
@@ -102,7 +115,12 @@ def _strategy_from_raw(raw: dict[str, Any]) -> DiagnosisStrategy:
     if not isinstance(diagnosis, dict):
         diagnosis = {}
     return DiagnosisStrategy(
+        project=_optional_str(diagnosis.get("project")),
         project_type=str(diagnosis.get("project_type", "generic")),
+        symptom=_optional_str(diagnosis.get("symptom")),
+        failure_stage=_optional_str(diagnosis.get("failure_stage")),
+        investigation_boundary=_list(diagnosis.get("investigation_boundary", [])),
+        do_not_change=_list(diagnosis.get("do_not_change", [])),
         default_commands=_list(diagnosis.get("default_commands", [])),
         evidence_rules=_list(diagnosis.get("evidence_rules", [])),
         verification_rules=_list(diagnosis.get("verification_rules", [])),
@@ -127,6 +145,13 @@ def _list(value: Any) -> list[str]:
     if isinstance(value, list):
         return [str(item) for item in value]
     return [str(value)]
+
+
+def _optional_str(value: Any) -> str | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None
 
 
 def _section(title: str, values: list[str]) -> list[str]:
