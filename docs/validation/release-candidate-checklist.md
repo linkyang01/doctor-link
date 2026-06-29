@@ -51,7 +51,8 @@ Status: `v0.1.0-rc.1 ready after cloud validation`
 
 ## Pending Items Before Formal External Release
 
-- [ ] Local / target-environment validation record.
+- [x] Local Mac validation record (2026-06-29).
+- [ ] Additional target-environment validation (optional).
 - [ ] Final release notes for `v0.1.0-rc.1`.
 - [ ] Explicit authorization before creating a release tag.
 - [ ] Explicit authorization before creating a GitHub Release.
@@ -61,4 +62,4 @@ Status: `v0.1.0-rc.1 ready after cloud validation`
 
 Doctor link is suitable for `v0.1.0-rc.1` release candidate status based on cloud CI validation.
 
-It is not yet certified as locally validated or customer-environment validated.
+It is locally validated on the developer Mac (2026-06-29) but not yet certified on customer delivery or production-like environments.

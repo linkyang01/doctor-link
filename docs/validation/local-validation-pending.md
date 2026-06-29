@@ -1,10 +1,14 @@
-# Doctor link Local Validation Pending Notice
+# Doctor link Local Validation Status
 
-Status: pending local or target-environment validation
+Status: local Mac validation recorded; additional target environments optional
 
 ## Current Situation
 
-Local or target-environment validation has not been executed yet because an appropriate local or delivery environment is currently unavailable.
+Local Mac validation was executed successfully on 2026-06-29. The full validation sequence passed on the developer machine.
+
+Recorded evidence:
+
+- `docs/p5.10-local-validation.md`
 
 ## What Has Been Completed
 
@@ -21,16 +25,39 @@ Confirmed cloud validation includes:
 - wheel build;
 - installed wheel smoke validation.
 
-## What Remains Pending
+Local Mac validation (2026-06-29) includes:
 
-The following is still pending:
+- ruff static checks;
+- pytest with coverage (217 passed, 84%);
+- wheel and source distribution build;
+- `scripts/validate_doctor_link.sh`;
+- `scripts/e2e_validate.sh`;
+- `scripts/p7_runtime_validate.sh`;
+- installed wheel smoke test.
 
-- validation on the user's Mac;
+## What Remains Optional
+
+The following target environments have not been recorded yet:
+
 - validation on an offline workstation;
 - validation on a customer delivery environment;
 - validation on a production-like target environment.
 
-## Recommended Future Local Validation Command Sequence
+These are optional follow-ups when Doctor link must be proven on environments that differ from the recorded Mac setup.
+
+## Local Validation Record (Mac)
+
+```text
+Date: 2026-06-29
+Machine / OS: MacBook Air, macOS 25.5.0 (Darwin 25.5.0 arm64)
+Python version: 3.11.15
+Commit SHA: 14b552c24feff1f2e28a8cb68e352e9d5b0c76af
+Branch: main
+Validation result: success
+Notes: full validation sequence passed; see docs/p5.10-local-validation.md
+```
+
+## Recommended Validation Command Sequence
 
 ```bash
 python3 -m venv .venv
@@ -49,20 +76,8 @@ bash scripts/e2e_validate.sh "$(pwd)"
 bash scripts/p7_runtime_validate.sh "$(pwd)"
 ```
 
-## Local Validation Record Template
-
-```text
-Date:
-Machine / OS:
-Python version:
-Commit SHA:
-Branch:
-Validation result:
-Notes:
-```
-
 ## Release Guidance
 
-Doctor link may be treated as cloud-CI-certified and release-candidate-ready.
+Doctor link may be treated as cloud-CI-certified, release-candidate-ready, and locally validated on the developer Mac.
 
-Before formal customer delivery, production deployment, PyPI publication, or stable release declaration, a local or target-environment validation record should be added.
+Before formal customer delivery, production deployment, PyPI publication, or stable release declaration on a different target environment, rerun this validation sequence on that environment and append a record to `docs/p5.10-local-validation.md`.

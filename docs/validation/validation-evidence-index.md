@@ -52,8 +52,31 @@ doctor-link strategy validate . --json
 - Integrity and privacy gates.
 - Local knowledge and archive helpers.
 
+## Latest Confirmed Local Mac Validation
+
+- Validation type: Local Mac validation
+- Date: 2026-06-29
+- Machine: MacBook Air, macOS 25.5.0 (arm64)
+- Python: 3.11.15
+- Commit: `14b552c24feff1f2e28a8cb68e352e9d5b0c76af`
+- Branch: `main`
+- Result: `success`
+- Record: `docs/p5.10-local-validation.md`
+
+| Check | Result |
+|---|---:|
+| Ruff | Passed |
+| Pytest | Passed (217 tests, 84% coverage) |
+| Wheel build | Passed |
+| validate_doctor_link.sh | Passed |
+| e2e_validate.sh | Passed |
+| p7_runtime_validate.sh | Passed |
+| Installed wheel smoke | Passed |
+
 ## Evidence Interpretation
 
-This evidence proves repository-side CI validation in GitHub Actions.
+Cloud validation evidence proves repository-side CI validation in GitHub Actions.
 
-It does not prove local Mac validation, offline deployment validation, customer-environment validation, production acceptance, PyPI release readiness, or hosted platform readiness.
+Local Mac validation evidence proves the full validation sequence passes on the developer Mac with Python 3.11.15.
+
+This combined evidence does not prove offline deployment validation, customer-environment validation, production acceptance, PyPI release readiness, or hosted platform readiness on environments other than the recorded Mac setup.

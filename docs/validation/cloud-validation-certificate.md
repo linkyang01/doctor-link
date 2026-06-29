@@ -15,7 +15,7 @@ It does not claim local machine validation, target customer environment validati
 - Validation type: GitHub Actions Cloud Validation
 - Validation scope: repository-side CI and package validation
 - Recommended release status: `v0.1.0-rc.1 ready`
-- Local / target-environment validation: pending
+- Local Mac validation: recorded (2026-06-29); additional target environments optional
 
 ## Cloud Validation Evidence
 
@@ -58,7 +58,6 @@ The cloud validation certifies that the repository can:
 
 This certificate does not certify:
 
-- local Mac validation;
 - offline workstation validation;
 - customer delivery environment validation;
 - production deployment readiness;
@@ -78,4 +77,4 @@ This certificate does not certify:
 
 Doctor link has passed repository-side GitHub Actions cloud validation and is suitable for `v0.1.0-rc.1` release candidate preparation.
 
-Formal external release, PyPI publication, customer delivery, or production handoff should still be preceded by local or target-environment validation when an appropriate environment is available.
+Local Mac validation has been recorded (2026-06-29). Formal external release, PyPI publication, customer delivery, or production handoff on a different target environment should still be preceded by validation on that environment when it differs materially from the recorded Mac setup.
