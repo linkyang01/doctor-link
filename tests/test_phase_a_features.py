@@ -177,6 +177,31 @@ def test_diagnose_now_full_workflow(tmp_path: Path) -> None:
     assert "Open the HTML report:" in result.output
 
 
+def test_diagnose_now_handoff_tool_flag(tmp_path: Path) -> None:
+    (tmp_path / "main.py").write_text("print('hello')\n", encoding="utf-8")
+    result = CliRunner().invoke(
+        main,
+        [
+            "diagnose-now",
+            str(tmp_path),
+            "--handoff",
+            "--tool",
+            "grok",
+            "--no-collect",
+            "--reports",
+            str(tmp_path / "DoctorReports"),
+            "--summary",
+            "startup issue",
+            "--json",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["handoff_dir"] is not None
+    manifest = json.loads((Path(payload["handoff_dir"]) / "handoff-manifest.json").read_text(encoding="utf-8"))
+    assert manifest["tool"] == "grok"
+
+
 def test_home_command_builds_static_page(tmp_path: Path) -> None:
     reports = tmp_path / "DoctorReports"
     package = reports / "2026_demo_issue"

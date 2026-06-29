@@ -54,6 +54,7 @@ Post-release documentation alignment and wizard handoff polish.
 ### Added
 
 - AI handoff profiles for `grok` (Grok Build), `windsurf` (Windsurf), and `cline` (Cline).
+- `doctor-link diagnose-now --tool` to select an AI handoff profile (aligned with `wizard --tool`).
 - P0 diagnostic foundation.
 - P1 evidence collection primitives.
 - P1+ CLI evidence pipeline.
