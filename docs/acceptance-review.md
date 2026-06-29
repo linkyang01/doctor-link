@@ -231,3 +231,14 @@ The remaining risks are intentional boundaries rather than blocking implementati
 Doctor link is ready for repository-side acceptance after this cleanup branch passes CI and is merged.
 
 Doctor link is not yet authorized for public release, tag creation, GitHub Release creation, PyPI publication, or customer delivery until target-environment validation is run and explicit release authorization is granted.
+
+## Post-review update (2026-06-29)
+
+Local Mac validation has since been recorded:
+
+- record: `docs/p5.10-local-validation.md`
+- evidence index: `docs/validation/validation-evidence-index.md`
+- commit: `14b552c24feff1f2e28a8cb68e352e9d5b0c76af`
+- result: success (217 tests, full validation scripts, wheel smoke)
+
+The remaining risk item "target-environment validation has not been recorded" is partially resolved for the developer Mac. Validation on additional delivery environments remains optional before formal external release.

@@ -4,6 +4,8 @@ Doctor link examples are designed to be copied into real projects and adapted gr
 
 ## Example project
 
+### Basic project
+
 `examples/basic-project/` contains:
 
 - a minimal Python script;
@@ -17,6 +19,26 @@ Useful commands:
 doctor-link strategy validate examples/basic-project --json
 doctor-link reproduce list examples/basic-project --json
 doctor-link test run examples/basic-project --json
+```
+
+### Multi-bug shop service
+
+`examples/shop-service-multi-bug/` contains a richer local-only case with six known issues across auth, API, database, and cache subsystems.
+
+One-click run:
+
+```bash
+bash examples/shop-service-multi-bug/run-example.sh
+```
+
+Useful commands:
+
+```bash
+doctor-link strategy validate examples/shop-service-multi-bug --json
+doctor-link reproduce list examples/shop-service-multi-bug --json
+doctor-link reproduce run repro-login-timeout examples/shop-service-multi-bug --json
+doctor-link test run examples/shop-service-multi-bug --json
+doctor-link report examples/shop-service-multi-bug --out DoctorReports
 ```
 
 ## Example diagnostic package flow
