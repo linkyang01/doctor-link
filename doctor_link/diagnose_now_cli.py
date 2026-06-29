@@ -5,37 +5,72 @@ from pathlib import Path
 
 import click
 
-from doctor_link.diagnose_now import diagnose_now as run
+from doctor_link.core.friendly_errors import friendly_path_error
 from doctor_link.diagnose_report import build_report
+from doctor_link.diagnose_workflow import files_for_report, run_diagnose_workflow
 from doctor_link.p4_cli import main
-
-
-def _files_for_report(library: Path, output: Path | None) -> list[Path]:
-    base = library.resolve()
-    root = output.resolve() if output is not None else base / ".doctor-link"
-    files: list[Path] = []
-    for path in base.rglob("*"):
-        if not path.is_file():
-            continue
-        resolved = path.resolve()
-        if root == resolved or root in resolved.parents:
-            continue
-        files.append(path)
-    return files
 
 
 @main.command("diagnose-now")
 @click.argument("library", default=".", required=False)
-@click.option("--json", "j", is_flag=True)
+@click.option("--summary", default=None, help="Short problem description.")
+@click.option("--json", "json_output", is_flag=True)
 @click.option("--report-json", is_flag=True)
-@click.option("--output", "o", type=click.Path(file_okay=False, path_type=str))
-def diagnose_now(library: str, j: bool, report_json: bool, o: str | None) -> None:
-    output = Path(o) if o else None
-    path = run(Path(library), output)
+@click.option("--output", "output", type=click.Path(file_okay=False, path_type=str), default=None)
+@click.option("--full", is_flag=True, help="Run the full diagnostic workflow (report, collect, verify, view).")
+@click.option("--handoff", is_flag=True, help="Generate an AI handoff package (implies --full).")
+@click.option("--no-collect", is_flag=True, help="Skip automatic evidence collection in full workflow.")
+@click.option("--reports", "reports_dir", type=click.Path(file_okay=False, path_type=Path), default=None, help="DoctorReports output directory for --full.")
+def diagnose_now_command(
+    library: str,
+    summary: str | None,
+    json_output: bool,
+    report_json: bool,
+    output: str | None,
+    full: bool,
+    handoff: bool,
+    no_collect: bool,
+    reports_dir: Path | None,
+) -> None:
+    """Quick scan or full guided diagnosis for a project folder."""
+    library_path = Path(library).expanduser().resolve()
+    if not library_path.exists() or not library_path.is_dir():
+        raise friendly_path_error(library_path, kind="folder")
+
+    output_path = Path(output).resolve() if output else None
+    run_full = full or handoff
+
+    if run_full:
+        result = run_diagnose_workflow(
+            library_path,
+            output=output_path,
+            summary=summary,
+            reports_dir=reports_dir,
+            collect_evidence=not no_collect,
+            handoff=handoff,
+            quick_scan=True,
+            full_pipeline=True,
+        )
+        if report_json:
+            payload = result.to_dict()
+            payload["report"] = build_report(files_for_report(library_path, output_path))
+            click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        elif json_output:
+            click.echo(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+        else:
+            click.echo("Diagnostic workflow complete.")
+            for step in result.next_steps:
+                click.echo(step)
+        return
+
+    from doctor_link.diagnose_now import diagnose_now as write_quick_summary
+
+    summary_path = write_quick_summary(library_path, output_path)
     if report_json:
-        report = build_report(_files_for_report(Path(library), output))
-        click.echo(json.dumps({"summary": str(path), "report": report}))
-    elif j:
-        click.echo(json.dumps({"summary": str(path)}))
+        report = build_report(files_for_report(library_path, output_path))
+        click.echo(json.dumps({"summary": str(summary_path), "report": report}, ensure_ascii=False, indent=2))
+    elif json_output:
+        click.echo(json.dumps({"summary": str(summary_path)}))
     else:
-        click.echo(str(path))
+        click.echo(str(summary_path))
+        click.echo("Tip: add --full to generate a complete diagnostic package and HTML report.")
