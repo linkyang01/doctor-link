@@ -1,6 +1,6 @@
 # Doctor link Release Candidate Checklist
 
-Status: `v0.1.0-rc.1 ready after cloud validation`
+Status: `v0.1.0-rc.1 published (Latest Release, 2026-06-29)`
 
 ## Repository and CI
 
@@ -38,9 +38,9 @@ Status: `v0.1.0-rc.1 ready after cloud validation`
 
 ## Release Boundaries
 
-- [x] No GitHub Release created.
-- [x] No release tag created.
-- [x] No PyPI publication performed.
+- [x] GitHub Release published (`v0.1.0-rc.1`, Latest, 2026-06-29).
+- [x] Release tag published (`v0.1.0-rc.1`).
+- [ ] PyPI publication performed (optional; GitHub wheel is the primary install path).
 - [x] No hosted service introduced.
 - [x] No external account system introduced.
 - [x] No telemetry introduced.
@@ -49,17 +49,16 @@ Status: `v0.1.0-rc.1 ready after cloud validation`
 - [x] No hosted archive service introduced.
 - [x] No hosted diagnostic knowledge base introduced.
 
-## Pending Items Before Formal External Release
+## Pending Items Before Broader Distribution
 
 - [x] Local Mac validation record (2026-06-29).
-- [ ] Additional target-environment validation (optional).
-- [ ] Final release notes for `v0.1.0-rc.1`.
-- [ ] Explicit authorization before creating a release tag.
-- [ ] Explicit authorization before creating a GitHub Release.
-- [ ] Explicit authorization before PyPI publication.
+- [x] Final release notes for `v0.1.0-rc.1`.
+- [x] GitHub Release and tag published (`v0.1.0-rc.1`).
+- [ ] Additional target-environment validation (optional, e.g. Windows).
+- [ ] PyPI publication (optional).
 
 ## Decision
 
-Doctor link is suitable for `v0.1.0-rc.1` release candidate status based on cloud CI validation.
+Doctor link `v0.1.0-rc.1` is published on GitHub with wheel and sdist assets after cloud CI validation and local Mac validation (2026-06-29).
 
-It is locally validated on the developer Mac (2026-06-29) but not yet certified on customer delivery or production-like environments.
+Customer delivery or production-like environments that differ materially from the recorded Mac setup should still be validated on those targets before handoff.

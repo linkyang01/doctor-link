@@ -9,15 +9,25 @@ Doctor link 是一个面向软件项目的人机协同诊断层。
 - [English](docs/readme/README.en.md)
 - [中文](docs/readme/README.zh-CN.md)
 
+## Install (GitHub Release)
+
+```bash
+pip install https://github.com/linkyang01/doctor-link/releases/download/v0.1.0-rc.1/doctor_link-0.1.0rc1-py3-none-any.whl
+doctor-link --version
+```
+
+From source: `pip install -e .` after cloning this repository.
+
 ## CLI docs
 
 - [diagnose-now](docs/diagnose-now.md) - quick local diagnosis, summary output, `--output`, `--json`, and `--report-json`
+- [No-code quick start (EN)](docs/guides/no-code-quick-start.en.md) | [非程序员入门 (ZH)](docs/guides/no-code-quick-start.zh-CN.md)
 
 ## Current status
 
-Doctor link has completed P0-P7 local runtime implementation and post-P7 hardening work. The repository remains local-first and does not publish releases, create tags, upload packages, introduce hosted services, or add external account systems by default.
+Doctor link has completed P0-P7 local runtime implementation, post-P7 hardening, and the first public GitHub Release (`v0.1.0-rc.1`, Latest). The project remains local-first: no hosted platform, account system, or telemetry. PyPI publication is optional and not required for GitHub distribution.
 
-Doctor link 已完成 P0-P7 本地运行能力实现和 Post-P7 加固工作。仓库仍坚持本地优先，默认不发布 release、不创建 tag、不上传包、不引入托管服务、不增加外部账号体系。
+Doctor link 已完成 P0-P7 本地运行能力、Post-P7 加固，并发布首个 GitHub 正式版（`v0.1.0-rc.1`，Latest）。项目仍坚持本地优先：无托管平台、账号体系或遥测。PyPI 为可选项，GitHub Release 即可安装使用。
 
 ## Main project areas
 

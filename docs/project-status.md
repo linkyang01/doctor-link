@@ -14,7 +14,7 @@ Post-P7 hardening has also been completed:
 - Adapter and Plugin run commands default to dry-run and require `--allow-run` for actual local command execution;
 - completed TODO trackers are archived under `docs/archive/completed-todos/`.
 
-Doctor link is now documented as Cloud CI Certified, Release Candidate Ready (`v0.1.0-rc.1`), and locally validated on the developer Mac (2026-06-29). The certification package is maintained under `docs/validation/`.
+Doctor link is now documented as Cloud CI Certified, publicly released on GitHub (`v0.1.0-rc.1`, Latest Release, 2026-06-29), and locally validated on the developer Mac (2026-06-29). The certification package is maintained under `docs/validation/`.
 
 All repository-side, non-local, non-release closure work has been completed. Local Mac validation has been recorded in `docs/p5.10-local-validation.md`. Validation on additional target environments (offline workstation, customer delivery, production-like) remains optional when those environments differ from the recorded Mac setup.
 
@@ -40,17 +40,17 @@ P7.9 implemented P6 local knowledge base and enterprise archive runtime for loca
 
 P7.10 implements final validation and closure through P7 runtime E2E validation, CI coverage, self-validation coverage, final audit, README updates, and TODO closure.
 
-P6 and P7 are complete as repository-side local-first implementation work. This does not mean Doctor link has implemented a hosted Web platform, cloud service, account system, marketplace, live third-party integrations, real signing, real permission system, hosted enterprise archive system, hosted knowledge base service, release tag, GitHub Release, or PyPI publication.
+P6 and P7 are complete as repository-side local-first implementation work. GitHub Release `v0.1.0-rc.1` is published with wheel and sdist assets. This does not mean Doctor link has implemented a hosted Web platform, cloud service, account system, marketplace, live third-party integrations, real signing, real permission system, hosted enterprise archive system, hosted knowledge base service, or PyPI publication.
 
 ## Validation certification status
 
 - [x] Cloud CI Certified
 - [x] Release Candidate Ready
+- [x] First public GitHub Release (`v0.1.0-rc.1`, Latest, 2026-06-29)
 - [x] Local Mac Validation Recorded (2026-06-29)
-- [ ] Additional target-environment validation (optional)
-- [ ] GitHub Release created
-- [x] Release tag prepared locally (`v0.1.0-rc.1`)
-- [ ] PyPI publication performed
+- [ ] Additional target-environment validation (optional, e.g. Windows)
+- [x] Release tag published (`v0.1.0-rc.1`)
+- [ ] PyPI publication performed (optional; GitHub wheel is the primary install path)
 
 Certification documents:
 

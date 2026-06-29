@@ -34,6 +34,21 @@ Release candidate for the local-first diagnostic CLI and AI collaboration workfl
 
 - Diagnostic packages no longer hard-code project name `"Doctor link"` when `diagnosis.yml` defines `project`.
 
+## [0.1.1] - 2026-06-29
+
+Post-release documentation alignment and wizard handoff polish.
+
+### Added
+
+- `doctor-link wizard --tool` to select an AI handoff profile without interactive prompts.
+- `doctor-link wizard --handoff/--no-handoff` and `--collect-evidence/--no-collect-evidence` for non-interactive runs.
+- Wizard interactive prompt for AI tool profile when `--tool` is omitted.
+
+### Changed
+
+- Project status, validation certificates, and README files reflect the published GitHub Release (`v0.1.0-rc.1`, Latest).
+- P8 no-code UX roadmap marked largely complete.
+
 ## Unreleased
 
 ### Added

@@ -13,13 +13,13 @@ from doctor_link.core.scanner import scan_library
 from doctor_link.core.test_planner import generate_test_plan
 from doctor_link.core.verification_builder import build_verification_checklist
 from doctor_link.diagnose_report import build_report
-from doctor_link.p4_cli import main
+from doctor_link.entrypoint import main
 
 
 def test_cli_version_flag() -> None:
     result = CliRunner().invoke(main, ["--version"])
     assert result.exit_code == 0
-    assert "0.1.0-rc.1" in result.output
+    assert "0.1.1" in result.output
 
 
 def test_report_uses_diagnosis_project_name(tmp_path: Path) -> None:
@@ -105,6 +105,41 @@ reproductions:
     )
     catalog = load_reproduction_catalog(tmp_path)
     assert catalog.entries[0].command == "python -c \"print('a')\" && python -c \"print('b')\""
+
+
+def test_wizard_handoff_tool_flag(tmp_path: Path) -> None:
+    (tmp_path / "main.py").write_text("print('hello')\n", encoding="utf-8")
+    result = CliRunner().invoke(
+        main,
+        [
+            "wizard",
+            "--folder",
+            str(tmp_path),
+            "--summary",
+            "startup issue",
+            "--tool",
+            "codex",
+            "--handoff",
+            "--no-collect-evidence",
+            "--json",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["handoff_dir"] is not None
+    handoff_dir = Path(payload["handoff_dir"])
+    manifest = json.loads((handoff_dir / "handoff-manifest.json").read_text(encoding="utf-8"))
+    assert manifest["tool"] == "codex"
+
+
+def test_wizard_rejects_unknown_tool(tmp_path: Path) -> None:
+    (tmp_path / "main.py").write_text("print('hello')\n", encoding="utf-8")
+    result = CliRunner().invoke(
+        main,
+        ["wizard", "--folder", str(tmp_path), "--tool", "unknown"],
+    )
+    assert result.exit_code != 0
+    assert "unknown" in result.output.lower() or "invalid" in result.output.lower()
 
 
 def test_diagnose_now_full_workflow(tmp_path: Path) -> None:

@@ -14,11 +14,12 @@ P5: Productization and Release Readiness is complete. P6 implementation requires
 
 P7.10 added the final validation and closure layer, including a P7 runtime validation script and CI coverage for the P7 command surface.
 
-Doctor link remains local-first. It does not create a hosted platform, external account system, telemetry service, marketplace, GitHub Release, release tag, or PyPI publication.
+Doctor link remains local-first. The first public GitHub Release (`v0.1.0-rc.1`, Latest, 2026-06-29) is published with wheel and sdist assets. It does not create a hosted platform, external account system, telemetry service, or marketplace. PyPI publication is optional.
 
 ## Common Commands
 
 ```bash
+doctor-link wizard --folder . --tool cursor
 doctor-link init
 doctor-link scan <library>
 doctor-link plan <library>
@@ -64,4 +65,4 @@ P7 implements local runtime support for evidence hardening, local workbench hard
 
 ## Boundaries
 
-Doctor link does not currently provide hosted Web platform, cloud synchronization, external account system, telemetry, marketplace, real signing keys or key management, hosted enterprise archive, hosted diagnostic knowledge base, real RBAC, GitHub Release, release tag, or PyPI publication.
+Doctor link does not currently provide hosted Web platform, cloud synchronization, external account system, telemetry, marketplace, real signing keys or key management, hosted enterprise archive, hosted diagnostic knowledge base, or real RBAC. PyPI publication remains optional.

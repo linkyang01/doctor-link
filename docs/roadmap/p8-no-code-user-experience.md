@@ -1,6 +1,6 @@
 # P8 No-code User Experience and Guided Workflow
 
-Status: planned
+Status: largely complete (v0.1.0-rc.1 + v0.1.1 polish)
 
 ## Purpose
 
@@ -21,19 +21,13 @@ P8 focuses on users who:
 
 ## Current gap
 
-Doctor link currently has a complete technical workflow:
+Doctor link has a complete technical workflow:
 
 ```text
 collect evidence -> build diagnostic package -> record assertions -> verify -> view report -> AI handoff -> repair loop
 ```
 
-But the no-code user workflow is not yet complete:
-
-```text
-download -> install -> select folder -> describe problem -> generate report -> open report -> share AI package -> understand next step
-```
-
-P8 closes that gap.
+The guided no-code workflow is now available through `wizard`, `diagnose-now`, `home`, bilingual quick-start guides, and macOS/Windows helper scripts. Remaining P8 polish targets v0.1.1+ (wizard multi-tool handoff, Windows validation record, example CI smoke).
 
 ## Product principles
 
@@ -178,7 +172,7 @@ P8 is complete when:
 - tests cover the wizard, diagnose-now, and friendly errors;
 - CI passes on Python 3.10, 3.11, and 3.12;
 - P7 runtime validation still passes;
-- no release, tag, PyPI publication, hosted service, telemetry, marketplace, or account system is introduced.
+- no PyPI publication, hosted service, telemetry, marketplace, or account system is introduced beyond the published GitHub Release.
 
 ## Out of scope
 
@@ -203,4 +197,4 @@ P8 is a candidate for a future:
 v0.2.0 no-code workflow preview
 ```
 
-The current `v0.1.0-rc.1` remains a cloud-CI-certified developer and AI-coding workflow release candidate.
+`v0.1.0-rc.1` is published on GitHub (Latest, 2026-06-29). Further no-code UX polish ships in `v0.1.1` and may preview in a future `v0.2.0` workbench release.

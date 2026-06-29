@@ -6,7 +6,7 @@ Status: Cloud CI Certified / Release Candidate Ready
 
 This certificate records GitHub Actions cloud validation for Doctor link.
 
-It does not claim local machine validation, target customer environment validation, production validation, PyPI publication, GitHub Release publication, release tag creation, hosted service readiness, or enterprise deployment acceptance.
+It does not claim target customer environment validation, production validation, PyPI publication, hosted service readiness, or enterprise deployment acceptance. Local Mac validation is recorded separately (2026-06-29). GitHub Release `v0.1.0-rc.1` is published (Latest, 2026-06-29).
 
 ## Project
 
@@ -14,7 +14,7 @@ It does not claim local machine validation, target customer environment validati
 - Repository: `linkyang01/doctor-link`
 - Validation type: GitHub Actions Cloud Validation
 - Validation scope: repository-side CI and package validation
-- Recommended release status: `v0.1.0-rc.1 ready`
+- Published release: `v0.1.0-rc.1` (Latest, 2026-06-29)
 - Local Mac validation: recorded (2026-06-29); additional target environments optional
 
 ## Cloud Validation Evidence
@@ -69,12 +69,10 @@ This certificate does not certify:
 - real signing keys or key management;
 - hosted enterprise archive;
 - hosted diagnostic knowledge base;
-- GitHub Release creation;
-- release tag creation;
 - PyPI publication.
 
 ## Certification Conclusion
 
-Doctor link has passed repository-side GitHub Actions cloud validation and is suitable for `v0.1.0-rc.1` release candidate preparation.
+Doctor link has passed repository-side GitHub Actions cloud validation. GitHub Release `v0.1.0-rc.1` is published with wheel and sdist assets (2026-06-29).
 
-Local Mac validation has been recorded (2026-06-29). Formal external release, PyPI publication, customer delivery, or production handoff on a different target environment should still be preceded by validation on that environment when it differs materially from the recorded Mac setup.
+Local Mac validation has been recorded (2026-06-29). PyPI publication, customer delivery, or production handoff on a different target environment should still be preceded by validation on that environment when it differs materially from the recorded Mac setup.
