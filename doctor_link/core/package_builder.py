@@ -4,6 +4,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from doctor_link.adapters.registry import resolve_adapter_name
+from doctor_link.core.diagnosis_strategy import DiagnosisStrategy
 from doctor_link.core.models import (
     AITask,
     DiagnosticEvent,
@@ -16,9 +18,17 @@ from doctor_link.core.models import (
     VerificationChecklist,
     utc_now_iso,
 )
+from doctor_link.core.problem_map_builder import build_problem_map, render_problem_map
+from doctor_link.core.verification_builder import build_verification_checklist, render_verification_checklist
 
 
-def event_from_scan(scan_result: ScanResult, test_plan: TestPlan, project: str = "Doctor link") -> DiagnosticEvent:
+def event_from_scan(
+    scan_result: ScanResult,
+    test_plan: TestPlan,
+    project: str = "Doctor link",
+    strategy: DiagnosisStrategy | None = None,
+    symptom: str | None = None,
+) -> DiagnosticEvent:
     """Create a diagnostic event from a library scan and test plan."""
     evidence = [
         EvidenceItem(
@@ -42,9 +52,16 @@ def event_from_scan(scan_result: ScanResult, test_plan: TestPlan, project: str =
     ]
 
     missing_count = len(test_plan.missing_categories)
+    strategy = strategy or DiagnosisStrategy()
+    user_symptom = symptom or strategy.symptom or "Initial diagnostic package generated from a scanned test library."
+    failure_stage = strategy.failure_stage or ("test_library_completeness" if missing_count else "ready_for_playback_testing")
+    investigation_boundary = strategy.investigation_boundary or ["diagnostic package", "test plan", "scan result"]
+    do_not_change = strategy.do_not_change or ["Do not modify unrelated application code without evidence."]
+    reproduce_steps = strategy.default_commands or [f"Run doctor-link report {scan_result.root}"]
+
     problem_map = ProblemMap(
-        user_symptom="Initial diagnostic package generated from a scanned test library.",
-        failure_stage="test_library_completeness" if missing_count else "ready_for_playback_testing",
+        user_symptom=user_symptom,
+        failure_stage=failure_stage,
         possible_root_causes=test_plan.missing_categories[:10],
         ruled_out_causes=[],
         related_modules=["test_planner", "scanner"],
@@ -55,50 +72,52 @@ def event_from_scan(scan_result: ScanResult, test_plan: TestPlan, project: str =
 
     ai_task = AITask(
         title="Review Doctor link diagnostic package",
-        summary="Review the generated diagnostic package and identify missing evidence or next diagnostic steps.",
+        summary=user_symptom,
         requested_work=[
             "Review the diagnostic report and JSON payload.",
             "Do not guess root causes without evidence.",
             "Identify missing test samples or missing runtime evidence.",
         ],
-        investigation_boundary=["diagnostic package", "test plan", "scan result"],
-        do_not_change=["Do not modify unrelated application code without evidence."],
+        investigation_boundary=investigation_boundary,
+        do_not_change=do_not_change,
         evidence_ids=[item.evidence_id for item in evidence],
-        verification_steps=[
+        verification_steps=strategy.verification_rules
+        or [
             "Confirm the diagnostic package was generated.",
             "Confirm missing categories are listed.",
             "Confirm next actions are explicit.",
         ],
     )
 
-    verification = VerificationChecklist(
-        items=[
-            "Open summary.md and confirm it is readable.",
-            "Open doctor-report.json and confirm it is machine-readable.",
-            "Open ai-task.md and confirm it contains evidence and boundaries.",
-            "If user assertions exist, confirm they are included in ai-task.md.",
-        ]
-    )
-
-    return DiagnosticEvent(
+    adapter_name = resolve_adapter_name(scan_result.root)
+    event = DiagnosticEvent(
         project=project,
-        adapter="generic",
+        adapter=adapter_name,
         severity="warning" if missing_count else "info",
         category="test_library_incomplete" if missing_count else "diagnostic_package_created",
-        summary="Generated a standard Doctor link diagnostic package from a test library scan.",
+        summary=user_symptom,
         environment={"generated_at": utc_now_iso(), "library_root": str(scan_result.root)},
         timeline=timeline,
         evidence=evidence,
-        reproduce_steps=[f"Run doctor-link report {scan_result.root}"],
+        reproduce_steps=reproduce_steps,
         problem_map=problem_map,
         ai_task=ai_task,
-        verification_checklist=verification,
+        verification_checklist=VerificationChecklist(items=[]),
         status="ai_ready",
     )
+    return finalize_event(event)
+
+
+def finalize_event(event: DiagnosticEvent) -> DiagnosticEvent:
+    """Apply problem-map and verification builders to a diagnostic event."""
+    event.problem_map = build_problem_map(event)
+    event.verification_checklist = build_verification_checklist(event)
+    return event
 
 
 def build_diagnostic_package(event: DiagnosticEvent, output_root: Path) -> DiagnosticPackage:
     """Write a standard diagnostic package to disk."""
+    event = finalize_event(event)
     safe_project = _safe_name(event.project or "project")
     safe_issue = _safe_name(event.category or "issue")
     timestamp = utc_now_iso().replace(":", "-")
@@ -132,7 +151,7 @@ def build_diagnostic_package(event: DiagnosticEvent, output_root: Path) -> Diagn
     }
 
     files["summary"].write_text(_render_summary(event), encoding="utf-8")
-    files["problem_map"].write_text(_render_problem_map(event), encoding="utf-8")
+    files["problem_map"].write_text(render_problem_map(event.problem_map), encoding="utf-8")
     files["timeline"].write_text(_render_timeline(event), encoding="utf-8")
     files["evidence_list"].write_text(_render_evidence_list(event), encoding="utf-8")
     files["doctor_report_md"].write_text(_render_doctor_report(event), encoding="utf-8")
@@ -141,7 +160,7 @@ def build_diagnostic_package(event: DiagnosticEvent, output_root: Path) -> Diagn
     files["reproduce_steps"].write_text(_render_reproduce_steps(event), encoding="utf-8")
     files["ai_task"].write_text(_render_ai_task(event), encoding="utf-8")
     files["investigation_boundary"].write_text(_render_investigation_boundary(event), encoding="utf-8")
-    files["verification"].write_text(_render_verification(event), encoding="utf-8")
+    files["verification"].write_text(render_verification_checklist(event.verification_checklist), encoding="utf-8")
     files["user_assertions"].write_text(_json([item.to_dict() for item in event.user_assertions]), encoding="utf-8")
     files["environment"].write_text(_json(event.environment), encoding="utf-8")
 
