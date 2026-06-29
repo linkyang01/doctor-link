@@ -10,6 +10,9 @@ EXAMPLE_CONFIGS = [
     "examples/basic-project/.doctorlink/diagnosis.yml",
     "examples/basic-project/.doctorlink/reproduce.yml",
     "examples/basic-project/.doctorlink/test-matrix.yml",
+    "examples/shop-service-multi-bug/.doctorlink/diagnosis.yml",
+    "examples/shop-service-multi-bug/.doctorlink/reproduce.yml",
+    "examples/shop-service-multi-bug/.doctorlink/test-matrix.yml",
 ]
 
 EXAMPLE_ARTIFACTS = [
@@ -39,6 +42,14 @@ def test_basic_project_readme_mentions_core_commands() -> None:
     assert "doctor-link strategy validate" in text
     assert "doctor-link reproduce list" in text
     assert "doctor-link test run" in text
+
+
+def test_shop_service_multi_bug_readme_mentions_run_script() -> None:
+    text = Path("examples/shop-service-multi-bug/README.md").read_text(encoding="utf-8")
+
+    assert "run-example.sh" in text
+    assert "shop-service-multi-bug" in text
+    assert "P1" in text
 
 
 def test_examples_guide_mentions_required_template_categories() -> None:
