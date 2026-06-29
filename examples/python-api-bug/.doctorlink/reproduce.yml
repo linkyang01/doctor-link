@@ -1,0 +1,7 @@
+reproductions:
+  - id: api-500
+    title: Reproduce missing users_endpoint config bug
+    kind: command
+    command:
+      - python -c "from pathlib import Path; import sys; sys.path.insert(0, str(Path('src'))); from api import load_config; load_config()['users_endpoint']"
+    expected: KeyError when users_endpoint is missing

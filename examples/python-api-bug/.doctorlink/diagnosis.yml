@@ -1,0 +1,13 @@
+project: python-api-bug
+project_type: python
+symptom: "GET /users returns HTTP 500"
+failure_stage: api_handler
+investigation_boundary:
+  - src/api.py
+  - config/app.yml
+  - logs/
+do_not_change:
+  - deployment/
+default_commands:
+  - python -m pytest -q
+  - doctor-link reproduce list .

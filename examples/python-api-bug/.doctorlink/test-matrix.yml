@@ -1,0 +1,5 @@
+jobs:
+  - id: unit-api
+    title: API unit tests
+    command: python -m pytest -q tests/test_api.py
+    required: true
