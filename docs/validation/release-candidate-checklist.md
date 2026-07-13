@@ -1,6 +1,6 @@
 # Doctor link Release Candidate Checklist
 
-Status: `v0.1.3 locally and cloud validated, merged, tagged, and published on GitHub`
+Status: `v0.2.0 locally and cloud validated, merged, tagged, and published on GitHub`
 
 ## Repository and CI
 
@@ -9,7 +9,7 @@ Status: `v0.1.3 locally and cloud validated, merged, tagged, and published on Gi
 - [x] Completed TODO trackers archived under `docs/archive/completed-todos/`.
 - [x] English and Chinese README files moved under `docs/readme/`.
 - [x] Root `README.md` is a lightweight entrypoint.
-- [x] Current implementation commit pushed and GitHub Actions CI passed (PR #140, run 29245883700).
+- [x] Current implementation commit pushed and GitHub Actions CI passed (PR #145, run 29256743976).
 - [x] Current repaired implementation passed on Python 3.10 in cloud CI.
 - [x] Current repaired implementation passed on Python 3.11 in cloud CI.
 - [x] Current repaired implementation passed on Python 3.12 locally and in cloud CI.
@@ -46,6 +46,7 @@ Status: `v0.1.3 locally and cloud validated, merged, tagged, and published on Gi
 - [x] Historical GitHub Release tag `v0.1.1` exists.
 - [x] GitHub Release `v0.1.2` published (2026-07-13, workflow `29223309411`).
 - [x] GitHub Release `v0.1.3` published (2026-07-13, workflow `29246045227`).
+- [x] GitHub Release `v0.2.0` published (2026-07-13, workflow `29256955705`).
 - [x] Release tag published (`v0.1.0-rc.1`).
 - [ ] PyPI publication performed (optional; GitHub wheel is the primary install path).
 - [x] No hosted service introduced.
@@ -66,6 +67,6 @@ Status: `v0.1.3 locally and cloud validated, merged, tagged, and published on Gi
 
 ## Decision
 
-Doctor link version `0.1.3` passed local validation and the complete configured GitHub Actions matrix on 2026-07-13: 298 tests, 85.25% branch-aware coverage, and all 62 public CLI routes through a clean installed wheel. PR `#140` was merged as commit `fa779da`, explicit GitHub publication authorization was received, and [GitHub Release `v0.1.3`](https://github.com/linkyang01/doctor-link/releases/tag/v0.1.3) was published with wheel and source-distribution assets by workflow `29246045227`. PyPI publication remains optional and was not performed.
+Doctor link version `0.2.0` passed local validation and the complete configured GitHub Actions matrix on 2026-07-13: 319 tests, 85.39% branch-aware coverage, and all 63 public CLI routes through a clean installed wheel. PR `#145` was merged as commit `40a547c`, explicit GitHub publication authorization was received, and [GitHub Release `v0.2.0`](https://github.com/linkyang01/doctor-link/releases/tag/v0.2.0) was published with wheel and source-distribution assets by workflow `29256955705`. PyPI publication remains optional and was not performed.
 
 Customer delivery or production-like environments that differ materially from the recorded Mac setup should still be validated on those targets before handoff.
