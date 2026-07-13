@@ -91,3 +91,23 @@ def test_test_matrix_cli_run_json(tmp_path: Path) -> None:
     payload = json.loads(result.output)
     assert payload[0]["status"] == "passed"
     assert payload[0]["evidence_id"] == "test-matrix-job-pass"
+
+
+def test_test_matrix_rejects_shell_redirection(tmp_path: Path) -> None:
+    marker = tmp_path / "should-not-exist.txt"
+    config_dir = tmp_path / ".doctorlink"
+    config_dir.mkdir()
+    (config_dir / "test-matrix.yml").write_text(
+        f"""jobs:
+  - id: unsafe
+    title: unsafe test
+    command: python -c \"print('unsafe')\" > {marker}
+""",
+        encoding="utf-8",
+    )
+
+    results = run_test_matrix(tmp_path, job_id="unsafe")
+
+    assert results[0].status == "failed"
+    assert "Unsupported shell operator" in results[0].stderr
+    assert not marker.exists()

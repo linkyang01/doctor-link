@@ -1,6 +1,6 @@
 # Doctor link Project Status
 
-Status date: 2026-06-29
+Status date: 2026-07-13
 
 ## Current status
 
@@ -14,7 +14,7 @@ Post-P7 hardening has also been completed:
 - Adapter and Plugin run commands default to dry-run and require `--allow-run` for actual local command execution;
 - completed TODO trackers are archived under `docs/archive/completed-todos/`.
 
-Doctor link is now documented as Cloud CI Certified, publicly released on GitHub (`v0.1.2`, Latest Release, 2026-06-29), and locally validated on the developer Mac (2026-06-29). The certification package is maintained under `docs/validation/`.
+The repaired source version `0.1.2` passed local validation on 2026-07-13: 273 tests, 85.09% branch-aware coverage, Ruff, E2E, self-validation, P7 runtime validation, clean wheel/sdist build, Twine validation, isolated installed-wheel smoke tests, zero medium/high Bandit findings, and zero known third-party dependency vulnerabilities. The local readiness score is 92/100 under the evidence-based scorecard in `docs/validation/local-quality-scorecard.md`. Cloud CI revalidation is pending until these changes are pushed. `v0.1.2` is not currently published and must not be described as Latest before an authorized release succeeds.
 
 All repository-side, non-local, non-release closure work has been completed. Local Mac validation has been recorded in `docs/p5.10-local-validation.md`. Validation on additional target environments (offline workstation, customer delivery, production-like) remains optional when those environments differ from the recorded Mac setup.
 
@@ -40,17 +40,18 @@ P7.9 implemented P6 local knowledge base and enterprise archive runtime for loca
 
 P7.10 implements final validation and closure through P7 runtime E2E validation, CI coverage, self-validation coverage, final audit, README updates, and TODO closure.
 
-P6 and P7 are complete as repository-side local-first implementation work. GitHub Release `v0.1.2` is published with wheel and sdist assets. This does not mean Doctor link has implemented a hosted Web platform, cloud service, account system, marketplace, live third-party integrations, real signing, real permission system, hosted enterprise archive system, hosted knowledge base service, or PyPI publication.
+P6 and P7 are complete as repository-side local-first implementation work. Source version `0.1.2` is a locally validated release candidate. This does not mean Doctor link has published `v0.1.2`, passed cloud revalidation for the repaired commit, or implemented a hosted platform, account system, marketplace, real signing, hosted archive, hosted knowledge base, or PyPI distribution.
 
 ## Validation certification status
 
-- [x] Cloud CI Certified
-- [x] Release Candidate Ready
+- [ ] Current repaired commit cloud CI revalidated
+- [x] Local Release Candidate validation passed (2026-07-13)
 - [x] First public GitHub Release (`v0.1.0-rc.1`, 2026-06-29)
 - [x] GitHub Release `v0.1.1` (2026-06-29)
-- [x] GitHub Release `v0.1.2` (Latest, 2026-06-29)
+- [ ] GitHub Release `v0.1.2` published
 - [x] Local Mac Validation Recorded (2026-06-29)
 - [ ] Additional target-environment validation (optional, e.g. Windows)
+- [x] Cross-platform CI jobs configured for Linux, macOS, and Windows
 - [x] Release tag published (`v0.1.0-rc.1`)
 - [ ] PyPI publication performed (optional; GitHub wheel is the primary install path)
 

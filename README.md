@@ -9,25 +9,26 @@ Doctor link 是一个面向软件项目的人机协同诊断层。
 - [English](docs/readme/README.en.md)
 - [中文](docs/readme/README.zh-CN.md)
 
-## Install (GitHub Release)
+## Install from source
 
 ```bash
-pip install https://github.com/linkyang01/doctor-link/releases/download/v0.1.2/doctor_link-0.1.2-py3-none-any.whl
+git clone https://github.com/linkyang01/doctor-link.git
+cd doctor-link
+python -m pip install -e .
 doctor-link --version
 ```
-
-From source: `pip install -e .` after cloning this repository.
 
 ## CLI docs
 
 - [diagnose-now](docs/diagnose-now.md) - quick local diagnosis, summary output, `--output`, `--json`, and `--report-json`
+- `doctor-link preflight . --json` - inspect configuration, tools, and repository commands without executing them
 - [No-code quick start (EN)](docs/guides/no-code-quick-start.en.md) | [非程序员入门 (ZH)](docs/guides/no-code-quick-start.zh-CN.md)
 
 ## Current status
 
-Doctor link has completed P0-P7 local runtime implementation, post-P7 hardening, and public GitHub Releases (`v0.1.2` Latest). The project remains local-first: no hosted platform, account system, or telemetry. PyPI publication is optional and not required for GitHub distribution.
+The current source version is `0.1.2`. Local repair validation passed on 2026-07-13, including the full test suite, E2E, self-validation, P7 runtime validation, security scanning, package build, and installed-wheel smoke tests. `v0.1.2` has not been published yet; release and cloud-CI status must only be updated after GitHub verifies the pushed commit.
 
-Doctor link 已完成 P0-P7 本地运行能力、Post-P7 加固，并发布 GitHub 正式版（`v0.1.2`，Latest）。项目仍坚持本地优先：无托管平台、账号体系或遥测。PyPI 为可选项，GitHub Release 即可安装使用。
+当前源码版本为 `0.1.2`。2026-07-13 已完成本地修复验证，包括全量测试、E2E、自验证、P7 runtime、安全扫描、构建和已安装 wheel 冒烟测试。`v0.1.2` 尚未发布；只有修复提交推送并通过 GitHub 校验后，才能更新云端认证和正式发布状态。
 
 ## Main project areas
 

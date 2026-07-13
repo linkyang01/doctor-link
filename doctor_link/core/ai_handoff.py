@@ -280,6 +280,13 @@ def build_handoff_package(package_dir: Path, tool: str = DEFAULT_HANDOFF_TOOL, o
         "missing_files": missing,
         "compatibility_status": compatibility.status,
         "instruction_file": profile.instruction_file,
+        "human_assertion_rule": "Do not dismiss user-confirmed problems without evidence.",
+        "required_missing": compatibility.required_missing,
+        "optional_missing": compatibility.optional_missing,
+        "skipped_files": compatibility.skipped_files,
+        "missing_evidence_warnings": compatibility.missing_evidence_warnings,
+        "privacy_warnings": compatibility.privacy_warnings,
+        "guidance": compatibility.guidance,
     }
     manifest_path = out / "handoff-manifest.json"
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -331,17 +338,41 @@ def check_handoff_compatibility(package_dir: Path, tool: str = DEFAULT_HANDOFF_T
     return report
 
 
-def add_ai_result(package_dir: Path, summary: str, claimed_fix: str, tool: str = DEFAULT_HANDOFF_TOOL, evidence_ids: list[str] | None = None, files_changed: list[str] | None = None, verification_commands: list[str] | None = None, repair_session_id: str | None = None) -> dict[str, Any]:
+def add_ai_result(
+    package_dir: Path,
+    summary: str,
+    claimed_fix: str,
+    tool: str = DEFAULT_HANDOFF_TOOL,
+    evidence_ids: list[str] | None = None,
+    files_changed: list[str] | None = None,
+    verification_commands: list[str] | None = None,
+    repair_session_id: str | None = None,
+    *,
+    evidence_used: list[str] | None = None,
+    related_assertion_ids: list[str] | None = None,
+    verification_steps: list[str] | None = None,
+    risks: list[str] | None = None,
+    assumptions: list[str] | None = None,
+) -> dict[str, Any]:
     package_dir = package_dir.resolve()
     result_id = f"ai_result_{len(_load_list(package_dir / 'ai-repair-result.json')) + 1:03d}"
+    session_id = repair_session_id or _latest_or_next_repair_session_id(package_dir)
+    resolved_evidence = evidence_used if evidence_used is not None else evidence_ids
+    resolved_verification = verification_steps if verification_steps is not None else verification_commands
     payload = {
         "result_id": result_id,
+        "repair_session_id": session_id,
         "tool": tool,
         "summary": summary,
         "claimed_fix": claimed_fix,
-        "evidence_ids": evidence_ids or [],
+        "evidence_ids": resolved_evidence or [],
+        "evidence_used": resolved_evidence or [],
         "files_changed": files_changed or [],
-        "verification_commands": verification_commands or [],
+        "related_assertion_ids": related_assertion_ids or [],
+        "verification_commands": resolved_verification or [],
+        "verification_steps": resolved_verification or [],
+        "risks": risks or [],
+        "assumptions": assumptions or [],
         "recorded_at": utc_now_iso(),
         "status": "open_verification_required",
     }
@@ -349,29 +380,43 @@ def add_ai_result(package_dir: Path, summary: str, claimed_fix: str, tool: str =
     results.append(payload)
     (package_dir / "ai-repair-result.json").write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
     (package_dir / "ai-repair-result.md").write_text(_md("AI Repair Results", results), encoding="utf-8")
-    session_id = repair_session_id or _latest_or_next_repair_session_id(package_dir)
     _upsert_repair_session(package_dir, session_id, tool, payload)
     _report_update(package_dir, "latest_ai_result", payload)
+    _report_update(package_dir, "ai_repair_results", results)
+    _sync_repair_sessions_to_report(package_dir)
     return payload
 
 
-def add_history_round(package_dir: Path, ai_pass: str, user_correction: str | None = None, tool: str = DEFAULT_HANDOFF_TOOL, repair_session_id: str | None = None) -> dict[str, Any]:
+def add_history_round(
+    package_dir: Path,
+    ai_pass: str,
+    user_correction: str | None = None,
+    tool: str = DEFAULT_HANDOFF_TOOL,
+    repair_session_id: str | None = None,
+    evidence_added: list[str] | None = None,
+    verification_attempt: str | None = None,
+) -> dict[str, Any]:
     package_dir = package_dir.resolve()
-    round_id = f"history_round_{len(_load_list(package_dir / 'diagnosis-history.json')) + 1:03d}"
+    round_id = f"round_{len(_load_list(package_dir / 'diagnosis-history.json')) + 1:03d}"
+    session_id = repair_session_id or _latest_or_next_repair_session_id(package_dir)
     payload = {
         "round_id": round_id,
+        "repair_session_id": session_id,
         "tool": tool,
         "ai_pass": ai_pass,
         "user_correction": user_correction,
+        "evidence_added": evidence_added or [],
+        "verification_attempt": verification_attempt,
         "recorded_at": utc_now_iso(),
     }
     history = _load_list(package_dir / "diagnosis-history.json")
     history.append(payload)
     (package_dir / "diagnosis-history.json").write_text(json.dumps(history, ensure_ascii=False, indent=2), encoding="utf-8")
     (package_dir / "diagnosis-history.md").write_text(_md("Diagnosis History", history), encoding="utf-8")
-    session_id = repair_session_id or _latest_or_next_repair_session_id(package_dir)
     _append_session_round(package_dir, session_id, tool, payload)
     _report_update(package_dir, "latest_history_round", payload)
+    _report_update(package_dir, "diagnosis_history", history)
+    _sync_repair_sessions_to_report(package_dir)
     return payload
 
 
@@ -381,17 +426,30 @@ def build_assertion_compliance(package_dir: Path) -> dict[str, Any]:
     compliance = _load_any(package_dir / "assertion-compliance-report.json", {})
     if not isinstance(compliance, dict):
         compliance = {}
+    ai_results = _load_list(package_dir / "ai-repair-result.json")
+    covered_ids = {
+        str(assertion_id)
+        for result in ai_results
+        for assertion_id in result.get("related_assertion_ids", [])
+    }
     items: list[dict[str, Any]] = []
     for index, assertion in enumerate(assertions, start=1):
         assertion_id = _assertion_id(assertion, index)
+        status = "covered" if assertion_id in covered_ids else "needs_review"
         items.append({
             "assertion_id": assertion_id,
-            "statement": assertion.get("statement") if isinstance(assertion, dict) else str(assertion),
-            "status": "needs_review",
+            "statement": (
+                assertion.get("user_statement") or assertion.get("statement")
+                if isinstance(assertion, dict)
+                else str(assertion)
+            ),
+            "status": status,
             "notes": "Human-confirmed issue must not be dismissed without evidence.",
         })
+    overall_status = "covered" if not items or all(item["status"] == "covered" for item in items) else "needs_review"
     report = {
         "generated_at": utc_now_iso(),
+        "status": overall_status,
         "assertion_count": len(items),
         "items": items,
         "summary": "All user-confirmed assertions require explicit evidence before closure.",
@@ -409,12 +467,27 @@ def build_assertion_compliance(package_dir: Path) -> dict[str, Any]:
     return report
 
 
-def build_risk_review(package_dir: Path, file_path: str, boundary: str) -> dict[str, Any]:
+def build_risk_review(
+    package_dir: Path,
+    file_path: str | None = None,
+    boundary: str | list[str] | None = None,
+    *,
+    files_changed: list[str] | None = None,
+) -> dict[str, Any]:
     package_dir = package_dir.resolve()
+    changed = files_changed or ([file_path] if file_path else [])
+    boundaries = boundary if isinstance(boundary, list) else ([boundary] if boundary else [])
+    outside_boundary = [
+        path for path in changed if boundaries and not any(path.startswith(prefix) for prefix in boundaries)
+    ]
+    risk_level = "high" if outside_boundary or len(changed) > 1 else ("medium" if changed else "low")
     report = {
         "generated_at": utc_now_iso(),
-        "file_path": file_path,
-        "boundary": boundary,
+        "risk_level": risk_level,
+        "file_path": changed[0] if changed else "unknown",
+        "files_changed": changed,
+        "boundary": boundaries,
+        "outside_boundary": outside_boundary,
         "risks": [
             "Patch may exceed investigation boundary if unrelated files are edited.",
             "AI repair may claim success without rerunning verification commands.",
@@ -430,8 +503,9 @@ def build_risk_review(package_dir: Path, file_path: str, boundary: str) -> dict[
     lines = [
         "# Repair Risk Review",
         "",
-        f"- file_path: {file_path}",
-        f"- boundary: {boundary}",
+        f"- risk_level: {risk_level}",
+        f"- files_changed: {changed}",
+        f"- boundary: {boundaries}",
         "",
         "## Risks",
         *[f"- {item}" for item in report["risks"]],
@@ -638,6 +712,10 @@ def _append_session_round(package_dir: Path, session_id: str, tool: str, history
     session["updated_at"] = utc_now_iso()
     (package_dir / "ai-repair-sessions.json").write_text(json.dumps(sessions, ensure_ascii=False, indent=2), encoding="utf-8")
     (package_dir / "ai-repair-sessions.md").write_text(_md("AI Repair Sessions", sessions), encoding="utf-8")
+
+
+def _sync_repair_sessions_to_report(package_dir: Path) -> None:
+    _report_update(package_dir, "ai_repair_sessions", _load_list(package_dir / "ai-repair-sessions.json"))
 
 
 def _load_any(path: Path, default: Any) -> Any:

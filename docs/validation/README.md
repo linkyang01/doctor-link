@@ -8,12 +8,14 @@ Files:
 - `release-candidate-checklist.md`
 - `validation-evidence-index.md`
 - `local-validation-pending.md`
+- `local-quality-scorecard.md`
 
-Certification status:
+Certification status for the current repaired source:
 
 ```text
-Cloud CI Certified
-Release Candidate Ready
-Local Mac Validation Recorded (2026-06-29)
+Historical Cloud CI Certificate Retained
+Current Cloud Revalidation Pending
+Local Repair Validation Passed (2026-07-13)
+Local Evidence-Based Readiness Score: 92/100
 Additional Target-Environment Validation Optional
 ```

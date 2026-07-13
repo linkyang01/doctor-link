@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import subprocess
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
@@ -9,6 +8,7 @@ from typing import Any
 import yaml
 
 from doctor_link.core.models import EvidenceItem, TimelineStep
+from doctor_link.core.safe_command_runner import run_safe_command_sequence
 
 
 @dataclass
@@ -54,7 +54,10 @@ def load_test_matrix(project_root: Path) -> TestMatrixCatalog:
     path = test_matrix_path(project_root)
     if not path.exists():
         return TestMatrixCatalog(path=str(path), warnings=["Missing .doctorlink/test-matrix.yml"])
-    raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    try:
+        raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except (OSError, yaml.YAMLError) as exc:
+        return TestMatrixCatalog(path=str(path), warnings=[f"Invalid test-matrix.yml: {exc}"])
     if not isinstance(raw, dict):
         return TestMatrixCatalog(path=str(path), warnings=["test-matrix.yml must be a mapping"])
     jobs_raw = raw.get("jobs") or []
@@ -93,7 +96,7 @@ def run_test_matrix(project_root: Path, package_dir: Path | None = None, job_id:
         raise ValueError(f"Unknown test matrix job id: {job_id}")
     results: list[TestMatrixRunResult] = []
     for job in selected:
-        completed = subprocess.run(job.command, shell=True, cwd=project_root, text=True, capture_output=True, timeout=timeout_seconds, check=False)
+        completed = run_safe_command_sequence(job.command, cwd=project_root, timeout_seconds=timeout_seconds)
         result = TestMatrixRunResult(job_id=job.job_id, status="passed" if completed.returncode == 0 else "failed", return_code=completed.returncode, stdout=completed.stdout, stderr=completed.stderr)
         if package_dir is not None:
             result.evidence_id = write_test_matrix_evidence(package_dir, job, result)

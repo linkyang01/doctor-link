@@ -14,12 +14,13 @@ P5: Productization and Release Readiness is complete. P6 implementation requires
 
 P7.10 added the final validation and closure layer, including a P7 runtime validation script and CI coverage for the P7 command surface.
 
-Doctor link remains local-first. The latest public GitHub Release (`v0.1.2`, Latest, 2026-06-29) is published with wheel and sdist assets. It does not create a hosted platform, external account system, telemetry service, or marketplace. PyPI publication is optional.
+Doctor link remains local-first. Source version `0.1.2` has passed the repaired local validation suite on 2026-07-13, but `v0.1.2` is not yet a published GitHub Release. Cloud certification and release status remain pending until the repaired commit is pushed and GitHub Actions passes. The project does not create a hosted platform, external account system, telemetry service, or marketplace.
 
 ## Common Commands
 
 ```bash
 doctor-link wizard --folder . --tool cursor
+doctor-link preflight . --json
 doctor-link init
 doctor-link scan <library>
 doctor-link plan <library>
@@ -42,8 +43,11 @@ Adapter and Plugin `run` commands are dry-run by default. They validate manifest
 
 ```bash
 ruff check doctor_link tests scripts
-pytest -q --cov=doctor_link
+pytest -q --cov=doctor_link --cov-branch --cov-fail-under=85
+bandit -r doctor_link -ll
+pip-audit
 python -m build
+python scripts/validate_distribution_contents.py dist
 bash scripts/validate_doctor_link.sh
 bash scripts/e2e_validate.sh "$(pwd)"
 bash scripts/p7_runtime_validate.sh "$(pwd)"

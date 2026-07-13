@@ -4,6 +4,27 @@ All notable changes to Doctor link are documented in this file.
 
 Doctor link follows semantic versioning. Public release publishing requires explicit authorization.
 
+## Unreleased
+
+### Fixed
+
+- Reconciled CLI, core runtime, tests, and validation scripts after interface drift.
+- Restored `collect`, `verify`, `strategy validate`, Vly proof, workbench JSON, AI result/history, assertion compliance, and risk-review workflows.
+- Restored all local E2E, self-validation, P7 runtime, and installed-wheel validation paths.
+- Made configured `python` commands portable on systems that only expose the active interpreter by absolute path.
+
+### Added
+
+- Added `doctor-link preflight` for read-only configuration, command, catalog, tool, and environment readiness checks.
+- Added clean wheel/sdist content validation, Twine checks, dependency consistency checks, and source-package runtime-artifact exclusions.
+- Added cross-platform CI smoke coverage for Linux, macOS, and Windows.
+
+### Security
+
+- Replaced shell-based reproduction and test-matrix execution with a shell-free command-sequence runner.
+- Routed adapter and plugin commands through the same shell-free, timeout-aware command runner.
+- Added Bandit, dependency audit, Dependabot, immutable release tags, and an 85% coverage gate.
+
 ## [0.1.0-rc.1] - 2026-06-29
 
 Release candidate for the local-first diagnostic CLI and AI collaboration workflow.
@@ -49,7 +70,7 @@ Post-release documentation alignment and wizard handoff polish.
 - Project status, validation certificates, and README files reflect the published GitHub Release (`v0.1.0-rc.1`, Latest).
 - P8 no-code UX roadmap marked largely complete.
 
-## [0.1.2] - 2026-06-29
+## [0.1.2] - Release candidate, not yet published
 
 AI handoff expansion and guided-workflow CLI polish.
 
@@ -70,7 +91,7 @@ AI handoff expansion and guided-workflow CLI polish.
 
 - Restored `doctor_link/core/ai_handoff.py` after a corrupted remote placeholder blocked handoff generation.
 
-## Unreleased
+## Historical development backlog
 
 ### Added
 

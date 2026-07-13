@@ -89,3 +89,46 @@ def test_reproduce_run_cli_writes_package_evidence(tmp_path: Path) -> None:
     payload = json.loads(result.output)
     assert payload["status"] == "passed"
     assert payload["evidence_id"] == "reproduction-repro-pass"
+
+
+def test_reproduction_rejects_shell_operators(tmp_path: Path) -> None:
+    marker = tmp_path / "should-not-exist.txt"
+    config_dir = tmp_path / ".doctorlink"
+    config_dir.mkdir()
+    (config_dir / "reproduce.yml").write_text(
+        f"""reproductions:
+  - id: unsafe
+    title: unsafe command
+    kind: command
+    command: python -c \"print('safe')\"; touch {marker}
+""",
+        encoding="utf-8",
+    )
+
+    result = run_reproduction(tmp_path, "unsafe")
+
+    assert result.status == "failed"
+    assert "Unsupported shell operator" in result.stderr
+    assert not marker.exists()
+
+
+def test_reproduction_runs_safe_chained_commands(tmp_path: Path) -> None:
+    config_dir = tmp_path / ".doctorlink"
+    config_dir.mkdir()
+    (config_dir / "reproduce.yml").write_text(
+        """reproductions:
+  - id: chained
+    title: safe chain
+    kind: command
+    command:
+      - python -c "print('first')"
+      - python -c "print('second')"
+""",
+        encoding="utf-8",
+    )
+
+    result = run_reproduction(tmp_path, "chained")
+
+    assert result.status == "passed"
+    assert "first" in result.stdout
+    assert "second" in result.stdout

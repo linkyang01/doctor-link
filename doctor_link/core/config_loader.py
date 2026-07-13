@@ -55,6 +55,7 @@ class DoctorLinkConfig:
     verification: VerificationConfig = field(default_factory=VerificationConfig)
     raw: dict[str, Any] = field(default_factory=dict)
     warnings: list[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -64,6 +65,7 @@ class DoctorLinkConfig:
             "verification": self.verification.to_dict(),
             "raw": self.raw,
             "warnings": self.warnings,
+            "errors": self.errors,
         }
 
 
@@ -77,11 +79,15 @@ def load_config(start_dir: Path | None = None) -> DoctorLinkConfig:
     config_dir = root_dir / CONFIG_DIR_NAME
     raw: dict[str, Any] = {}
     warnings: list[str] = []
+    errors: list[str] = []
 
     for name in ["doctorlink.yml", "collect.yml", "package.yml", "verification.yml"]:
         path = config_dir / name
         if path.exists():
-            raw[name] = _read_yaml(path)
+            try:
+                raw[name] = _read_yaml(path)
+            except (OSError, yaml.YAMLError) as exc:
+                errors.append(f"Invalid config file {path}: {exc}")
         else:
             warnings.append(f"Missing config file: {path}")
 
@@ -92,6 +98,7 @@ def load_config(start_dir: Path | None = None) -> DoctorLinkConfig:
         verification=_verification_config(raw),
         raw=raw,
         warnings=warnings,
+        errors=errors,
     )
     config.warnings.extend(validate_config(config))
     return config
@@ -105,6 +112,7 @@ def merge_collect_cli(
     probes: Iterable[Path] | None = None,
     attachments: Iterable[Path] | None = None,
     no_redact: bool = False,
+    redact: bool | None = None,
     redact_email: bool = False,
     redact_phone: bool = False,
     custom_patterns: Iterable[str] | None = None,
@@ -115,7 +123,7 @@ def merge_collect_cli(
         commands=_prefer_list(commands, config.commands),
         probes=[str(item) for item in probes] if probes else list(config.probes),
         attachments=[str(item) for item in attachments] if attachments else list(config.attachments),
-        redact=False if no_redact else config.redact,
+        redact=False if no_redact else (redact if redact is not None else config.redact),
         redact_email=redact_email or config.redact_email,
         redact_phone=redact_phone or config.redact_phone,
         redact_patterns=_prefer_list(custom_patterns, config.redact_patterns),

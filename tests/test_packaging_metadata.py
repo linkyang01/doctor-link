@@ -17,7 +17,7 @@ def test_pyproject_has_packaging_metadata() -> None:
 
     assert project["name"] == "doctor-link"
     assert project["version"] == "0.1.2"
-    assert project["license"]["text"] == "MIT"
+    assert project["license"] == "MIT"
     assert "Development Status :: 4 - Beta" in project["classifiers"]
     assert "Programming Language :: Python :: 3.10" in project["classifiers"]
     assert "Programming Language :: Python :: 3.12" in project["classifiers"]
@@ -36,6 +36,30 @@ def test_package_data_and_license_files_exist() -> None:
     assert Path("LICENSE").exists()
     assert Path("doctor_link/py.typed").exists()
     assert payload["tool"]["setuptools"]["package-data"]["doctor_link"] == ["py.typed"]
+
+
+def test_dev_quality_and_security_tools_are_declared() -> None:
+    payload = _pyproject()
+    dev = " ".join(payload["project"]["optional-dependencies"]["dev"]).lower()
+
+    assert "pytest-cov" in dev
+    assert "ruff" in dev
+    assert "bandit" in dev
+    assert "pip-audit" in dev
+    assert "twine" in dev
+    assert payload["tool"]["coverage"]["report"]["fail_under"] >= 85
+
+
+def test_source_distribution_manifest_covers_delivery_assets() -> None:
+    manifest = Path("MANIFEST.in").read_text(encoding="utf-8")
+
+    assert "include SECURITY.md" in manifest
+    assert "recursive-include schemas *.json" in manifest
+    assert "recursive-include scripts" in manifest
+    assert "recursive-include docs" in manifest
+    assert "prune examples/basic-project/.doctor-link" in manifest
+    assert "global-exclude *.py[cod]" in manifest
+    assert Path("scripts/validate_distribution_contents.py").exists()
 
 
 def test_installation_docs_cover_build_and_boundaries() -> None:

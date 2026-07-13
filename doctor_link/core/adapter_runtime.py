@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import json
-import subprocess
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
 import yaml
 
+from doctor_link.core.command_runner import run_command
 from doctor_link.core.models import utc_now_iso
 
 ADAPTER_SCHEMA = "doctor-link-adapter-v1"
@@ -193,14 +193,7 @@ def run_adapter(
         )
         _write_adapter_run(output_dir or project_root / "DoctorReports" / "adapters", result)
         return result
-    process = subprocess.run(
-        command,
-        cwd=str(project_root),
-        capture_output=True,
-        text=True,
-        timeout=timeout_seconds,
-        check=False,
-    )
+    process = run_command(command, cwd=project_root, timeout_seconds=timeout_seconds)
     completed_at = utc_now_iso()
     status = "passed" if process.returncode == 0 else "failed"
     audit = _audit_record(manifest, capability, command, status, started_at, completed_at, process.returncode, dry_run=False, explicit_user_approval=True)

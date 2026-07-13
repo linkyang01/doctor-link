@@ -14,14 +14,15 @@ from doctor_link.core.ai_handoff import (
 )
 from doctor_link.core.ai_task_generator import generate_ai_task
 from doctor_link.core.collector import collect_into_package
-from doctor_link.core.config_loader import load_config, merge_collect_cli, merge_package_cli, merge_verify_cli
+from doctor_link.core.config_loader import load_config, merge_collect_cli, merge_verify_cli
 from doctor_link.core.environment_collector import collect_environment
 from doctor_link.core.media_probe import probe_media, summarize_media_probe
 from doctor_link import __version__
-from doctor_link.core.diagnosis_strategy import project_context_from_library
+from doctor_link.core.diagnosis_strategy import load_diagnosis_strategy, project_context_from_library
 from doctor_link.core.friendly_errors import friendly_path_error, wrap_io_error
 from doctor_link.core.package_builder import build_diagnostic_package, event_from_scan
 from doctor_link.core.package_exporter import PackageExportOptions, export_package
+from doctor_link.core.preflight import run_preflight
 from doctor_link.core.redactor import RedactionOptions
 from doctor_link.core.report_comparator import write_report_comparison, write_report_comparison_to_package
 from doctor_link.core.scanner import scan_library
@@ -30,7 +31,7 @@ from doctor_link.core.report_generator import generate_basic_report
 from doctor_link.core.test_recorder import record_test_result
 from doctor_link.core.user_assertion_manager import add_user_assertion
 from doctor_link.core.verification_runner import run_verification
-from doctor_link.adapters.vly import VlyAdapter
+from doctor_link.core.vly_adapter import build_vly_core_proof_matrix, write_vly_core_proof_to_package
 from doctor_link.core.web_server import build_web_view, serve_web_view
 from doctor_link.core.workbench_writeback import append_workbench_note
 
@@ -70,6 +71,20 @@ def plan(library: Path) -> None:
     scan_result = scan_library(library)
     test_plan = generate_test_plan(scan_result)
     click.echo(test_plan.to_markdown())
+
+
+@main.command("preflight")
+@click.argument("project_root", type=click.Path(exists=True, file_okay=False, path_type=Path), default=Path("."), required=False)
+@click.option("--json", "json_output", is_flag=True, help="Print JSON output.")
+def preflight_command(project_root: Path, json_output: bool) -> None:
+    """Inspect project readiness without executing configured commands."""
+    report = run_preflight(project_root)
+    if json_output:
+        click.echo(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+    else:
+        click.echo(report.to_markdown())
+    if report.status == "blocked":
+        raise click.ClickException("Preflight checks are blocked.")
 
 
 @main.command()
@@ -193,10 +208,9 @@ def record_command(
 @click.option("--package-dir", type=click.Path(exists=True, file_okay=False, path_type=Path), default=None, help="Optional diagnostic package to update with this proof as evidence.")
 def vly_proof(library: Path, output: Path | None, json_output: bool, package_dir: Path | None) -> None:
     """Build a Vly Core Proof readiness report from a test library."""
-    adapter = VlyAdapter()
     scan_result = scan_library(library)
-    report = adapter.build_proof_report(scan_result)
-    text = json.dumps(report, ensure_ascii=False, indent=2) if json_output else adapter.render_markdown(report)
+    report = build_vly_core_proof_matrix(scan_result)
+    text = json.dumps(report.to_dict(), ensure_ascii=False, indent=2) if json_output else report.to_markdown()
     if output is not None:
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(text, encoding="utf-8")
@@ -204,17 +218,17 @@ def vly_proof(library: Path, output: Path | None, json_output: bool, package_dir
     else:
         click.echo(text)
     if package_dir is not None:
-        adapter.attach_proof_to_package(package_dir, report)
+        write_vly_core_proof_to_package(package_dir, report)
         click.echo(f"Attached Vly proof evidence to package: {package_dir}")
 
 
 @main.command("collect")
 @click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
-@click.option("--project-root", type=click.Path(file_okay=False, path_type=Path), default=None, help="Optional project root for relative log patterns.")
-@click.option("--log", "log_patterns", multiple=True, help="Log glob pattern. Can be repeated.")
+@click.option("--project-root", type=click.Path(exists=True, file_okay=False, path_type=Path), default=None, help="Optional project root for relative log patterns.")
+@click.option("--log", "--logs", "log_patterns", multiple=True, help="Log glob pattern. Can be repeated.")
 @click.option("--command", "commands", multiple=True, help="Shell command to capture. Can be repeated.")
 @click.option("--probe", "probes", multiple=True, type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Media file to probe. Can be repeated.")
-@click.option("--attach", "attachments", multiple=True, type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Attachment file to copy into evidence. Can be repeated.")
+@click.option("--attach", "--attachment", "attachments", multiple=True, type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Attachment file to copy into evidence. Can be repeated.")
 @click.option("--note", default=None, help="Collector note.")
 @click.option("--redact", is_flag=True, help="Enable redaction for collected text evidence.")
 @click.option("--redact-email", is_flag=True, help="Redact email addresses when redaction is enabled.")
@@ -240,18 +254,22 @@ def collect_command(
         project_root=project_root,
         log_patterns=list(log_patterns),
         commands=list(commands),
-        redact=redact,
+        probes=list(probes),
+        attachments=list(attachments),
+        redact=True if redact else None,
         redact_email=redact_email,
         redact_phone=redact_phone,
-        redact_patterns=list(redact_patterns),
+        custom_patterns=list(redact_patterns),
     )
+    config_root = Path(config.root_dir)
+    effective_root = _resolve_collect_root(project_root, merged.project_root, config_root)
     result = collect_into_package(
         package_dir=package_dir,
-        project_root=project_root,
-        log_patterns=merged.logs,
+        project_root=effective_root,
+        log_patterns=[_resolve_pattern(item, effective_root) for item in merged.logs],
         commands=merged.commands,
-        probes=[str(path) for path in probes],
-        attachments=[str(path) for path in attachments],
+        probes=[_resolve_local_path(item, effective_root) for item in merged.probes],
+        attachments=[_resolve_local_path(item, effective_root) for item in merged.attachments],
         note=note,
         redact=merged.redact,
         redaction_options=RedactionOptions(
@@ -261,7 +279,7 @@ def collect_command(
         ),
     )
     click.echo(f"Collected evidence into package: {package_dir}")
-    click.echo(f"Evidence items added: {len(result.evidence_ids)}")
+    click.echo(f"Evidence items added: {len(result.evidence)}")
 
 
 @main.command("assert")
@@ -269,15 +287,35 @@ def collect_command(
 @click.option("--statement", required=True, help="Human-confirmed issue statement.")
 @click.option("--severity", default="medium", show_default=True, help="Issue severity.")
 @click.option("--evidence-id", "evidence_ids", multiple=True, help="Related evidence ID. Can be repeated.")
-def assert_command(package_dir: Path, statement: str, severity: str, evidence_ids: tuple[str, ...]) -> None:
+@click.option("--expected", "expected_behavior", default=None, help="Expected behavior.")
+@click.option("--actual", "actual_behavior", default=None, help="Actual behavior.")
+@click.option("--why-wrong", default=None, help="Why the current behavior is considered wrong.")
+@click.option("--file", "related_file", default=None, help="Related file path.")
+@click.option("--next-ai", "next_ai_instruction", default=None, help="Instruction for the next AI repair pass.")
+def assert_command(
+    package_dir: Path,
+    statement: str,
+    severity: str,
+    evidence_ids: tuple[str, ...],
+    expected_behavior: str | None,
+    actual_behavior: str | None,
+    why_wrong: str | None,
+    related_file: str | None,
+    next_ai_instruction: str | None,
+) -> None:
     """Add a human-confirmed issue assertion to a diagnostic package."""
     assertion = add_user_assertion(
         package_dir=package_dir,
-        statement=statement,
+        user_statement=statement,
         severity=severity,
-        evidence_ids=list(evidence_ids),
+        expected_behavior=expected_behavior,
+        actual_behavior=actual_behavior,
+        why_user_thinks_it_is_wrong=why_wrong,
+        related_file=related_file,
+        next_ai_instruction=next_ai_instruction,
+        related_evidence_ids=list(evidence_ids),
     )
-    click.echo(f"Recorded user assertion: {assertion.assertion_id}")
+    click.echo(f"Added user assertion: {assertion.assertion_id}")
 
 
 @main.command("verify")
@@ -287,7 +325,7 @@ def assert_command(package_dir: Path, statement: str, severity: str, evidence_id
 def verify_command(package_dir: Path, write_back: bool, json_output: bool) -> None:
     """Run verification planning for a diagnostic package."""
     config = load_config(package_dir.parent)
-    merged = merge_verify_cli(config.verify)
+    merged = merge_verify_cli(config.verification, write_back=write_back)
     result = run_verification(package_dir, write_back=write_back, config=merged)
     if json_output:
         click.echo(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
@@ -311,13 +349,13 @@ def verify_command(package_dir: Path, write_back: bool, json_output: bool) -> No
 def compare_command(before: Path, after: Path, package_dir: Path | None, output: Path | None) -> None:
     """Compare two diagnostic reports."""
     if package_dir is not None:
-        paths = write_report_comparison_to_package(before, after, package_dir)
-        for path in paths:
-            click.echo(f"Generated: {path}")
+        evidence = write_report_comparison_to_package(before, package_dir)
+        click.echo(f"Generated comparison evidence: {evidence.path}")
         return
-    paths = write_report_comparison(before, after, output or Path("DoctorReports"))
-    for path in paths:
-        click.echo(f"Generated: {path}")
+    output_dir = output or Path("DoctorReports")
+    write_report_comparison(before, after, output_dir)
+    click.echo(f"Generated: {output_dir / 'report-comparison.json'}")
+    click.echo(f"Generated: {output_dir / 'report-comparison.md'}")
 
 
 @main.command("doctor-package")
@@ -354,15 +392,18 @@ def workbench_note_command(package_dir: Path, note: str, enable_write_back: bool
     """Append a workbench note to a diagnostic package."""
     result = append_workbench_note(package_dir, note=note, enable_write_back=enable_write_back)
     if json_output:
-        click.echo(json.dumps(result, ensure_ascii=False, indent=2))
+        click.echo(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
         return
-    click.echo(f"Appended workbench note: {result['note_id']}")
+    if result.wrote:
+        click.echo(f"Appended workbench note: {result.target_file}")
+    else:
+        click.echo("Write-back disabled; no note was written.")
 
 
 @main.command("ai-result")
 @click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
 @click.option("--summary", required=True, help="AI repair summary.")
-@click.option("--claimed-fix", required=True, help="Claimed fix description.")
+@click.option("--claimed-fix", default="No claimed fix provided; verification required.", show_default=True, help="Claimed fix description.")
 @click.option("--tool", default=None, type=click.Choice(sorted(SUPPORTED_TOOLS)), help="AI tool profile.")
 @click.option("--repair-session-id", default=None, help="Optional repair session ID.")
 @click.option("--file", "files_changed", multiple=True, help="Changed file path. Can be repeated.")
@@ -392,9 +433,9 @@ def ai_result_command(
         tool=tool or "generic",
         repair_session_id=repair_session_id,
         files_changed=list(files_changed),
-        evidence_ids=list(evidence_used),
+        evidence_used=list(evidence_used),
         related_assertion_ids=list(related_assertion_ids),
-        verification_commands=list(verification_steps),
+        verification_steps=list(verification_steps),
         risks=list(risks),
         assumptions=list(assumptions),
     )
@@ -453,25 +494,48 @@ def assertion_check_command(package_dir: Path, json_output: bool) -> None:
 @click.option("--boundary", "boundary", multiple=True, help="Investigation boundary path prefix. Can be repeated.")
 def risk_review_command(package_dir: Path, files_changed: tuple[str, ...], boundary: tuple[str, ...]) -> None:
     """Build a repair risk review report."""
-    file_path = files_changed[0] if files_changed else "unknown"
-    boundary_value = ", ".join(boundary) if boundary else "unspecified"
-    report = build_risk_review(package_dir, file_path=file_path, boundary=boundary_value)
-    click.echo(f"Repair risk review generated for: {file_path}")
+    report = build_risk_review(package_dir, files_changed=list(files_changed), boundary=list(boundary))
+    click.echo(f"Repair risk level: {report['risk_level']}")
     click.echo(f"Risks listed: {len(report.get('risks', []))}")
 
 
-@main.command("strategy")
+@main.group("strategy")
+def strategy_group() -> None:
+    """Inspect and validate diagnosis strategy configuration."""
+
+
+@strategy_group.command("validate")
 @click.argument("library", type=click.Path(exists=True, file_okay=False, path_type=Path))
 @click.option("--json", "json_output", is_flag=True, help="Print JSON output.")
-def strategy_group(library: Path, json_output: bool) -> None:
-    """Validate diagnosis strategy configuration."""
-    project, strategy = project_context_from_library(library)
-    payload = {"project": project, "strategy": strategy.to_dict()}
+def strategy_validate(library: Path, json_output: bool) -> None:
+    """Validate .doctorlink/diagnosis.yml for a project."""
+    result = load_diagnosis_strategy(library)
+    payload = result.to_dict()
     if json_output:
         click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
-        return
-    click.echo(f"Project: {project}")
-    click.echo(f"Strategy: {strategy.name}")
+    else:
+        click.echo(result.to_markdown())
+    if not result.is_valid:
+        raise click.ClickException("Strategy validation failed.")
+
+
+def _resolve_collect_root(explicit: Path | None, configured: str | None, config_root: Path) -> Path:
+    if explicit is not None:
+        return explicit.expanduser().resolve()
+    if configured:
+        candidate = Path(configured).expanduser()
+        return (candidate if candidate.is_absolute() else config_root / candidate).resolve()
+    return config_root.resolve()
+
+
+def _resolve_local_path(value: str, project_root: Path) -> Path:
+    candidate = Path(value).expanduser()
+    return (candidate if candidate.is_absolute() else project_root / candidate).resolve()
+
+
+def _resolve_pattern(value: str, project_root: Path) -> str:
+    candidate = Path(value).expanduser()
+    return str(candidate if candidate.is_absolute() else project_root / candidate)
 
 
 if __name__ == "__main__":

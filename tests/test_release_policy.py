@@ -34,3 +34,14 @@ def test_release_policy_requires_explicit_authorization() -> None:
     assert "do not publish without explicit authorization" in checklist
     assert "pypi" in policy
     assert "github release" in policy
+
+
+def test_release_workflow_uses_version_matched_immutable_tags() -> None:
+    workflow = Path(".github/workflows/release.yml").read_text(encoding="utf-8")
+    payload = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+    version = payload["project"]["version"]
+
+    assert f"default: v{version}" in workflow
+    assert "git push origin \"${RELEASE_TAG}\"" in workflow
+    assert "--force" not in workflow
+    assert "Release tag already exists and will not be moved" in workflow

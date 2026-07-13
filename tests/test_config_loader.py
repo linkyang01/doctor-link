@@ -2,7 +2,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from click.testing import CliRunner
+
 from doctor_link.core.config_loader import load_config, merge_collect_cli, merge_package_cli, merge_verify_cli
+from doctor_link.core.models import DiagnosticEvent
+from doctor_link.core.package_builder import build_diagnostic_package
+from doctor_link.entrypoint import main
 
 
 def test_load_config_reads_doctorlink_files(tmp_path: Path) -> None:
@@ -66,6 +71,17 @@ def test_load_config_falls_back_to_defaults_without_files(tmp_path: Path) -> Non
     assert "Missing config file" in "\n".join(config.warnings)
 
 
+def test_load_config_reports_invalid_yaml_without_crashing(tmp_path: Path) -> None:
+    config_dir = tmp_path / ".doctorlink"
+    config_dir.mkdir()
+    (config_dir / "collect.yml").write_text("collect: [unterminated", encoding="utf-8")
+
+    config = load_config(tmp_path)
+
+    assert config.errors
+    assert "Invalid config file" in config.errors[0]
+
+
 def test_merge_collect_cli_prefers_explicit_values(tmp_path: Path) -> None:
     config_dir = tmp_path / ".doctorlink"
     config_dir.mkdir()
@@ -116,3 +132,38 @@ def test_merge_package_and_verify_cli() -> None:
 
     verify = merge_verify_cli(load_config(Path.cwd()).verification, write_back=True)
     assert verify.write_back is True
+
+
+def test_collect_cli_uses_configured_relative_logs_and_attachments(tmp_path: Path) -> None:
+    config_dir = tmp_path / ".doctorlink"
+    config_dir.mkdir()
+    (config_dir / "collect.yml").write_text(
+        """collect:
+  project_root: .
+  logs:
+    - logs/*.log
+  attachments:
+    - inputs/context.txt
+  redaction:
+    enabled: true
+""",
+        encoding="utf-8",
+    )
+    (tmp_path / "logs").mkdir()
+    (tmp_path / "logs" / "app.log").write_text("hello", encoding="utf-8")
+    (tmp_path / "inputs").mkdir()
+    (tmp_path / "inputs" / "context.txt").write_text("context", encoding="utf-8")
+    package = build_diagnostic_package(
+        DiagnosticEvent(project="configured-collect"),
+        tmp_path / "DoctorReports",
+    )
+    assert package.root_dir is not None
+
+    result = CliRunner().invoke(
+        main,
+        ["collect", str(package.root_dir), "--project-root", str(tmp_path)],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert list((package.root_dir / "evidence" / "logs").glob("*app.log"))
+    assert list((package.root_dir / "evidence" / "attachments").glob("*context.txt"))
