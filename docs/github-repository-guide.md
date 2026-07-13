@@ -137,11 +137,13 @@ The current `0.1.3` implementation was validated in PR `#140`.
 - final PR CI: `29245883700`;
 - Release workflow: `29246045227`;
 - result: eight of eight jobs passed;
-- operating systems: Ubuntu, macOS, Windows;
+- operating systems: Ubuntu, macOS 15, Windows;
 - Python versions: 3.10, 3.11, 3.12;
 - installed-package capability coverage: 62/62 routes, 70 invocations, eight complex scenarios.
 
 See the [cloud certificate](validation/cloud-validation-certificate.md), [evidence index](validation/validation-evidence-index.md), and [100-point scorecard](validation/local-quality-scorecard.md).
+
+The cross-platform smoke matrix pins macOS to `macos-15` instead of `macos-latest`, preventing an unreviewed runner-image migration from changing the certified environment. GitHub-maintained JavaScript actions use Node 24-compatible majors.
 
 ## Recommended repository protections
 

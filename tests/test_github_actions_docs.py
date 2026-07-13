@@ -1,8 +1,17 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import yaml
+
+
+ACTION_MAJORS = {
+    "actions/checkout": "v7",
+    "actions/setup-python": "v6",
+    "actions/upload-artifact": "v7",
+    "softprops/action-gh-release": "v3",
+}
 
 
 def test_pr_diagnostics_workflow_example_is_valid_yaml() -> None:
@@ -18,3 +27,19 @@ def test_pr_diagnostics_workflow_example_is_valid_yaml() -> None:
     assert "doctor-link strategy validate" in run_blocks
     assert "doctor-link diagnose verify" in run_blocks
     assert "DoctorReports/**" in str(steps[-1])
+
+
+def test_workflows_use_node24_action_majors_and_pinned_macos() -> None:
+    paths = sorted(Path(".github/workflows").glob("*.yml"))
+    paths.append(Path("docs/examples/doctor-link-pr-diagnostics.yml"))
+
+    for path in paths:
+        text = path.read_text(encoding="utf-8")
+        yaml.safe_load(text)
+        for action, major in re.findall(r"uses:\s*([^@\s]+)@(v\d+)", text):
+            if action in ACTION_MAJORS:
+                assert major == ACTION_MAJORS[action], f"{path}: {action}@{major}"
+
+    ci_workflow = Path(".github/workflows/ci.yml").read_text(encoding="utf-8")
+    assert "macos-latest" not in ci_workflow
+    assert "macos-15" in ci_workflow
