@@ -32,8 +32,14 @@ doctor-link vly-proof <library> --package-dir <package_dir>
 doctor-link assert <package_dir> --statement "This is the problem"
 doctor-link verify <package_dir> --write-back
 doctor-link compare before.json after.json --package-dir <package_dir>
-doctor-link doctor-package <package_dir> --out DoctorReports/package.zip
+doctor-link doctor-package <package_dir> --out DoctorReports/package.zip --json
+doctor-link doctor-package <package_dir> --out DoctorReports/reviewed.zip --allow-unsafe-export
+doctor-link schema migrate <package_dir> --json
 ```
+
+`doctor-package` runs the privacy export gate by default and returns non-zero when sensitive patterns remain. `--allow-unsafe-export` is an explicit reviewed override and is recorded in `package-export-manifest.json`. Export manifests and package README files contain portable relative paths only.
+
+`schema migrate` recognizes only legacy export-shaped `manifest.json` files. It writes `package-export-manifest.json`, preserves the original as `manifest.legacy-export.json`, backs up the old package README, and leaves formal package manifests untouched.
 
 ## Local workbench
 

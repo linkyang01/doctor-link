@@ -57,10 +57,18 @@ DoctorReports/
 
 ## Export files
 
-- `package-export-manifest.json`: files included or skipped by `doctor-package`, export destination, validation summary, and redaction-report presence.
-- `package-readme.md`: human-readable archive contents and warnings.
+- `package-export-manifest.json`: portable file inventory, privacy-gate status, explicit override state, validation summary, and redaction-report presence. Stored paths are relative filenames and never local absolute paths.
+- `package-readme.md`: portable human-readable archive contents, privacy-gate result, and warnings.
 
 The explicit filename avoids collision with the versioned package-level `manifest.json` schema and `handoff-manifest.json`.
+
+Legacy export-shaped `manifest.json` files can be migrated safely:
+
+```bash
+doctor-link schema migrate <package_dir> --json
+```
+
+The command preserves the original manifest and README as legacy backups. It refuses a formal package `manifest.json` instead of guessing.
 
 ## Evidence directory
 

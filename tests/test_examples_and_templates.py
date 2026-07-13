@@ -64,7 +64,7 @@ def test_shop_service_multi_bug_readme_mentions_run_script() -> None:
 def test_full_capability_lab_documents_complete_route_coverage() -> None:
     text = Path("examples/full-capability-lab/README.md").read_text(encoding="utf-8")
 
-    assert "61/61" in text
+    assert "62/62" in text
     assert "run-all.py" in text
     assert "repair lifecycle" in text.casefold()
     assert "security" in text.casefold()

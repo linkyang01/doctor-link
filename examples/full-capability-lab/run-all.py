@@ -68,6 +68,7 @@ CAPABILITIES = {
     "risk-review",
     "scan",
     "schema validate",
+    "schema migrate",
     "strategy validate",
     "test list",
     "test run",
@@ -485,10 +486,44 @@ def run_validation(executable: str, output: Path, dist_dir: Path | None = None) 
     runner.run(
         "doctor-package",
         "doctor-package",
+        security / "raw",
+        "--out",
+        output / "blocked-unsafe-package.zip",
+        "--json",
+        expected_codes=(1,),
+        contains="Privacy export gate blocked",
+    )
+    runner.run(
+        "doctor-package",
+        "doctor-package",
         after,
         "--out",
         output / "checkout-package.zip",
         "--include-web",
+        "--json",
+    )
+    migration_package = output / "legacy-export-package"
+    shutil.copytree(after, migration_package)
+    migration_target = migration_package / "package-export-manifest.json"
+    legacy_payload = json.loads(migration_target.read_text(encoding="utf-8"))
+    legacy_payload.pop("schema")
+    legacy_payload.pop("privacy_gate")
+    legacy_payload["package_dir"] = str(migration_package)
+    legacy_payload["output_zip"] = str(output / "legacy-export.zip")
+    legacy_payload["validation"]["package_dir"] = str(migration_package)
+    legacy_payload["manifest_path"] = str(migration_package / "manifest.json")
+    legacy_payload["package_readme_path"] = str(migration_package / "package-readme.md")
+    migration_target.unlink()
+    (migration_package / "manifest.json").write_text(
+        json.dumps(legacy_payload, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    runner.run(
+        "schema migrate",
+        "schema",
+        "migrate",
+        migration_package,
+        "--json",
+        contains='"status": "migrated"',
     )
     runner.run(
         "home", "home", "--reports", reports, "--output", output / "home", "--json"
@@ -801,6 +836,7 @@ def run_validation(executable: str, output: Path, dist_dir: Path | None = None) 
             "integrity verification detects post-manifest tampering",
             "adapter and plugin dry-run plus explicit execution",
             "schema, conformance, distribution, knowledge, archive, and handoff governance",
+            "package export blocks raw secrets and migrates legacy manifests safely",
         ]
     )
     _write_report(runner, output)

@@ -178,12 +178,21 @@ def _validate_package_export_manifest(
     ]
     if not legacy:
         required.insert(0, "schema")
+        required.append("privacy_gate")
     _required(relative, payload, result, required)
     _dict(relative, payload, result, "validation")
     _list(relative, payload, result, "included_files")
     _list(relative, payload, result, "skipped_files")
     if legacy:
         result.add(relative, "warning", "Legacy package export manifest filename; re-export to migrate.")
+        return
+    _dict(relative, payload, result, "privacy_gate")
+    if payload.get("package_dir") != ".":
+        result.add(relative, "error", "package_dir must be `.` in a portable export manifest.")
+    for field_name in ["output_zip", "manifest_path", "package_readme_path", "redaction_report_path"]:
+        value = payload.get(field_name)
+        if value is not None and not _portable_filename(value):
+            result.add(relative, "error", f"{field_name} must be a portable filename without directories.")
 
 
 def _object(relative: str, payload: Any, result: SchemaValidationResult) -> bool:
@@ -215,6 +224,12 @@ def _list(relative: str, payload: dict[str, Any], result: SchemaValidationResult
 def _dict(relative: str, payload: dict[str, Any], result: SchemaValidationResult, key: str) -> None:
     if key in payload and not isinstance(payload[key], dict):
         result.add(relative, "error", f"Field `{key}` must be an object.")
+
+
+def _portable_filename(value: Any) -> bool:
+    if not isinstance(value, str) or not value or value in {".", ".."}:
+        return False
+    return "/" not in value and "\\" not in value and ":" not in value
 
 
 def _to_markdown(result: SchemaValidationResult) -> str:

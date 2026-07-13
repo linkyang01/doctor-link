@@ -4,7 +4,7 @@ This lab runs every Doctor link CLI capability through realistic local scenarios
 
 ## Coverage contract
 
-- 61/61 capability routes, including the version entrypoint;
+- 62/62 capability routes, including the version entrypoint;
 - at least one real process execution for every route;
 - successful and expected-blocked outcomes checked separately;
 - machine-readable per-command logs and a final coverage report;
@@ -60,4 +60,4 @@ The output directory contains:
 - `command-logs/`: stdout and stderr for every command invocation;
 - diagnostic packages, handoff, workbench, archive, knowledge, integrity, privacy, conformance, CI, and distribution artifacts.
 
-A successful run means all 61 declared routes executed and all seven scenario-level invariants passed. It does not upload data, publish a release, or call a hosted service.
+A successful run means all 62 declared routes executed through 70 real command invocations and all eight scenario-level invariants passed. It does not upload data, publish a release, or call a hosted service.

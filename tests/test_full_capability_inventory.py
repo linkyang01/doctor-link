@@ -36,4 +36,4 @@ def test_full_capability_inventory_matches_every_cli_route() -> None:
     actual = _cli_routes(main) | {"--version"}
 
     assert declared == actual
-    assert len(declared) == 61
+    assert len(declared) == 62

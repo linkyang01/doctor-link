@@ -32,6 +32,11 @@ Doctor link follows semantic versioning. Public release publishing requires expl
 - Prevented failed reproductions and required test jobs from printing failure JSON while returning shell exit code 0.
 - Repaired `doctor-package --include-web` and exposed the documented attachment/log/screenshot/size filters.
 - Prevented package export manifests from being misclassified as AI handoff manifests during Schema and Conformance validation.
+- Made `doctor-package` run the privacy export gate by default, with an explicit audited `--allow-unsafe-export` override.
+- Removed absolute local paths from archived export manifests and package README files.
+- Added `schema migrate` to convert legacy export-shaped `manifest.json` files while preserving backups and refusing formal manifests.
+- Made zip export atomic with destination-capacity preflight so interruptions and low-disk failures preserve the previous complete archive.
+- Added large-file-count, command-timeout, interrupted-export, retry, and insufficient-disk regression coverage.
 
 ## [0.1.2] - 2026-07-13
 

@@ -42,7 +42,12 @@ def test_export_package_writes_manifest_readme_and_zip(tmp_path: Path) -> None:
     assert result.validation.is_valid is True
 
     manifest = json.loads(Path(result.manifest_path).read_text(encoding="utf-8"))
-    assert manifest["output_zip"] == str(output_zip.resolve())
+    assert manifest["package_dir"] == "."
+    assert manifest["output_zip"] == output_zip.name
+    assert manifest["manifest_path"] == "package-export-manifest.json"
+    assert manifest["package_readme_path"] == "package-readme.md"
+    assert manifest["privacy_gate"]["status"] == "passed"
+    assert str(tmp_path) not in json.dumps(manifest)
     assert manifest["validation"]["is_valid"] is True
 
     with zipfile.ZipFile(output_zip) as archive:

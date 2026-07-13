@@ -167,7 +167,13 @@ def load_privacy_policy(path: Path | None = None) -> PrivacyPolicy:
     )
 
 
-def scan_privacy(root: Path, policy_path: Path | None = None, include_globs: list[str] | None = None) -> PrivacyScanResult:
+def scan_privacy(
+    root: Path,
+    policy_path: Path | None = None,
+    include_globs: list[str] | None = None,
+    *,
+    include_paths: set[str] | None = None,
+) -> PrivacyScanResult:
     root = root.resolve()
     policy = load_privacy_policy(policy_path)
     findings: list[dict[str, Any]] = []
@@ -175,6 +181,8 @@ def scan_privacy(root: Path, policy_path: Path | None = None, include_globs: lis
     compiled = _compile_patterns(policy.patterns, findings)
     for path in _iter_files(root, include_globs, policy.exclude_globs):
         rel = _safe_relative(path, root)
+        if include_paths is not None and rel not in include_paths:
+            continue
         text = _read_text(path)
         if text is None:
             continue
@@ -200,8 +208,14 @@ def redaction_gate(root: Path, policy_path: Path | None = None, include_globs: l
     return GateResult(status=status, gate="redaction", root=str(root.resolve()), findings=report.findings, report=report.to_dict())
 
 
-def export_safety_gate(root: Path, policy_path: Path | None = None, manifest_path: Path | None = None) -> GateResult:
-    privacy = scan_privacy(root, policy_path)
+def export_safety_gate(
+    root: Path,
+    policy_path: Path | None = None,
+    manifest_path: Path | None = None,
+    *,
+    include_paths: set[str] | None = None,
+) -> GateResult:
+    privacy = scan_privacy(root, policy_path, include_paths=include_paths)
     findings = list(privacy.findings)
     if manifest_path is not None:
         integrity = verify_integrity_manifest(root, manifest_path, strict=True)

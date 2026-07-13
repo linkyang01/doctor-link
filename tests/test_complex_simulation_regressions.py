@@ -42,6 +42,18 @@ def test_safe_runner_supports_leading_environment_assignments(tmp_path: Path) ->
     assert result.stdout.splitlines() == ["simulation", "second"]
 
 
+def test_safe_runner_reports_real_command_timeout(tmp_path: Path) -> None:
+    result = run_safe_command_sequence(
+        'python -c "import time; time.sleep(2)"',
+        cwd=tmp_path,
+        timeout_seconds=1,
+    )
+
+    assert result.returncode == -1
+    assert result.timed_out is True
+    assert "timed out" in result.stderr.casefold()
+
+
 def test_failed_reproduction_and_required_test_return_nonzero(tmp_path: Path) -> None:
     config = tmp_path / ".doctorlink"
     config.mkdir()

@@ -24,6 +24,7 @@ from doctor_link.core.integrity_privacy import (
 )
 from doctor_link.core.plugin_runtime import discover_plugins, run_plugin, validate_plugin_file
 from doctor_link.core.project_health import write_project_health
+from doctor_link.core.package_exporter import migrate_legacy_export_manifest
 from doctor_link.core.reproduction import load_reproduction_catalog, run_reproduction
 from doctor_link.core.schema_validator import validate_diagnostic_package, write_schema_validation_result
 from doctor_link.core.test_matrix_runner import load_test_matrix, run_test_matrix
@@ -193,6 +194,24 @@ def schema_validate(package_dir: Path, write_result: bool, json_output: bool) ->
         click.echo(f"Findings: {len(result.findings)}")
     if not result.valid:
         raise click.ClickException("Schema validation failed.")
+
+
+@schema_group.command("migrate")
+@click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--json", "json_output", is_flag=True, help="Print JSON output.")
+def schema_migrate(package_dir: Path, json_output: bool) -> None:
+    """Migrate a legacy package export manifest and preserve a backup."""
+    try:
+        result = migrate_legacy_export_manifest(package_dir)
+    except (FileNotFoundError, FileExistsError, ValueError, json.JSONDecodeError) as exc:
+        raise click.ClickException(str(exc)) from exc
+    if json_output:
+        click.echo(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+        return
+    click.echo(f"Schema migration status: {result.status}")
+    click.echo(f"Portable export manifest: {result.target_path}")
+    if result.backup_path:
+        click.echo(f"Legacy backup: {result.backup_path}")
 
 
 @main.group("conformance")
