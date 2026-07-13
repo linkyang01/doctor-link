@@ -59,7 +59,7 @@ PR #140 was merged as commit `fa779da`, and the authorized [GitHub Release `v0.1
 | Evidence collection | Logs, attachments, environment metadata, command results, redaction records, and integrity indexes. |
 | Human assertions | Explicit records of user-confirmed problems that AI output must not silently dismiss. |
 | Reproduction and tests | Shell-free configured command execution, test matrices, evidence write-back, and timeout metadata. |
-| Automatic solve | Python failure reproduction, explicit repair approval, isolated Git branch, bounded Codex rounds, and independent regression acceptance. |
+| Automatic solve | Python failure reproduction, explicit repair approval, isolated Git branch, bounded Codex rounds, protected verification inputs, and independent regression acceptance. |
 | Verification | Missing-evidence reporting, linked assertion coverage, failed-test blockers, before/after comparison, and conservative closure status. |
 | AI handoff | Tool-specific packages with explicit repair, evidence, and verification-review readiness states. |
 | Local workbench | Static local HTML for reviewing diagnostic packages without a hosted service. |
@@ -126,7 +126,7 @@ preflight → report → collect → assert → reproduce/test → verify → ha
 For the automatic Python path, the complete workflow is:
 
 ```text
-solve preview → explicit approval → repair branch → Codex round → independent verification → verified/failed
+solve preview → explicit approval → repair branch → Codex round → protected-input check → independent verification → verified/blocked/failed
 ```
 
 1. `preflight` checks readiness without running repository commands.
@@ -145,6 +145,7 @@ Failed reproductions, failed required test jobs, and incomplete verification ret
 - Reproduction and test-matrix commands do not invoke a shell; pipelines, redirection, command substitution, and unsafe operators are rejected.
 - Adapter and plugin execution is dry-run by default and requires explicit `--allow-run` approval.
 - Automatic code repair requires `--allow-repair`, a clean Git working tree, and a failing executable check. Codex remains sandboxed to workspace-write; Doctor link does not auto-commit or push.
+- Automatic repair hash-protects tests, test configuration, reproduction/test catalogs, and directly referenced verification scripts. Protected-input changes block `verified`; the explicit exception `--allow-verification-changes` returns `review_required` instead of success.
 - `--allow-repair` invokes the authenticated Codex service and may send the bounded prompt, failing output, and inspected repository context. Review the preview and remove sensitive data before authorization.
 - Generated packages may still contain project-sensitive evidence. Review privacy and redaction reports before sharing them.
 - Do not attach secrets or private diagnostic packages to public GitHub issues.

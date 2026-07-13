@@ -14,12 +14,38 @@ from doctor_link.core.models import utc_now_iso
 from doctor_link.core.package_transaction import atomic_write_json, atomic_write_text
 from doctor_link.core.preflight import run_preflight
 from doctor_link.core.reproduction import load_reproduction_catalog
-from doctor_link.core.safe_command_runner import run_safe_command_sequence, validate_safe_command_sequence
+from doctor_link.core.safe_command_runner import (
+    parse_safe_command_sequence,
+    run_safe_command_sequence,
+    validate_safe_command_sequence,
+)
 from doctor_link.core.test_matrix_runner import load_test_matrix
 
 
 SOLVE_SCHEMA = "doctor-link-solve-session-v1"
-FINAL_STATUSES = {"approval_required", "blocked", "failed", "not_reproduced", "verified"}
+FINAL_STATUSES = {
+    "approval_required",
+    "blocked",
+    "failed",
+    "not_reproduced",
+    "review_required",
+    "verified",
+}
+VERIFICATION_CONFIG_PATHS = {
+    ".coveragerc",
+    "noxfile.py",
+    "pyproject.toml",
+    "pytest.ini",
+    "setup.cfg",
+    "tox.ini",
+}
+VERIFICATION_CATALOG_PATHS = {
+    ".doctorlink/reproduce.yml",
+    ".doctorlink/reproduce.yaml",
+    ".doctorlink/test-matrix.yml",
+    ".doctorlink/test-matrix.yaml",
+}
+IGNORED_VERIFICATION_PARTS = {".git", ".pytest_cache", "__pycache__"}
 
 
 @dataclass
@@ -77,6 +103,7 @@ class SolveRound:
     prompt_path: str
     events_path: str
     stderr_path: str
+    verification_input_changes: list[dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -97,10 +124,14 @@ class SolveResult:
     original_branch: str | None = None
     repair_branch: str | None = None
     explicit_user_approval: bool = False
+    allow_verification_changes: bool = False
     preflight: dict[str, Any] = field(default_factory=dict)
     commands: list[dict[str, Any]] = field(default_factory=list)
     baseline: list[dict[str, Any]] = field(default_factory=list)
     rounds: list[dict[str, Any]] = field(default_factory=list)
+    protected_verification_inputs: list[str] = field(default_factory=list)
+    verification_input_hashes: dict[str, str] = field(default_factory=dict)
+    verification_input_changes: list[dict[str, Any]] = field(default_factory=list)
     summary: str = ""
     blockers: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
@@ -170,6 +201,7 @@ def solve_project(
     output_root: Path | None = None,
     tool: str = "codex",
     allow_repair: bool = False,
+    allow_verification_changes: bool = False,
     max_rounds: int = 3,
     command_timeout_seconds: int = 120,
     repair_timeout_seconds: int = 900,
@@ -188,6 +220,7 @@ def solve_project(
         project_type=project_type,
         tool=tool,
         explicit_user_approval=allow_repair,
+        allow_verification_changes=allow_verification_changes,
     )
 
     if not root.is_dir():
@@ -203,6 +236,13 @@ def solve_project(
         )
     if tool != "codex":
         return _finish(result, "blocked", f"Unsupported repair tool: {tool}", blocker="unsupported_repair_tool")
+    if allow_verification_changes and not allow_repair:
+        return _finish(
+            result,
+            "blocked",
+            "--allow-verification-changes is valid only together with --allow-repair.",
+            blocker="verification_change_approval_requires_repair",
+        )
 
     git_state = _inspect_git(root)
     result.original_branch = git_state.get("branch")
@@ -257,6 +297,10 @@ def solve_project(
             "not_reproduced",
             "All independent checks already pass, so Doctor link did not authorize a repair.",
         )
+
+    verification_snapshot = snapshot_verification_inputs(root, commands)
+    result.protected_verification_inputs = sorted(verification_snapshot)
+    result.verification_input_hashes = dict(sorted(verification_snapshot.items()))
 
     prompt = build_repair_prompt(result, baseline, round_number=1)
     if not allow_repair:
@@ -325,9 +369,34 @@ def solve_project(
             )
         atomic_write_text(events_path, execution.raw_stdout)
         atomic_write_text(stderr_path, execution.raw_stderr)
-        verification = _run_solve_commands(root, commands, command_timeout_seconds)
-        verified = _checks_passed(commands, verification)
+        pre_verification_snapshot = snapshot_verification_inputs(root, commands)
+        pre_verification_changes = compare_verification_inputs(
+            verification_snapshot,
+            pre_verification_snapshot,
+            round_number=round_number,
+            detected_at="before_verification",
+        )
+        verification = (
+            _run_solve_commands(root, commands, command_timeout_seconds)
+            if not pre_verification_changes or allow_verification_changes
+            else []
+        )
+        post_verification_changes = compare_verification_inputs(
+            verification_snapshot,
+            snapshot_verification_inputs(root, commands),
+            round_number=round_number,
+            detected_at="after_verification",
+        )
+        input_changes = _merge_verification_input_changes(
+            pre_verification_changes,
+            post_verification_changes,
+        )
+        if input_changes:
+            result.verification_input_changes.extend(input_changes)
+        checks_passed = _checks_passed(commands, verification)
+        verified = checks_passed and not input_changes
         atomic_write_json(round_dir / "verification.json", [item.to_dict() for item in verification])
+        atomic_write_json(round_dir / "verification-input-changes.json", input_changes)
         solve_round = SolveRound(
             round_number=round_number,
             repair=execution.to_dict(),
@@ -336,17 +405,47 @@ def solve_project(
             prompt_path=str(prompt_path),
             events_path=str(events_path),
             stderr_path=str(stderr_path),
+            verification_input_changes=input_changes,
         )
         result.rounds.append(solve_round.to_dict())
         _write_session_files(session_dir, result)
 
-        if verified:
+        if input_changes and not allow_verification_changes:
+            result.blockers.append("verification_inputs_modified")
+            changed_paths = ", ".join(item["path"] for item in input_changes[:8])
+            if len(input_changes) > 8:
+                changed_paths += f", and {len(input_changes) - 8} more"
+            result.warnings.append(f"Repair changed protected verification inputs: {changed_paths}")
+            result.next_steps.append(
+                "Restore the original verification inputs and repair production behavior, or explicitly rerun with "
+                "--allow-verification-changes for a review-required result."
+            )
+            return _persist_and_finish(
+                result,
+                output_root,
+                "blocked",
+                "The repair changed protected verification inputs, so Doctor link refused to trust the altered acceptance contract.",
+                session_dir=session_dir,
+            )
+        if checks_passed:
             result.next_steps.extend(
                 [
                     f"Review the changes on branch `{repair_branch}`.",
                     "Commit and push the repair only after reviewing the diff.",
                 ]
             )
+            if input_changes:
+                result.next_steps.insert(
+                    0,
+                    "Review every verification-input change; this result is not equivalent to an unchanged-contract verification.",
+                )
+                return _persist_and_finish(
+                    result,
+                    output_root,
+                    "review_required",
+                    "All checks pass, but protected verification inputs changed under explicit authorization; human review is required.",
+                    session_dir=session_dir,
+                )
             return _persist_and_finish(
                 result,
                 output_root,
@@ -442,6 +541,24 @@ def build_repair_prompt(
     previous = ""
     if previous_message:
         previous = f"\nPrevious repair summary:\n{previous_message[-3000:]}\n"
+    protected_examples = result.protected_verification_inputs[:20]
+    protected_summary = [
+        f"- Doctor link snapshotted {len(result.protected_verification_inputs)} protected verification input(s).",
+    ]
+    if result.allow_verification_changes:
+        protected_summary.append(
+            "- Verification-input changes were explicitly allowed, but avoid them unless essential and explain every change."
+        )
+    else:
+        protected_summary.append(
+            "- Do not modify tests, test configuration, reproduction/test catalogs, or scripts referenced by verification commands."
+        )
+    if protected_examples:
+        protected_summary.append("- Protected examples: " + ", ".join(f"`{item}`" for item in protected_examples))
+    if result.allow_verification_changes:
+        protected_summary.append(
+            "- The user explicitly allowed verification-input changes, but any passing result will still require human review."
+        )
     return "\n".join(
         [
             "# Doctor link bounded automatic repair",
@@ -456,8 +573,9 @@ def build_repair_prompt(
             "",
             "## Required behavior",
             "",
+            *protected_summary,
             "- Inspect the repository and identify the grounded root cause.",
-            "- Make the smallest production-quality code or test-fixture change that fixes the stated problem.",
+            "- Make the smallest production-quality change that fixes the stated problem without weakening its acceptance contract.",
             "- Stay inside this workspace. Do not switch branches, commit, push, publish, or change Git configuration.",
             "- Preserve unrelated behavior and existing user changes.",
             "- You may run focused tests, but Doctor link will independently rerun every command above.",
@@ -490,6 +608,129 @@ def _run_solve_commands(root: Path, commands: list[SolveCommand], timeout_second
             )
         )
     return results
+
+
+def snapshot_verification_inputs(root: Path, commands: list[SolveCommand]) -> dict[str, str]:
+    """Hash files that define the acceptance contract for this solve session."""
+    paths = _discover_verification_input_paths(root, commands)
+    snapshot: dict[str, str] = {}
+    for path in sorted(paths, key=lambda item: item.as_posix()):
+        relative = path.relative_to(root).as_posix()
+        try:
+            snapshot[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
+        except OSError:
+            snapshot[relative] = "unreadable"
+    return snapshot
+
+
+def compare_verification_inputs(
+    baseline: dict[str, str],
+    current: dict[str, str],
+    *,
+    round_number: int,
+    detected_at: str,
+) -> list[dict[str, Any]]:
+    """Return structured added, deleted, and modified acceptance inputs."""
+    changes: list[dict[str, Any]] = []
+    for path in sorted(set(baseline) | set(current)):
+        before = baseline.get(path)
+        after = current.get(path)
+        if before == after:
+            continue
+        change_type = "added" if before is None else ("deleted" if after is None else "modified")
+        changes.append(
+            {
+                "round_number": round_number,
+                "detected_at": detected_at,
+                "path": path,
+                "change_type": change_type,
+                "before_sha256": before,
+                "after_sha256": after,
+            }
+        )
+    return changes
+
+
+def _merge_verification_input_changes(*groups: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    merged: list[dict[str, Any]] = []
+    seen: set[tuple[Any, ...]] = set()
+    for group in groups:
+        for item in group:
+            key = (
+                item.get("path"),
+                item.get("change_type"),
+                item.get("before_sha256"),
+                item.get("after_sha256"),
+            )
+            if key in seen:
+                continue
+            seen.add(key)
+            merged.append(item)
+    return merged
+
+
+def _discover_verification_input_paths(root: Path, commands: list[SolveCommand]) -> set[Path]:
+    paths: set[Path] = set()
+    for relative in VERIFICATION_CONFIG_PATHS | VERIFICATION_CATALOG_PATHS:
+        candidate = root / relative
+        if candidate.is_file():
+            paths.add(candidate)
+
+    for directory_name in ("test", "tests"):
+        directory = root / directory_name
+        if directory.is_dir():
+            paths.update(path for path in directory.rglob("*") if _is_protected_file(root, path))
+
+    for pattern in ("conftest.py", "test_*.py", "*_test.py"):
+        paths.update(path for path in root.rglob(pattern) if _is_protected_file(root, path))
+
+    for command in commands:
+        try:
+            segments = parse_safe_command_sequence(command.command)
+        except ValueError:
+            continue
+        for segment in segments:
+            paths.update(_command_referenced_paths(root, segment.argv))
+    return paths
+
+
+def _is_protected_file(root: Path, path: Path) -> bool:
+    if not path.is_file() or path.suffix in {".pyc", ".pyo"}:
+        return False
+    try:
+        relative = path.relative_to(root)
+    except ValueError:
+        return False
+    return not any(part in IGNORED_VERIFICATION_PARTS for part in relative.parts)
+
+
+def _command_referenced_paths(root: Path, argv: list[str]) -> set[Path]:
+    referenced: set[Path] = set()
+    for raw_token in argv:
+        token = raw_token.split("::", 1)[0]
+        if not token or token.startswith("-"):
+            continue
+        candidate = Path(token).expanduser()
+        if not candidate.is_absolute():
+            candidate = root / candidate
+        try:
+            candidate = candidate.resolve()
+            candidate.relative_to(root)
+        except (OSError, ValueError):
+            continue
+        if candidate.is_file():
+            referenced.add(candidate)
+
+    if "-m" in argv:
+        index = argv.index("-m")
+        if index + 1 < len(argv):
+            module_name = argv[index + 1]
+            if module_name not in {"pytest", "unittest"}:
+                module_path = root.joinpath(*module_name.split("."))
+                for candidate in (module_path.with_suffix(".py"), module_path / "__main__.py"):
+                    if candidate.is_file():
+                        referenced.add(candidate.resolve())
+    return referenced
 
 
 def _checks_passed(commands: list[SolveCommand], results: list[SolveCommandResult]) -> bool:
@@ -602,6 +843,7 @@ def _summary_markdown(result: SolveResult) -> str:
         f"- Project type: `{result.project_type}`",
         f"- Tool: `{result.tool}`",
         f"- Explicit repair approval: `{str(result.explicit_user_approval).lower()}`",
+        f"- Verification-input changes allowed: `{str(result.allow_verification_changes).lower()}`",
         f"- Original branch: `{result.original_branch or 'N/A'}`",
         f"- Repair branch: `{result.repair_branch or 'N/A'}`",
         "",
@@ -617,6 +859,27 @@ def _summary_markdown(result: SolveResult) -> str:
         "",
     ]
     lines.extend(f"- `{item['command_id']}`: `{item['command']}`" for item in result.commands)
+    if result.protected_verification_inputs:
+        lines.extend(
+            [
+                "",
+                "## Protected verification inputs",
+                "",
+                *[f"- `{item}`" for item in result.protected_verification_inputs],
+            ]
+        )
+    if result.verification_input_changes:
+        lines.extend(
+            [
+                "",
+                "## Verification input changes",
+                "",
+                *[
+                    f"- Round {item['round_number']}: `{item['path']}` ({item['change_type']})"
+                    for item in result.verification_input_changes
+                ],
+            ]
+        )
     if result.blockers:
         lines.extend(["", "## Blockers", "", *[f"- {item}" for item in result.blockers]])
     if result.warnings:

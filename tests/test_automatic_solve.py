@@ -93,6 +93,24 @@ def _no_fix(root: Path) -> None:
     assert root.is_dir()
 
 
+def _add_pytest_contract(root: Path) -> None:
+    tests = root / "tests"
+    tests.mkdir()
+    (tests / "test_calculator.py").write_text(
+        "from calculator import add\n\n\ndef test_add() -> None:\n    assert add(2, 3) == 5\n",
+        encoding="utf-8",
+    )
+    _run_git(root, "add", ".")
+    _run_git(root, "commit", "-m", "add acceptance test")
+
+
+def _tamper_pytest_contract(root: Path) -> None:
+    (root / "tests" / "test_calculator.py").write_text(
+        "from calculator import add\n\n\ndef test_add() -> None:\n    assert add(2, 3) == -1\n",
+        encoding="utf-8",
+    )
+
+
 def test_detects_python_project_and_explicit_commands(tmp_path: Path) -> None:
     root = _python_project(tmp_path)
 
@@ -169,6 +187,20 @@ def test_dirty_worktree_blocks_before_commands_or_repair(tmp_path: Path) -> None
     assert result.status == "blocked"
     assert "dirty_worktree" in result.blockers
     assert result.baseline == []
+
+
+def test_verification_change_approval_requires_repair_approval(tmp_path: Path) -> None:
+    root = _python_project(tmp_path)
+
+    result = solve_project(
+        root,
+        problem="addition is wrong",
+        test_command=_check_command(),
+        allow_verification_changes=True,
+    )
+
+    assert result.status == "blocked"
+    assert "verification_change_approval_requires_repair" in result.blockers
 
 
 def test_unsafe_shell_operator_is_blocked_without_execution(tmp_path: Path) -> None:
@@ -248,6 +280,134 @@ def test_failed_first_round_retries_and_then_verifies(tmp_path: Path) -> None:
     assert result.status == "verified"
     assert executor.calls == 2
     assert [item["verified"] for item in result.rounds] == [False, True]
+
+
+def test_test_tampering_blocks_even_when_modified_tests_pass(tmp_path: Path) -> None:
+    root = _python_project(tmp_path)
+    _add_pytest_contract(root)
+
+    result = solve_project(
+        root,
+        problem="addition is wrong",
+        test_command="python -m pytest -q",
+        output_root=tmp_path / "out",
+        allow_repair=True,
+        repair_executor=ScriptedRepairExecutor([_tamper_pytest_contract]),
+    )
+
+    assert result.status == "blocked"
+    assert result.success is False
+    assert "verification_inputs_modified" in result.blockers
+    assert result.rounds[0]["verification"] == []
+    assert result.rounds[0]["verified"] is False
+    assert result.verification_input_changes[0]["path"] == "tests/test_calculator.py"
+    assert result.verification_input_changes[0]["change_type"] == "modified"
+    session = Path(result.output_dir or "")
+    changes = json.loads((session / "round-1" / "verification-input-changes.json").read_text(encoding="utf-8"))
+    assert changes[0]["path"] == "tests/test_calculator.py"
+
+
+def test_explicit_test_change_authorization_requires_review_instead_of_verified(tmp_path: Path) -> None:
+    root = _python_project(tmp_path)
+    _add_pytest_contract(root)
+
+    result = solve_project(
+        root,
+        problem="addition is wrong",
+        test_command="python -m pytest -q",
+        output_root=tmp_path / "out",
+        allow_repair=True,
+        allow_verification_changes=True,
+        repair_executor=ScriptedRepairExecutor([_tamper_pytest_contract]),
+    )
+
+    assert result.status == "review_required"
+    assert result.success is False
+    assert result.blockers == []
+    assert result.rounds[0]["verification"][0]["status"] == "passed"
+    assert result.verification_input_changes[0]["path"] == "tests/test_calculator.py"
+
+
+def test_directly_referenced_verification_script_is_protected(tmp_path: Path) -> None:
+    root = _python_project(tmp_path)
+    verification_script = root / "verify_contract.py"
+    verification_script.write_text(
+        "from calculator import add\nassert add(2, 3) == 5\n",
+        encoding="utf-8",
+    )
+    _run_git(root, "add", ".")
+    _run_git(root, "commit", "-m", "add verification script")
+
+    def tamper_script(project: Path) -> None:
+        (project / "verify_contract.py").write_text("raise SystemExit(0)\n", encoding="utf-8")
+
+    result = solve_project(
+        root,
+        problem="addition is wrong",
+        test_command="python verify_contract.py",
+        output_root=tmp_path / "out",
+        allow_repair=True,
+        repair_executor=ScriptedRepairExecutor([tamper_script]),
+    )
+
+    assert result.status == "blocked"
+    assert result.verification_input_changes[0]["path"] == "verify_contract.py"
+
+
+def test_test_configuration_change_blocks_a_passing_production_fix(tmp_path: Path) -> None:
+    root = _python_project(tmp_path)
+
+    def change_config_and_fix(project: Path) -> None:
+        _fix(project)
+        (project / "pyproject.toml").write_text(
+            "[project]\nname = 'solve-fixture'\nversion = '0.0.1'\n\n[tool.pytest.ini_options]\naddopts = '-q'\n",
+            encoding="utf-8",
+        )
+
+    result = solve_project(
+        root,
+        problem="addition is wrong",
+        test_command=_check_command(),
+        output_root=tmp_path / "out",
+        allow_repair=True,
+        repair_executor=ScriptedRepairExecutor([change_config_and_fix]),
+    )
+
+    assert result.status == "blocked"
+    assert result.rounds[0]["verification"] == []
+    assert result.verification_input_changes[0]["path"] == "pyproject.toml"
+
+
+def test_post_repair_check_cannot_mutate_protected_golden_file(tmp_path: Path) -> None:
+    root = _python_project(tmp_path)
+    tests = root / "tests"
+    tests.mkdir()
+    (tests / "golden.txt").write_text("original\n", encoding="utf-8")
+    (root / "verify_contract.py").write_text(
+        "from pathlib import Path\n"
+        "from calculator import add\n"
+        "value = add(2, 3)\n"
+        "if value == 5:\n"
+        "    Path('tests/golden.txt').write_text('changed\\n', encoding='utf-8')\n"
+        "assert value == 5\n",
+        encoding="utf-8",
+    )
+    _run_git(root, "add", ".")
+    _run_git(root, "commit", "-m", "add mutating verification fixture")
+
+    result = solve_project(
+        root,
+        problem="addition is wrong",
+        test_command="python verify_contract.py",
+        output_root=tmp_path / "out",
+        allow_repair=True,
+        repair_executor=ScriptedRepairExecutor([_fix]),
+    )
+
+    assert result.status == "blocked"
+    assert result.rounds[0]["verification"][0]["status"] == "passed"
+    assert result.verification_input_changes[0]["path"] == "tests/golden.txt"
+    assert result.verification_input_changes[0]["detected_at"] == "after_verification"
 
 
 def test_exhausted_rounds_returns_failed_with_evidence(tmp_path: Path) -> None:

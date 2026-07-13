@@ -128,6 +128,8 @@ doctor-link solve /path/to/project \
 
 The first release supports Python projects. It requires a clean Git repository and either explicit commands, configured reproduction/test catalogs, or a discoverable `tests/` directory. Without `--allow-repair`, the command may reproduce the problem and write a prompt preview, but it does not create a branch, invoke Codex, or edit code. See [Automatic Solve with Codex](automatic-solve.md).
 
+By default, `solve` hash-protects tests, test configuration, configured reproduction/test catalogs, and directly referenced verification scripts. If Codex changes any protected input, Doctor link returns `blocked` with `verification_inputs_modified`, even when the changed checks pass. `--allow-verification-changes` is an explicit exception that is valid only with `--allow-repair`; passing checks then return `review_required` (exit 6), never `verified`.
+
 ## CI and distribution readiness
 
 ```bash
@@ -198,10 +200,10 @@ Commands print JSON before returning their final exit status, so CI can parse th
 | `test run` | all required jobs passed | at least one required job failed; optional job failures remain visible but do not fail the command |
 | `verify` | `candidate_verified`, `ready`, or `verified` | `missing_evidence`, `not_verified`, or another incomplete status |
 | `diagnose verify` | diagnosis pipeline reports success | pipeline remains incomplete or blocked |
-| `solve` | `verified` | `approval_required` (2), `not_reproduced` (3), `blocked` (4), or `failed` (5) |
+| `solve` | `verified` | `approval_required` (2), `not_reproduced` (3), `blocked` (4), `failed` (5), or `review_required` (6) |
 
 See [Automated diagnosis reliability](automated-diagnosis-reliability.md) for assertion, evidence, concurrency, and handoff rules.
 
 ## Safety boundary
 
-CLI commands are local-first. They do not publish releases or upload diagnostic packages by default. `solve` requires explicit `--allow-repair`, keeps Codex in a workspace-write sandbox, and never auto-commits or pushes the repair branch.
+CLI commands are local-first. They do not publish releases or upload diagnostic packages by default. `solve` requires explicit `--allow-repair`, keeps Codex in a workspace-write sandbox, protects the original acceptance inputs, and never auto-commits or pushes the repair branch.

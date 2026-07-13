@@ -85,6 +85,16 @@ def validate_safe_command_sequence(command_text: str) -> str | None:
     return None
 
 
+def parse_safe_command_sequence(command_text: str) -> list[SafeCommand]:
+    """Parse a validated command into shell-free argv segments.
+
+    Callers that need to inspect referenced files should use this helper so
+    discovery follows exactly the same quoting and operator rules as runtime
+    execution.
+    """
+    return _parse_command_sequence(command_text)
+
+
 def _parse_command_sequence(command_text: str) -> list[SafeCommand]:
     lexer = shlex.shlex(command_text, posix=True, punctuation_chars=";&|<>")
     lexer.whitespace_split = True

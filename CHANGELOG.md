@@ -17,14 +17,17 @@ Doctor link follows semantic versioning. Public release publishing requires expl
 
 - Product positioning now makes verified problem resolution the user-facing goal while retaining the diagnostic context layer as its evidence foundation.
 - Shell-free command execution accepts internal environment overrides so automatic checks can prevent Python bytecode artifacts from dirtying a clean repository.
+- Automatic solve snapshots tests, test configuration, configured catalogs, and directly referenced verification scripts before repair; protected-input changes now block ordinary verification.
+- Explicit `--allow-verification-changes` uses the distinct `review_required` status and exit code 6, so intentionally changed acceptance inputs cannot be confused with `verified`.
 
 ### Security
 
 - Automatic repair refuses dirty or non-Git workspaces, requires `--allow-repair`, uses `codex exec --sandbox workspace-write --json`, never bypasses the Codex sandbox, and does not auto-commit, push, or publish.
+- A repair provider can no longer obtain `verified` by deleting or weakening protected tests and verification configuration; per-round hashes and structured change receipts preserve the original acceptance contract.
 
 ### Validation
 
-- 313 automated tests passed with 85.32% branch-aware coverage and the enforced 85% floor.
+- 319 automated tests passed with 85.39% branch-aware coverage and the enforced 85% floor.
 - The final clean wheel passed all 63 public routes through 71 real invocations and nine complex scenario invariants.
 - A disposable Git/Python inventory project completed a live Codex repair: three baseline failures became three passing tests in one round, and Doctor link returned `verified` from its independent rerun.
 - Ruff, Bandit, dependency vulnerability audit, wheel/sdist build, distribution-content validation, and Twine validation passed.
