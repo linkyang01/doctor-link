@@ -38,6 +38,17 @@ def test_cli_reference_mentions_core_command_groups() -> None:
         assert command in text
 
 
+def test_quick_start_prioritizes_current_user_paths() -> None:
+    text = Path("docs/quick-start.md").read_text(encoding="utf-8")
+
+    assert "doctor-link wizard" in text
+    assert "doctor-link diagnose-now" in text
+    assert "doctor-link solve" in text
+    assert "--allow-repair" in text
+    assert "npm test" in text
+    assert "VlyTestLibrary" not in text
+
+
 def test_troubleshooting_mentions_privacy_and_release_boundary() -> None:
     text = Path("docs/troubleshooting.md").read_text(encoding="utf-8").lower()
 

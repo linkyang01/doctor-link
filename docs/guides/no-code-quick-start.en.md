@@ -12,13 +12,15 @@ You do not need to write code. Copy and paste the commands below.
 
 ## Step 1 — Install
 
+Clone the repository and enter the `doctor-link` folder first, then run:
+
 ```bash
 python3 --version
 pip install -e .
 doctor-link --version
 ```
 
-You need Python 3.10 or newer.
+You need Python 3.10 through 3.14.
 
 ## Step 2 — Run the wizard
 

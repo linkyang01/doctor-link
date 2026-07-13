@@ -1,120 +1,133 @@
-# Quick Start
+# Doctor link Quick Start
 
-This guide gets Doctor link running locally from source.
+This guide takes Doctor link from a clean source checkout to a useful result on your own project. Choose the guided diagnosis path when you want evidence and a report, or the verified-repair path when you already have a failing test.
 
-## 1. Install
+## 1. Install the current source candidate
+
+Requirements: Git and Python 3.10 through 3.14.
 
 ```bash
 git clone https://github.com/linkyang01/doctor-link.git
 cd doctor-link
-python -m pip install --upgrade pip
-python -m pip install -e .
+python -m venv .venv
 ```
 
-Verify:
+Activate the environment on macOS or Linux:
 
 ```bash
-doctor-link --help
+source .venv/bin/activate
+```
+
+Activate it on Windows PowerShell:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+Install and confirm the CLI:
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install -e .
 doctor-link --version
 doctor-link preflight . --json
 ```
 
-`preflight` is read-only. It inspects configuration, configured commands, runtime catalogs, Python version, and local tools without executing repository commands. Resolve blockers before collecting or running project evidence.
+`preflight` is read-only. It checks configuration, command safety, runtime catalogs, Python, and local tools without running project-owned commands.
 
-## 2. Create a diagnostic package
+## 2. Choose the shortest path to your goal
 
-```bash
-mkdir -p VlyTestLibrary/01-BasicFormats
-echo sample > VlyTestLibrary/01-BasicFormats/sample.mp4
+### Path A: guided diagnosis
 
-doctor-link report VlyTestLibrary --out DoctorReports
-```
-
-Find the package:
+Use the interactive wizard when you want Doctor link to ask what it needs:
 
 ```bash
-PACKAGE_DIR=$(find DoctorReports -mindepth 1 -maxdepth 1 -type d | head -n 1)
+doctor-link wizard --folder /path/to/your/project
 ```
 
-## 3. Add evidence
+The wizard can collect evidence, create a local diagnostic package, build an HTML workbench, and prepare an AI handoff. It prints the exact files to open or share.
+
+### Path B: one-command diagnosis
+
+Use a single non-interactive command when the problem is already easy to describe:
 
 ```bash
-doctor-link collect "$PACKAGE_DIR" --project-root . --command "python --version" --note "quick start evidence"
+doctor-link diagnose-now /path/to/your/project \
+  --full \
+  --summary "checkout creates a duplicate charge"
 ```
 
-## 4. Add a human-confirmed issue
+Add `--handoff` to prepare a reviewed package for an AI coding tool:
 
 ```bash
-doctor-link assert "$PACKAGE_DIR" --statement "This is the problem" --expected "Expected behavior" --actual "Actual behavior"
+doctor-link diagnose-now /path/to/your/project \
+  --full \
+  --handoff \
+  --tool codex \
+  --summary "checkout creates a duplicate charge"
 ```
 
-## 5. Verify
+### Path C: reproduce and verify an automatic repair
+
+Start with a preview. Doctor link runs the independent check and writes the bounded repair task, but does not edit code:
 
 ```bash
-doctor-link verify "$PACKAGE_DIR" --write-back
+doctor-link solve /path/to/your/project \
+  --problem "checkout creates a duplicate charge" \
+  --test-command "python -m pytest tests/test_checkout.py -q"
 ```
 
-Doctor link does not mark a fix complete just because AI says it is fixed. Verification evidence is required.
-
-## 6. Open local workbench
+For a Node.js project, use its project-owned test command:
 
 ```bash
-doctor-link view "$PACKAGE_DIR" --build-only
+doctor-link solve /path/to/your/node-project \
+  --problem "concurrent updates lose the latest value" \
+  --test-command "npm test"
 ```
 
-Open:
-
-```text
-$PACKAGE_DIR/.doctorlink-web/index.html
-```
-
-## 7. AI Coding handoff
+When the preview returns `approval_required`, review the generated prompt and protected inputs. Only then authorize an isolated repair branch and Codex edits:
 
 ```bash
-doctor-link handoff "$PACKAGE_DIR" --tool codex --out DoctorReports/handoff
-```
-
-Use the generated instruction file with your AI Coding tool.
-
-## 8. P4 pipeline commands
-
-```bash
-doctor-link strategy validate . --json
-doctor-link reproduce list . --json
-doctor-link test list . --json
-doctor-link diagnose before --project "Demo" --summary "before" --out DoctorReports
-doctor-link health DoctorReports --json
-```
-
-For a complete runnable scenario with known passing and failing checks:
-
-```bash
-bash examples/shop-service-multi-bug/run-example.sh
-```
-
-The script succeeds only when Doctor link correctly captures the known failures, returns non-zero from the failing subcommands, records assertion-linked evidence, keeps verification at `not_verified`, and emits a `needs_repair` handoff. See [Automated diagnosis reliability](automated-diagnosis-reliability.md).
-
-## 9. Automatically solve a Python problem
-
-Start with a preview. This executes the check but does not edit code:
-
-```bash
-doctor-link solve /path/to/python-project \
-  --problem "The total is rounded before tax" \
-  --test-command "python -m pytest tests/test_totals.py -q"
-```
-
-When the result is `approval_required`, review the generated prompt and authorize the repair:
-
-```bash
-doctor-link solve /path/to/python-project \
-  --problem "The total is rounded before tax" \
-  --test-command "python -m pytest tests/test_totals.py -q" \
+doctor-link solve /path/to/your/project \
+  --problem "checkout creates a duplicate charge" \
+  --test-command "python -m pytest tests/test_checkout.py -q" \
   --allow-repair
 ```
 
-The target must be a clean Git repository. Doctor link creates a `doctor-link/solve-*` branch, invokes Codex with workspace-write sandboxing, and independently reruns the check after every repair round. See [Automatic Solve with Codex](automatic-solve.md).
+The target must be a clean Git repository. Doctor link independently reruns the original check after every repair round and returns `verified` only when the check passes without unauthorized changes to tests or verification configuration.
 
-## Boundary
+## 3. Understand the result
 
-Quick start commands are local. They do not publish releases, upload packages, or require paid cloud services. Diagnostic packages can contain sensitive project evidence; inspect redaction and privacy results before sharing them or attaching them to a GitHub issue.
+Common automatic-solve states:
+
+| Status | Meaning |
+| --- | --- |
+| `approval_required` | The failure was reproduced and a repair preview is ready; no edit occurred. |
+| `verified` | Independent checks passed and protected verification inputs stayed acceptable. |
+| `not_reproduced` | The supplied checks already pass; Doctor link will not authorize an edit. |
+| `blocked` | Repository, toolchain, command safety, or verification-contract requirements were not met. |
+| `review_required` | Verification inputs changed with explicit authorization and require human review. |
+| `failed` | The bounded repair rounds ended without a verified result. |
+
+Every path writes local receipts. Automatic solve records the baseline, prompts, repair rounds, verification output, protected-input hashes, blockers, and rollback guidance under the printed solve-session directory.
+
+## 4. Review local reports
+
+Build a home page for recent diagnostic packages:
+
+```bash
+doctor-link home --reports DoctorReports
+```
+
+Open the printed `index.html` path in a browser. For individual packages, `doctor-link view <package>` builds or serves the local workbench.
+
+## 5. Go deeper only when needed
+
+- [Automatic Solve with Codex](automatic-solve.md) explains command discovery, approval, branches, protected inputs, and rollback.
+- [Diagnostic package format](diagnostic-package-format.md) explains evidence and report files.
+- [CLI reference](cli-reference.md) lists advanced collection, verification, privacy, integrity, adapter, plugin, archive, and CI commands.
+- [Troubleshooting](troubleshooting.md) covers missing tools, permissions, invalid configuration, and sensitive-data handling.
+
+## Safety boundary
+
+Doctor link is local-first and does not upload project evidence by default. Review configured commands before executing them, inspect diagnostic and handoff packages before sharing, and remove credentials or private customer data. Automatic repair requires explicit approval and never commits, pushes, publishes, or merges changes for you.

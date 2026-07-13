@@ -80,6 +80,9 @@ CAPABILITIES = {
     "workbench-note",
 }
 
+OUTPUT_MARKER = ".doctor-link-full-capability-lab"
+OUTPUT_MARKER_SCHEMA = "doctor-link-full-capability-output-v1"
+
 
 @dataclass
 class CommandResult:
@@ -938,6 +941,42 @@ def run_validation(executable: str, output: Path, dist_dir: Path | None = None) 
     return output
 
 
+def _prepare_output_directory(output: Path) -> Path:
+    """Create a clean lab-owned output directory without overwriting other data."""
+    output = output.expanduser().resolve()
+    marker = output / OUTPUT_MARKER
+    if output.exists() and not output.is_dir():
+        raise RuntimeError(f"Output path is not a directory: {output}")
+    if output.exists() and any(output.iterdir()):
+        if not marker.is_file():
+            raise RuntimeError(
+                "Refusing to replace a non-empty directory that was not created by "
+                f"this lab: {output}. Choose a new --out directory."
+            )
+        try:
+            marker_payload = json.loads(marker.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise RuntimeError(f"Lab output marker is unreadable: {marker}") from exc
+        if marker_payload.get("schema") != OUTPUT_MARKER_SCHEMA:
+            raise RuntimeError(
+                f"Refusing to replace a directory with an invalid lab marker: {output}"
+            )
+        shutil.rmtree(output)
+    output.mkdir(parents=True, exist_ok=True)
+    marker.write_text(
+        json.dumps(
+            {
+                "schema": OUTPUT_MARKER_SCHEMA,
+                "purpose": "Doctor link full capability validation output",
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return output
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Run every Doctor link CLI capability through complex local scenarios."
@@ -962,8 +1001,10 @@ def main() -> None:
             "doctor-link executable was not found; install the package or pass --doctor-link"
         )
     output = args.out or Path(tempfile.mkdtemp(prefix="doctor-link-full-capability-"))
-    output = output.resolve()
-    output.mkdir(parents=True, exist_ok=True)
+    try:
+        output = _prepare_output_directory(output)
+    except RuntimeError as exc:
+        parser.error(str(exc))
     final = run_validation(args.doctor_link, output, args.dist)
     print(f"Full capability validation passed: {final}")
     print(f"Report: {final / 'full-capability-validation.md'}")

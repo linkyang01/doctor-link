@@ -54,7 +54,7 @@ body:
     attributes:
       label: Environment
       description: Include operating system and Python version.
-      placeholder: macOS 26 / Python 3.12
+      placeholder: macOS 26 / Python 3.14
     validations:
       required: true
 

@@ -50,18 +50,31 @@ def run_command(command: Sequence[str], timeout_seconds: int = 30, cwd: Path | N
     cwd_text = str(cwd.resolve()) if cwd is not None else None
     started_at = utc_now_iso()
     started_monotonic = time.monotonic()
+    if not resolved_command:
+        return _command_error_result(
+            command=command_list,
+            stderr="Command is empty.",
+            error="empty_command",
+            returncode=127,
+            started_at=started_at,
+            started_monotonic=started_monotonic,
+            cwd=cwd_text,
+            timeout_seconds=timeout_seconds,
+            executable=None,
+            executable_found=None,
+        )
     try:
         completed = subprocess.run(
             resolved_command,
             capture_output=True,
-            text=True,
+            text=False,
             timeout=timeout_seconds,
             check=False,
             cwd=str(cwd) if cwd is not None else None,
             env=dict(env) if env is not None else None,
         )
-        stdout = completed.stdout or ""
-        stderr = completed.stderr or ""
+        stdout = _coerce_output(completed.stdout)
+        stderr = _coerce_output(completed.stderr)
         return CommandResult(
             command=command_list,
             returncode=completed.returncode,
@@ -72,8 +85,8 @@ def run_command(command: Sequence[str], timeout_seconds: int = 30, cwd: Path | N
             duration_seconds=round(time.monotonic() - started_monotonic, 6),
             cwd=cwd_text,
             timeout_seconds=timeout_seconds,
-            stdout_bytes=len(stdout.encode("utf-8")),
-            stderr_bytes=len(stderr.encode("utf-8")),
+            stdout_bytes=_output_size(completed.stdout, stdout),
+            stderr_bytes=_output_size(completed.stderr, stderr),
             executable=executable,
             executable_found=executable_found,
         )
@@ -91,29 +104,50 @@ def run_command(command: Sequence[str], timeout_seconds: int = 30, cwd: Path | N
             duration_seconds=round(time.monotonic() - started_monotonic, 6),
             cwd=cwd_text,
             timeout_seconds=timeout_seconds,
-            stdout_bytes=len(stdout.encode("utf-8")),
-            stderr_bytes=len(stderr.encode("utf-8")),
+            stdout_bytes=_output_size(exc.stdout, stdout),
+            stderr_bytes=_output_size(exc.stderr, stderr),
             executable=executable,
             executable_found=executable_found,
             error="timeout",
         )
     except FileNotFoundError as exc:
-        stderr = str(exc)
-        return CommandResult(
+        return _command_error_result(
             command=command_list,
+            stderr=str(exc),
+            error="file_not_found",
             returncode=127,
-            stdout="",
-            stderr=stderr,
             started_at=started_at,
-            completed_at=utc_now_iso(),
-            duration_seconds=round(time.monotonic() - started_monotonic, 6),
+            started_monotonic=started_monotonic,
             cwd=cwd_text,
             timeout_seconds=timeout_seconds,
-            stdout_bytes=0,
-            stderr_bytes=len(stderr.encode("utf-8")),
             executable=executable,
             executable_found=False,
-            error="file_not_found",
+        )
+    except PermissionError as exc:
+        return _command_error_result(
+            command=command_list,
+            stderr=str(exc),
+            error="permission_denied",
+            returncode=126,
+            started_at=started_at,
+            started_monotonic=started_monotonic,
+            cwd=cwd_text,
+            timeout_seconds=timeout_seconds,
+            executable=executable,
+            executable_found=executable_found,
+        )
+    except OSError as exc:
+        return _command_error_result(
+            command=command_list,
+            stderr=str(exc),
+            error="os_error",
+            returncode=1,
+            started_at=started_at,
+            started_monotonic=started_monotonic,
+            cwd=cwd_text,
+            timeout_seconds=timeout_seconds,
+            executable=executable,
+            executable_found=executable_found,
         )
 
 
@@ -147,3 +181,40 @@ def _coerce_output(value: object) -> str:
     if isinstance(value, bytes):
         return value.decode("utf-8", errors="replace")
     return str(value)
+
+
+def _output_size(value: object, decoded: str) -> int:
+    if isinstance(value, bytes):
+        return len(value)
+    return len(decoded.encode("utf-8"))
+
+
+def _command_error_result(
+    *,
+    command: list[str],
+    stderr: str,
+    error: str,
+    returncode: int,
+    started_at: str,
+    started_monotonic: float,
+    cwd: str | None,
+    timeout_seconds: int,
+    executable: str | None,
+    executable_found: bool | None,
+) -> CommandResult:
+    return CommandResult(
+        command=command,
+        returncode=returncode,
+        stdout="",
+        stderr=stderr,
+        started_at=started_at,
+        completed_at=utc_now_iso(),
+        duration_seconds=round(time.monotonic() - started_monotonic, 6),
+        cwd=cwd,
+        timeout_seconds=timeout_seconds,
+        stdout_bytes=0,
+        stderr_bytes=len(stderr.encode("utf-8")),
+        executable=executable,
+        executable_found=executable_found,
+        error=error,
+    )

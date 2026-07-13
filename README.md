@@ -1,7 +1,7 @@
 # Doctor link
 
 [![Doctor link CI](https://github.com/linkyang01/doctor-link/actions/workflows/ci.yml/badge.svg)](https://github.com/linkyang01/doctor-link/actions/workflows/ci.yml)
-[![Python 3.10–3.12](https://img.shields.io/badge/python-3.10%E2%80%933.12-blue)](https://github.com/linkyang01/doctor-link/actions/workflows/ci.yml)
+[![Python 3.10–3.14](https://img.shields.io/badge/python-3.10%E2%80%933.14-blue)](https://github.com/linkyang01/doctor-link/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 Doctor link is a local-first, human-AI shared diagnostic and verified-repair layer for software projects.
@@ -29,7 +29,7 @@ Doctor link does not replace Codex, Cursor, Aider, OpenHands, Continue, Cline, W
 
 Latest published version: [`v0.2.0`](https://github.com/linkyang01/doctor-link/releases/tag/v0.2.0), published on 2026-07-13.
 
-The current source is the unreleased `v0.3.0` candidate. Its JavaScript/TypeScript automatic-solve extension has passed 331 local tests, 85.40% branch-aware coverage, an installed-wheel lab covering 63 routes through 72 invocations and ten complex scenarios, and a live protected-contract Node.js repair. [GitHub Actions run 29261286975](https://github.com/linkyang01/doctor-link/actions/runs/29261286975) passed all eight Python, security, package, Ubuntu, macOS, and Windows jobs for code commit `9cec5d1`; merge, tag creation, and release publication are still pending. See the [JavaScript/TypeScript validation report](docs/validation/javascript-typescript-solve-validation.md).
+The current source is the unreleased `v0.3.0` candidate. Its JavaScript/TypeScript automatic-solve and runtime-resilience work has passed 339 local tests, 85.48% branch-aware coverage, an installed-wheel lab covering 63 routes through 72 invocations and ten complex scenarios, and a live protected-contract Node.js repair. [GitHub Actions run 29261286975](https://github.com/linkyang01/doctor-link/actions/runs/29261286975) passed the earlier eight-job candidate matrix for code commit `9cec5d1`; the expanded Python 3.10–3.14 head matrix must pass before this follow-up is cloud-certified. Merge, tag creation, and release publication are still pending. See the [JavaScript/TypeScript validation report](docs/validation/javascript-typescript-solve-validation.md).
 
 The verified automatic problem-solving release in [PR #145](https://github.com/linkyang01/doctor-link/pull/145) passed the complete repository validation matrix on 2026-07-13:
 

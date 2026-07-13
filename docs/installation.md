@@ -25,8 +25,10 @@ Recommended Python versions:
 - Python 3.10
 - Python 3.11
 - Python 3.12
+- Python 3.13
+- Python 3.14
 
-Cloud validation has passed on GitHub Actions with Python 3.10, 3.11, and 3.12. Local validation should use one of these versions.
+The current candidate CI is configured to validate Python 3.10 through 3.14. Local validation should use one of these versions.
 
 ## 2. Clone the repository
 

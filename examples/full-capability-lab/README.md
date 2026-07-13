@@ -59,6 +59,11 @@ python examples/full-capability-lab/run-all.py \
   --out /tmp/doctor-link-full-capability
 ```
 
+The same `--out` path can be run again safely. The lab marks directories it
+creates and resets only those marked directories before a rerun. It refuses to
+replace a non-empty directory without its valid lab marker, so an accidental
+path cannot overwrite unrelated data.
+
 ## Output
 
 The output directory contains:

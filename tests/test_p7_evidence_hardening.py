@@ -52,6 +52,52 @@ def test_command_runner_does_not_rewrite_unknown_commands(monkeypatch) -> None:
     assert resolve_command(["custom", "check"]) == ["custom", "check"]
 
 
+def test_command_runner_preserves_invalid_utf8_as_safe_evidence(tmp_path: Path) -> None:
+    result = run_command(
+        [sys.executable, "-c", "import os; os.write(1, b'valid\\xfftail\\n'); os.write(2, b'warn\\xfeend\\n')"],
+        timeout_seconds=10,
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 0
+    assert result.stdout == "valid\ufffdtail\n"
+    assert result.stderr == "warn\ufffdend\n"
+    assert result.stdout_bytes == 11
+    assert result.stderr_bytes == 9
+
+
+def test_command_runner_returns_structured_empty_command_error() -> None:
+    result = run_command([])
+
+    assert result.returncode == 127
+    assert result.error == "empty_command"
+    assert result.stderr == "Command is empty."
+
+
+def test_command_runner_returns_structured_permission_error(monkeypatch) -> None:
+    def deny_execution(*args, **kwargs):
+        raise PermissionError(13, "Permission denied", "protected-tool")
+
+    monkeypatch.setattr("doctor_link.core.command_runner.subprocess.run", deny_execution)
+    result = run_command(["protected-tool"])
+
+    assert result.returncode == 126
+    assert result.error == "permission_denied"
+    assert "Permission denied" in result.stderr
+
+
+def test_command_runner_returns_structured_operating_system_error(monkeypatch) -> None:
+    def fail_to_launch(*args, **kwargs):
+        raise OSError(5, "Input/output error", "unstable-tool")
+
+    monkeypatch.setattr("doctor_link.core.command_runner.subprocess.run", fail_to_launch)
+    result = run_command(["unstable-tool"])
+
+    assert result.returncode == 1
+    assert result.error == "os_error"
+    assert "Input/output error" in result.stderr
+
+
 def test_environment_collector_includes_tools_and_project_markers(tmp_path: Path) -> None:
     (tmp_path / "pyproject.toml").write_text("[project]\nname='demo'\n", encoding="utf-8")
 

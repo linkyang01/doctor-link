@@ -2,7 +2,7 @@
 
 - Validation date: 2026-07-13
 - Candidate version: `0.3.0`
-- Status: local and cloud candidate validation passed; merge and publication pending
+- Status: expanded local candidate validation passed; Python 3.10–3.14 head validation, merge, and publication pending
 
 ## Scope
 
@@ -29,7 +29,7 @@ This validation proves that `doctor-link solve` can apply the same bounded repai
 
 ## Automated regression evidence
 
-The repository suite passed `331` tests with `85.40%` branch-aware coverage and an enforced `85%` floor. JavaScript/TypeScript-specific regressions prove:
+The repository suite passed `339` tests with `85.48%` branch-aware coverage and an enforced `85%` floor. JavaScript/TypeScript-specific regressions prove:
 
 - JavaScript and TypeScript source detection;
 - npm default discovery and pnpm/Yarn selection from metadata or lockfiles;
@@ -79,8 +79,8 @@ The protected hashes were identical before and after repair:
 
 | Gate | Local result |
 | --- | ---: |
-| Full tests | 331 passed |
-| Branch-aware coverage | 85.40% |
+| Full tests | 339 passed |
+| Branch-aware coverage | 85.48% |
 | Ruff | passed |
 | Bandit medium/high | 0 findings |
 | Dependency audit | 0 known third-party vulnerabilities |
