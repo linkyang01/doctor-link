@@ -15,6 +15,7 @@ EXIT_CODES = {
     "not_reproduced": 3,
     "blocked": 4,
     "failed": 5,
+    "review_required": 6,
 }
 
 
@@ -25,6 +26,11 @@ EXIT_CODES = {
 @click.option("--test-command", default=None, help="Safe regression command that must pass after repair.")
 @click.option("--tool", default="codex", show_default=True, type=click.Choice(["codex"]), help="Repair executor.")
 @click.option("--allow-repair", is_flag=True, help="Explicitly allow branch creation, Codex execution, and code edits.")
+@click.option(
+    "--allow-verification-changes",
+    is_flag=True,
+    help="Allow protected test/config changes, but require human review instead of returning verified.",
+)
 @click.option("--max-rounds", default=3, show_default=True, type=click.IntRange(1, 3), help="Maximum repair and verification rounds.")
 @click.option("--command-timeout", default=120, show_default=True, type=click.IntRange(1), help="Timeout for each independent check in seconds.")
 @click.option("--repair-timeout", default=900, show_default=True, type=click.IntRange(30), help="Timeout for each Codex repair round in seconds.")
@@ -37,6 +43,7 @@ def solve_command(
     test_command: str | None,
     tool: str,
     allow_repair: bool,
+    allow_verification_changes: bool,
     max_rounds: int,
     command_timeout: int,
     repair_timeout: int,
@@ -52,6 +59,7 @@ def solve_command(
         output_root=output,
         tool=tool,
         allow_repair=allow_repair,
+        allow_verification_changes=allow_verification_changes,
         max_rounds=max_rounds,
         command_timeout_seconds=command_timeout,
         repair_timeout_seconds=repair_timeout,

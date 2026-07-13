@@ -6,7 +6,7 @@ Doctor link is a human-AI shared diagnostic layer for software projects. It help
 
 Doctor link does not replace Codex, Aider, OpenHands, Continue, Cursor, or other AI coding tools. It prepares high-quality diagnostic context so AI tools can debug with less guessing, less unrelated editing, and stronger verification.
 
-The current source also provides `doctor-link solve`. For a Python project in a clean Git repository, it first reproduces the failure and writes a repair preview. Only after `--allow-repair` does Doctor link create an isolated branch, invoke Codex for up to three rounds, and independently rerun every required command. A Codex claim is not success; only passing checks produce `verified`.
+The current source also provides `doctor-link solve`. For a Python project in a clean Git repository, it first reproduces the failure and writes a repair preview. Only after `--allow-repair` does Doctor link create an isolated branch, invoke Codex for up to three rounds, and independently rerun every required command. Tests, test configuration, configured catalogs, and directly referenced verification scripts are hash-protected: a Codex claim or a weakened test is not success. Only passing checks against unchanged protected inputs produce `verified`.
 
 ## Current Status
 
@@ -87,4 +87,4 @@ P7 implements local runtime support for evidence hardening, local workbench hard
 
 ## Boundaries
 
-Doctor link does not currently provide hosted Web platform, cloud synchronization, external account system, telemetry, marketplace, real signing keys or key management, hosted enterprise archive, hosted diagnostic knowledge base, or real RBAC. Automatic repair currently supports Python projects only, requires explicit approval, and never auto-commits, pushes, or publishes. `--allow-repair` uses existing Codex authentication to call the service, so users should review the preview and remove sensitive data first. PyPI publication remains optional.
+Doctor link does not currently provide hosted Web platform, cloud synchronization, external account system, telemetry, marketplace, real signing keys or key management, hosted enterprise archive, hosted diagnostic knowledge base, or real RBAC. Automatic repair currently supports Python projects only, requires explicit approval, protects the original verification inputs, and never auto-commits, pushes, or publishes. The exceptional `--allow-verification-changes` path returns `review_required`, not `verified`. `--allow-repair` uses existing Codex authentication to call the service, so users should review the preview and remove sensitive data first. PyPI publication remains optional.

@@ -4,15 +4,18 @@
 
 ## What it does
 
-The command performs five distinct jobs:
+The command performs six distinct jobs:
 
 1. confirms that the target is a Python Git repository with a clean working tree;
 2. discovers or accepts shell-free reproduction and regression commands;
 3. runs those commands to prove the problem exists;
 4. after explicit approval, creates a `doctor-link/solve-*` branch and invokes `codex exec` in a workspace-write sandbox;
-5. independently reruns every required command after each repair round and accepts the fix only when they all pass.
+5. snapshots the tests, test configuration, configured catalogs, and directly referenced verification scripts that define the original acceptance contract;
+6. independently reruns every required command after each repair round and accepts the fix only when they all pass against unchanged protected inputs.
 
 Doctor link saves the complete local receipt. A successful Codex exit, an agent message that says “fixed,” or a generated patch is not sufficient by itself.
+
+Changing a test until it passes is also not sufficient. Protected verification inputs are hashed before repair and compared after every round. Their default modification is a release-blocking `verification_inputs_modified` result, even when the modified checks pass.
 
 ## Prerequisites
 
@@ -59,9 +62,12 @@ Doctor link then:
 - calls `codex exec --sandbox workspace-write --json` without bypassing the sandbox;
 - limits the run to three repair rounds by default;
 - reruns all required checks after every round;
-- returns `verified` only when all required checks pass.
+- compares protected verification inputs with the original snapshot after every round;
+- returns `verified` only when all required checks pass without changing the original acceptance contract.
 
 Use `--max-rounds 1`, `2`, or `3` to reduce the retry budget. Use `--command-timeout` and `--repair-timeout` to set separate limits for project checks and Codex work.
+
+If a repair legitimately requires a test or verification configuration change, add `--allow-verification-changes` together with `--allow-repair`. This is an exception path: passing checks return `review_required` with exit code `6`, never `verified`, and every changed protected file remains in the receipt for human review.
 
 ## Automatic command discovery
 
@@ -86,7 +92,8 @@ By default, solve evidence is placed outside the target Git repository at:
     ├── prompt.md
     ├── codex-events.jsonl
     ├── codex-stderr.log
-    └── verification.json
+    ├── verification.json
+    └── verification-input-changes.json
 ```
 
 Later rounds use `round-2/` and `round-3/`. Pass `--out <directory>` to select a different parent directory.
@@ -100,11 +107,14 @@ Later rounds use `round-2/` and `round-3/`. Pass `--out <directory>` to select a
 | `not_reproduced` | 3 | All supplied or discovered checks already pass. |
 | `blocked` | 4 | A safety or readiness condition prevents repair. |
 | `failed` | 5 | The repair-round limit was exhausted while verification still failed. |
+| `review_required` | 6 | Checks pass only after explicitly authorized protected-input changes; human review is mandatory. |
 
 ## Safety and rollback
 
 - Doctor link refuses a dirty working tree so existing user changes are not confused with AI edits.
 - Reproduction and test commands run before branch creation and are checked again for unexpected repository changes.
+- Tests, test configuration, reproduction/test catalogs, and directly referenced verification scripts are hash-protected by default.
+- A repair that changes protected verification inputs cannot return `verified`; without exception approval it is blocked immediately.
 - Codex receives workspace-write access only after `--allow-repair`.
 - Doctor link never passes `--dangerously-bypass-approvals-and-sandbox`.
 - Codex is instructed not to switch branches, commit, push, publish, or edit outside the workspace.
