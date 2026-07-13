@@ -4,6 +4,8 @@ reproductions:
     kind: command
     command: PYTHONPATH=src python3 -c "from auth.service import login; print(login('alice','secret'))"
     expected: ok True
+    related_assertion_statements:
+      - "P1: login timeout in auth.log"
   - id: repro-token-invalid
     title: "P2: Expired token still invalid path"
     kind: command
@@ -14,6 +16,8 @@ reproductions:
     kind: command
     command: PYTHONPATH=src python3 -c "from api.routes import get_user; print(get_user(404))"
     expected: status 404
+    related_assertion_statements:
+      - "P3: GET /users/404 returns 500"
   - id: repro-order-no-inventory
     title: "P4: Order created without inventory check"
     kind: command
@@ -24,8 +28,12 @@ reproductions:
     kind: command
     command: PYTHONPATH=src python3 -c "from db.pool import acquire; [acquire() for _ in range(3)]"
     expected: RuntimeError
+    related_assertion_statements:
+      - "P5: DB pool exhausted after two connections"
   - id: repro-cache-ttl
     title: "P6: Cache ignores TTL"
     kind: command
     command: PYTHONPATH=src python3 -c "from cache.client import set,get; set('k','v',ttl=1); print(get('k'))"
     expected: TTL enforced
+    related_assertion_statements:
+      - "P6: cache TTL ignored and miss storm risk"

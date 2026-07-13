@@ -71,3 +71,9 @@ evidence/
 ## Compatibility principle
 
 New fields should be additive. Existing diagnostic package readers should ignore unknown fields.
+
+## Mutation and concurrency guarantees
+
+Package writers serialize read-modify-write operations with a package-local lock and replace JSON/Markdown files atomically. This protects concurrent `record`, assertion, reproduction, test-matrix, comparison, and verification updates from silently overwriting one another. The lock is temporary and is not package evidence; stale locks are recovered automatically.
+
+Automated reproduction and test records use stable IDs. Rerunning the same configured item replaces its previous evidence, timeline step, test record, and marked Markdown block instead of accumulating contradictory historical status sections.

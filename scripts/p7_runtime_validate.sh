@@ -128,7 +128,11 @@ doctor-link diagnosis-history "${PACKAGE_DIR}" \
 doctor-link assertion-check "${PACKAGE_DIR}" >/dev/null
 doctor-link risk-review "${PACKAGE_DIR}" --file doctor_link/core/knowledge_archive.py --boundary doctor_link/ >/dev/null
 
-doctor-link verify "${PACKAGE_DIR}" --write-back >/dev/null
+if doctor-link verify "${PACKAGE_DIR}" --write-back --json > "${WORK_DIR}/verification.json"; then
+  echo "Expected the P7 package without before/after comparison to return non-zero" >&2
+  exit 1
+fi
+grep -q '"status": "missing_evidence"' "${WORK_DIR}/verification.json"
 doctor-link schema validate "${PACKAGE_DIR}" --write --json > "${WORK_DIR}/schema-final.json"
 doctor-link handoff "${PACKAGE_DIR}" --tool generic --out "${WORK_DIR}/handoff" >/dev/null
 doctor-link view "${PACKAGE_DIR}" --build-only >/dev/null

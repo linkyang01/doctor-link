@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from doctor_link.core.models import UserAssertion
+from doctor_link.core.package_transaction import atomic_write_json, atomic_write_text, package_transaction
 
 
 def add_user_assertion(
@@ -36,15 +37,16 @@ def add_user_assertion(
         next_ai_instruction=next_ai_instruction,
     )
 
-    assertions_path = package_dir / "user-assertions.json"
-    assertions = _read_json_list(assertions_path)
-    assertions.append(assertion.to_dict())
-    assertions_path.write_text(json.dumps(assertions, ensure_ascii=False, indent=2), encoding="utf-8")
+    with package_transaction(package_dir):
+        assertions_path = package_dir / "user-assertions.json"
+        assertions = _read_json_list(assertions_path)
+        assertions.append(assertion.to_dict())
+        atomic_write_json(assertions_path, assertions)
 
-    _update_doctor_report_json(package_dir, assertion)
-    _append_problem_map(package_dir, assertion)
-    _append_ai_task(package_dir, assertion)
-    _append_summary(package_dir, assertion)
+        _update_doctor_report_json(package_dir, assertion)
+        _append_problem_map(package_dir, assertion)
+        _append_ai_task(package_dir, assertion)
+        _append_summary(package_dir, assertion)
 
     return assertion
 
@@ -82,7 +84,7 @@ def _update_doctor_report_json(package_dir: Path, assertion: UserAssertion) -> N
     user_assertions.append(assertion.to_dict())
     problem_map = payload.setdefault("problem_map", {})
     problem_map["human_confirmed_problem"] = assertion.user_statement
-    report_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    atomic_write_json(report_path, payload)
 
 
 def _append_problem_map(package_dir: Path, assertion: UserAssertion) -> None:
@@ -134,4 +136,4 @@ def _append_text(path: Path, text: str) -> None:
         current = path.read_text(encoding="utf-8")
     else:
         current = ""
-    path.write_text(current.rstrip() + text, encoding="utf-8")
+    atomic_write_text(path, current.rstrip() + text)

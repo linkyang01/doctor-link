@@ -16,6 +16,8 @@ P7.10 added the final validation and closure layer, including a P7 runtime valid
 
 Doctor link remains local-first. Version `0.1.2` passed the repaired local suite and the complete GitHub Actions matrix on 2026-07-13: 273 tests, 85.09% branch coverage, Python 3.10–3.12, Ubuntu/macOS/Windows, security, package build, and isolated installation. See the 100-point certification [Actions run 29221918410](https://github.com/linkyang01/doctor-link/actions/runs/29221918410). The defined repository release-readiness score is 100/100. [GitHub Release `v0.1.2`](https://github.com/linkyang01/doctor-link/releases/tag/v0.1.2) was published from merge commit `862281f`; PyPI publication was not performed. The project does not create a hosted platform, external account system, telemetry service, or marketplace.
 
+Current unreleased hardening additionally guarantees non-zero exits for failed reproductions, required tests, and incomplete verification; automated package evidence write-back; before-to-after assertion inheritance; linked passing after-state evidence before candidate verification; and transaction/atomic-write protection for concurrent package updates. See [Automated Diagnosis Reliability](../automated-diagnosis-reliability.md).
+
 ## Common Commands
 
 ```bash
@@ -25,6 +27,8 @@ doctor-link init
 doctor-link scan <library>
 doctor-link plan <library>
 doctor-link report <library> --out DoctorReports
+doctor-link reproduce run <id> . --package-dir <package_dir> --json
+doctor-link test run . --package-dir <package_dir> --json
 doctor-link verify <package_dir> --write-back
 doctor-link handoff list
 doctor-link handoff <package_dir> --tool codex --out DoctorReports/handoff
@@ -58,6 +62,7 @@ bash scripts/p7_runtime_validate.sh "$(pwd)"
 - `../installation.md`
 - `../quick-start.md`
 - `../cli-reference.md`
+- `../automated-diagnosis-reliability.md`
 - `../github-repository-guide.md`
 - `../project-status.md`
 - `../validation/local-quality-scorecard.md`

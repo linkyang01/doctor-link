@@ -57,8 +57,8 @@ PR #134 was merged as commit `862281f`, and the authorized [GitHub Release `v0.1
 | Evidence collection | Logs, attachments, environment metadata, command results, redaction records, and integrity indexes. |
 | Human assertions | Explicit records of user-confirmed problems that AI output must not silently dismiss. |
 | Reproduction and tests | Shell-free configured command execution, test matrices, evidence write-back, and timeout metadata. |
-| Verification | Missing-evidence reporting, assertion coverage, before/after comparison, and closure status. |
-| AI handoff | Tool-specific packages for Codex, Cursor, Cline, Windsurf, Grok Build, and generic AI workflows. |
+| Verification | Missing-evidence reporting, linked assertion coverage, failed-test blockers, before/after comparison, and conservative closure status. |
+| AI handoff | Tool-specific packages with explicit repair, evidence, and verification-review readiness states. |
 | Local workbench | Static local HTML for reviewing diagnostic packages without a hosted service. |
 | Security and privacy | Redaction, privacy scanning, export gates, integrity manifests, and explicit execution approval. |
 | Extensibility | Adapter and plugin manifests with dry-run defaults, permission checks, and audit records. |
@@ -111,6 +111,8 @@ preflight → report → collect → assert → reproduce/test → verify → ha
 6. `verify` identifies missing evidence and determines closure status.
 7. `handoff` or `view` prepares AI context or a local review interface.
 
+Failed reproductions, failed required test jobs, and incomplete verification return a non-zero exit code even when `--json` is used. See [Automated diagnosis reliability](docs/automated-diagnosis-reliability.md) for the complete evidence and status rules.
+
 ## Safety model
 
 - Doctor link is local-first and does not upload diagnostic packages by default.
@@ -156,6 +158,7 @@ GitHub Actions runs the full Python matrix, security checks, package installatio
 - [Quick Start](docs/quick-start.md)
 - [Installation](docs/installation.md)
 - [CLI reference](docs/cli-reference.md)
+- [Automated diagnosis reliability](docs/automated-diagnosis-reliability.md)
 - [Product overview](docs/product-overview.md)
 - [Architecture overview](docs/architecture-overview.md)
 - [GitHub repository and workflow guide](docs/github-repository-guide.md)

@@ -7,6 +7,7 @@ from typing import Any
 
 from doctor_link.core.models import DiagnosticEvent, utc_now_iso
 from doctor_link.core.package_builder import build_diagnostic_package
+from doctor_link.core.package_transaction import atomic_write_json, atomic_write_text, package_transaction
 
 
 @dataclass
@@ -68,6 +69,7 @@ def create_after_package(project: str, summary: str, output_dir: Path, before_pa
         after_report=str(package.root_dir / "doctor-report.json"),
     )
     _write_metadata(package.root_dir, metadata)
+    _inherit_before_context(before_package, package.root_dir)
     return package.root_dir
 
 
@@ -91,14 +93,80 @@ def read_workflow_metadata(package_dir: Path) -> DiagnosisWorkflowMetadata | Non
 
 def _write_metadata(package_dir: Path, metadata: DiagnosisWorkflowMetadata) -> None:
     payload = metadata.to_dict()
-    (package_dir / "diagnosis-workflow.json").write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-    (package_dir / "diagnosis-workflow.md").write_text(_metadata_markdown(metadata), encoding="utf-8")
+    atomic_write_json(package_dir / "diagnosis-workflow.json", payload)
+    atomic_write_text(package_dir / "diagnosis-workflow.md", _metadata_markdown(metadata))
     report_path = package_dir / "doctor-report.json"
     if report_path.exists():
         report = json.loads(report_path.read_text(encoding="utf-8"))
         if isinstance(report, dict):
             report["diagnosis_workflow"] = payload
-            report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+            atomic_write_json(report_path, report)
+
+
+def _inherit_before_context(before_package: Path, after_package: Path) -> None:
+    """Carry unresolved human context into the after package.
+
+    Assertions remain present until after-state test records linked to their IDs
+    demonstrate resolution. Their absence must never be treated as proof.
+    """
+    with package_transaction(after_package):
+        assertions = _read_list(before_package / "user-assertions.json")
+        atomic_write_json(after_package / "user-assertions.json", assertions)
+
+        before_report = _read_dict(before_package / "doctor-report.json")
+        after_report_path = after_package / "doctor-report.json"
+        after_report = _read_dict(after_report_path)
+        after_report["user_assertions"] = assertions
+        if before_report.get("investigation_boundary"):
+            after_report["investigation_boundary"] = before_report["investigation_boundary"]
+        before_task = before_report.get("ai_task") if isinstance(before_report.get("ai_task"), dict) else {}
+        after_task = after_report.setdefault("ai_task", {})
+        for key in ("investigation_boundary", "do_not_change"):
+            if before_task.get(key):
+                after_task[key] = before_task[key]
+        if assertions:
+            requested = after_task.setdefault("requested_work", [])
+            for assertion in assertions:
+                if not isinstance(assertion, dict):
+                    continue
+                statement = str(assertion.get("user_statement") or assertion.get("statement") or "")
+                if statement:
+                    instruction = f"Reverify inherited user assertion: {statement}"
+                    if instruction not in requested:
+                        requested.append(instruction)
+        atomic_write_json(after_report_path, after_report)
+
+        boundary_path = before_package / "investigation-boundary.md"
+        if boundary_path.exists():
+            atomic_write_text(after_package / "investigation-boundary.md", boundary_path.read_text(encoding="utf-8"))
+        if assertions:
+            lines = ["", "## Inherited user assertions", ""]
+            for assertion in assertions:
+                if not isinstance(assertion, dict):
+                    continue
+                assertion_id = str(assertion.get("assertion_id") or assertion.get("id") or "unknown")
+                statement = str(assertion.get("user_statement") or assertion.get("statement") or "")
+                lines.append(f"- `{assertion_id}`: {statement}")
+            lines.extend(["", "These assertions remain unresolved until linked after-state tests pass.", ""])
+            task_path = after_package / "ai-task.md"
+            current = task_path.read_text(encoding="utf-8") if task_path.exists() else ""
+            atomic_write_text(task_path, current.rstrip() + "\n" + "\n".join(lines))
+
+
+def _read_list(path: Path) -> list[Any]:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
+    return payload if isinstance(payload, list) else []
+
+
+def _read_dict(path: Path) -> dict[str, Any]:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+    return payload if isinstance(payload, dict) else {}
 
 
 def _metadata_markdown(metadata: DiagnosisWorkflowMetadata) -> str:

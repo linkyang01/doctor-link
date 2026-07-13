@@ -329,16 +329,18 @@ def verify_command(package_dir: Path, write_back: bool, json_output: bool) -> No
     result = run_verification(package_dir, write_back=write_back, config=merged)
     if json_output:
         click.echo(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
-        return
-    click.echo(f"Verification status: {result.status}")
-    if result.missing_evidence:
-        click.echo("Missing evidence:")
-        for item in result.missing_evidence:
-            click.echo(f"  - {item}")
-    if result.next_commands:
-        click.echo("Next commands:")
-        for item in result.next_commands:
-            click.echo(f"  - {item}")
+    else:
+        click.echo(f"Verification status: {result.status}")
+        if result.missing_evidence:
+            click.echo("Missing evidence:")
+            for item in result.missing_evidence:
+                click.echo(f"  - {item}")
+        if result.next_commands:
+            click.echo("Next commands:")
+            for item in result.next_commands:
+                click.echo(f"  - {item}")
+    if result.status not in {"candidate_verified", "ready", "verified"}:
+        raise click.exceptions.Exit(1)
 
 
 @main.command("compare")

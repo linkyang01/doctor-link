@@ -58,7 +58,7 @@ def test_verify_lists_missing_evidence_and_next_commands(tmp_path: Path) -> None
     )
 
     result = CliRunner().invoke(main, ["verify", str(package)])
-    assert result.exit_code == 0, result.output
+    assert result.exit_code == 1, result.output
     assert "Missing evidence:" in result.output
     assert "Next commands:" in result.output
 

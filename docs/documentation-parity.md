@@ -6,9 +6,10 @@ This checklist keeps Doctor link Chinese and English user-facing documentation a
 
 - [x] `README.en.md` exists.
 - [x] `README.zh-CN.md` exists.
-- [x] Both describe P0-P4 completed status.
+- [x] Both describe the released status and current unreleased hardening boundary.
 - [x] Both list core CLI commands.
 - [x] Both state release / publishing boundaries.
+- [x] Both link to automated diagnosis reliability rules.
 
 ## User guide coverage
 
@@ -19,6 +20,7 @@ This checklist keeps Doctor link Chinese and English user-facing documentation a
 - [x] Local workbench guide.
 - [x] Troubleshooting guide.
 - [x] Installation guide.
+- [x] Automated diagnosis reliability guide.
 
 ## P5 follow-up
 

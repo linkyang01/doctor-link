@@ -61,11 +61,13 @@ def reproduce_run(reproduction_id: str, project_root: Path, package_dir: Path | 
     result = run_reproduction(project_root, reproduction_id, package_dir=package_dir, timeout_seconds=timeout)
     if json_output:
         click.echo(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
-        return
-    click.echo(f"Reproduction: {result.reproduction_id}")
-    click.echo(f"Status: {result.status}")
-    if result.evidence_id:
-        click.echo(f"Evidence: {result.evidence_id}")
+    else:
+        click.echo(f"Reproduction: {result.reproduction_id}")
+        click.echo(f"Status: {result.status}")
+        if result.evidence_id:
+            click.echo(f"Evidence: {result.evidence_id}")
+    if result.status not in {"passed", "manual"}:
+        raise click.exceptions.Exit(1)
 
 
 @main.group("test")
@@ -100,12 +102,14 @@ def test_run(project_root: Path, job_id: str | None, package_dir: Path | None, t
     results = run_test_matrix(project_root, package_dir=package_dir, job_id=job_id, timeout_seconds=timeout)
     if json_output:
         click.echo(json.dumps([item.to_dict() for item in results], ensure_ascii=False, indent=2))
-        return
-    for result in results:
-        click.echo(f"Test job: {result.job_id}")
-        click.echo(f"Status: {result.status}")
-        if result.evidence_id:
-            click.echo(f"Evidence: {result.evidence_id}")
+    else:
+        for result in results:
+            click.echo(f"Test job: {result.job_id}")
+            click.echo(f"Status: {result.status}")
+            if result.evidence_id:
+                click.echo(f"Evidence: {result.evidence_id}")
+    if any(result.required and result.status != "passed" for result in results):
+        raise click.exceptions.Exit(1)
 
 
 @main.group("diagnose")
@@ -159,10 +163,12 @@ def diagnose_verify(after_package: Path, no_write_back: bool, json_output: bool)
     summary = run_diagnosis_verify(after_package, write_back=not no_write_back)
     if json_output:
         click.echo(json.dumps(summary.to_dict(), ensure_ascii=False, indent=2))
-        return
-    click.echo(f"Verification status: {summary.verification_status}")
-    click.echo(f"Pipeline success: {summary.success}")
-    click.echo(f"Summary: {after_package / 'diagnosis-pipeline-summary.md'}")
+    else:
+        click.echo(f"Verification status: {summary.verification_status}")
+        click.echo(f"Pipeline success: {summary.success}")
+        click.echo(f"Summary: {after_package / 'diagnosis-pipeline-summary.md'}")
+    if not summary.success:
+        raise click.exceptions.Exit(1)
 
 
 @main.group("schema")

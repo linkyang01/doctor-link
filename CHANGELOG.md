@@ -6,7 +6,27 @@ Doctor link follows semantic versioning. Public release publishing requires expl
 
 ## Unreleased
 
-No unreleased changes.
+### Added
+
+- Safe leading environment assignments such as `PYTHONPATH=src python ...` in configured reproduction and test commands, without invoking a shell.
+- Transactional diagnostic-package updates with cross-process locking and atomic file replacement.
+- Automatic reproduction and test-matrix evidence recording with stable IDs, assertion links, timeline entries, and rerun replacement.
+- Complex regression scenarios for false-success exits, concurrent record writes, assertion inheritance, failed-test blockers, and handoff status accuracy.
+
+### Changed
+
+- `reproduce run`, required `test run` jobs, `verify`, and `diagnose verify` now return non-zero when their machine-readable result is unsuccessful.
+- After-state packages inherit before-state user assertions and investigation boundaries.
+- Before/after comparison resolves an assertion only when a linked after-state test record passes; a missing assertion is not proof of resolution.
+- Verification includes failed, partial, and unknown test records in blockers and rerun instructions, while replacing stale verification commands on later runs.
+- Handoff compatibility distinguishes `needs_repair`, `needs_evidence`, `ready_for_verification_review`, and `ready`, and exposes the current verification status.
+- The six-bug shop-service example now creates the package before running checks, attaches all automated evidence, and validates the expected unresolved status.
+
+### Fixed
+
+- Prevented concurrent CLI processes from silently overwriting each other's package updates.
+- Prevented stale comparison and verification sections from accumulating and incorrectly implying `candidate_verified`.
+- Prevented failed reproductions and required test jobs from printing failure JSON while returning shell exit code 0.
 
 ## [0.1.2] - 2026-07-13
 

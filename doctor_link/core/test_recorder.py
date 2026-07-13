@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from doctor_link.core.models import EvidenceItem, TimelineStep, new_id, utc_now_iso
+from doctor_link.core.package_transaction import atomic_write_json, atomic_write_text, package_transaction
 
 VALID_STATUSES = {"passed", "failed", "partial", "unknown"}
 
@@ -81,10 +82,16 @@ def record_test_result(
         related_file=related_file,
     )
 
+    with package_transaction(package_dir):
+        _record_test_result_locked(package_dir, record)
+    return record
+
+
+def _record_test_result_locked(package_dir: Path, record: TestRecord) -> None:
     results_dir = package_dir / "evidence" / "test-results"
     results_dir.mkdir(parents=True, exist_ok=True)
     result_path = results_dir / f"{record.test_id}.json"
-    result_path.write_text(_json(record.to_dict()), encoding="utf-8")
+    atomic_write_json(result_path, record.to_dict())
 
     evidence = EvidenceItem(
         kind="test_result",
@@ -110,7 +117,6 @@ def record_test_result(
     _append_timeline_markdown(package_dir, step)
     _append_ai_task(package_dir, record, evidence)
     _append_summary(package_dir, record)
-    return record
 
 
 def _update_report_json(package_dir: Path, record: TestRecord, evidence: EvidenceItem, step: TimelineStep) -> None:
@@ -139,7 +145,7 @@ def _update_report_json(package_dir: Path, record: TestRecord, evidence: Evidenc
         ai_task.setdefault("verification_steps", []).append(
             f"Rerun `{record.name}` and confirm the result is passed."
         )
-    path.write_text(_json(payload), encoding="utf-8")
+    atomic_write_json(path, payload)
 
 
 def _append_evidence_markdown(package_dir: Path, evidence: EvidenceItem) -> None:
@@ -226,7 +232,7 @@ def _next_order(package_dir: Path) -> int:
 
 def _append(path: Path, text: str) -> None:
     current = path.read_text(encoding="utf-8") if path.exists() else ""
-    path.write_text(current.rstrip() + "\n" + text.lstrip("\n"), encoding="utf-8")
+    atomic_write_text(path, current.rstrip() + "\n" + text.lstrip("\n"))
 
 
 def _json(payload: Any) -> str:

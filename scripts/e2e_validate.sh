@@ -21,7 +21,11 @@ doctor-link schema validate "${PACKAGE_DIR}" --write --json >/dev/null
 
 doctor-link collect "${PACKAGE_DIR}" --project-root "${ROOT_DIR}" --logs "${LIB_DIR}/*.log" --command "python --version" --attachment "${LIB_DIR}/input.txt" --note "E2E validation" --redact-email
 doctor-link assert "${PACKAGE_DIR}" --statement "E2E user-confirmed issue" --expected "Expected behavior" --actual "Actual behavior"
-doctor-link verify "${PACKAGE_DIR}" --write-back
+if doctor-link verify "${PACKAGE_DIR}" --write-back --json > "${WORK_DIR}/verification.json"; then
+  echo "Expected incomplete E2E evidence to return non-zero" >&2
+  exit 1
+fi
+grep -q '"status": "missing_evidence"' "${WORK_DIR}/verification.json"
 doctor-link schema validate "${PACKAGE_DIR}" --write --json >/dev/null
 doctor-link handoff "${PACKAGE_DIR}" --tool codex --out "${REPORTS_DIR}/handoff"
 doctor-link view "${PACKAGE_DIR}" --build-only
@@ -29,7 +33,11 @@ doctor-link view "${PACKAGE_DIR}" --build-only
 BEFORE=$(doctor-link diagnose before --project "E2E" --summary "before" --out "${REPORTS_DIR}" | awk -F': ' '/Created before package/ {print $2}')
 AFTER=$(doctor-link diagnose after --project "E2E" --summary "after" --before-package "${BEFORE}" --out "${REPORTS_DIR}" | awk -F': ' '/Created after package/ {print $2}')
 doctor-link diagnose compare "${AFTER}" --json >/dev/null
-doctor-link diagnose verify "${AFTER}" --json >/dev/null
+if doctor-link diagnose verify "${AFTER}" --json > "${WORK_DIR}/diagnosis-verification.json"; then
+  echo "Expected the evidence-free after package to remain incomplete" >&2
+  exit 1
+fi
+grep -q '"success": false' "${WORK_DIR}/diagnosis-verification.json"
 doctor-link schema validate "${AFTER}" --write --json >/dev/null
 doctor-link health "${REPORTS_DIR}" --json >/dev/null
 

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+import re
 import shlex
 import time
 from dataclasses import dataclass
@@ -17,6 +19,15 @@ class SafeCommandSequenceResult:
     stdout: str = ""
     stderr: str = ""
     timed_out: bool = False
+
+
+@dataclass
+class SafeCommand:
+    argv: list[str]
+    environment: dict[str, str]
+
+
+ENVIRONMENT_ASSIGNMENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=.*$", re.DOTALL)
 
 
 def run_safe_command_sequence(command_text: str, cwd: Path, timeout_seconds: int) -> SafeCommandSequenceResult:
@@ -38,7 +49,9 @@ def run_safe_command_sequence(command_text: str, cwd: Path, timeout_seconds: int
     for command in commands:
         elapsed = time.monotonic() - started
         remaining = max(1, int(timeout_seconds - elapsed))
-        result = run_command(command, timeout_seconds=remaining, cwd=cwd)
+        environment = dict(os.environ)
+        environment.update(command.environment)
+        result = run_command(command.argv, timeout_seconds=remaining, cwd=cwd, env=environment)
         stdout_parts.append(result.stdout)
         stderr_parts.append(result.stderr)
         if result.returncode != 0:
@@ -64,7 +77,7 @@ def validate_safe_command_sequence(command_text: str) -> str | None:
     return None
 
 
-def _parse_command_sequence(command_text: str) -> list[list[str]]:
+def _parse_command_sequence(command_text: str) -> list[SafeCommand]:
     lexer = shlex.shlex(command_text, posix=True, punctuation_chars=";&|<>")
     lexer.whitespace_split = True
     lexer.commenters = ""
@@ -72,16 +85,29 @@ def _parse_command_sequence(command_text: str) -> list[list[str]]:
     if not tokens:
         raise ValueError("Configured command is empty.")
 
-    commands: list[list[str]] = [[]]
+    command_tokens: list[list[str]] = [[]]
     for token in tokens:
         if token == "&&":
-            if not commands[-1]:
+            if not command_tokens[-1]:
                 raise ValueError("Configured command contains an empty `&&` segment.")
-            commands.append([])
+            command_tokens.append([])
             continue
         if token in UNSAFE_SHELL_OPERATORS:
             raise ValueError(f"Unsupported shell operator in configured command: {token}")
-        commands[-1].append(token)
-    if not commands[-1]:
+        command_tokens[-1].append(token)
+    if not command_tokens[-1]:
         raise ValueError("Configured command ends with an empty `&&` segment.")
+
+    commands: list[SafeCommand] = []
+    for segment in command_tokens:
+        environment: dict[str, str] = {}
+        index = 0
+        while index < len(segment) and ENVIRONMENT_ASSIGNMENT.fullmatch(segment[index]):
+            name, value = segment[index].split("=", 1)
+            environment[name] = os.path.expandvars(value)
+            index += 1
+        argv = segment[index:]
+        if not argv:
+            raise ValueError("Configured command segment contains environment assignments but no executable.")
+        commands.append(SafeCommand(argv=argv, environment=environment))
     return commands
