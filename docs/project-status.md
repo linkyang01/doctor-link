@@ -14,7 +14,7 @@ Post-P7 hardening has also been completed:
 - Adapter and Plugin run commands default to dry-run and require `--allow-run` for actual local command execution;
 - completed TODO trackers are archived under `docs/archive/completed-todos/`.
 
-The repaired source version `0.1.2` passed local and GitHub Actions validation on 2026-07-13: 273 tests, 85.09% branch-aware coverage, Ruff, E2E, self-validation, P7 runtime validation, clean wheel/sdist build, Twine validation, isolated installed-wheel smoke tests, zero medium/high Bandit findings, and zero known third-party dependency vulnerabilities. GitHub Actions run `29221790817` passed Python 3.10, 3.11, 3.12, security, package install, Ubuntu, macOS, and Windows jobs. The defined repository release-readiness score is 100/100 under `docs/validation/local-quality-scorecard.md`. `v0.1.2` is not currently published and must not be described as Latest before an authorized release succeeds.
+The repaired source version `0.1.2` passed local and GitHub Actions validation on 2026-07-13: 273 tests, 85.09% branch-aware coverage, Ruff, E2E, self-validation, P7 runtime validation, clean wheel/sdist build, Twine validation, isolated installed-wheel smoke tests, zero medium/high Bandit findings, and zero known third-party dependency vulnerabilities. GitHub Actions run `29221790817` passed Python 3.10, 3.11, 3.12, security, package install, Ubuntu, macOS, and Windows jobs. The defined repository release-readiness score is 100/100 under `docs/validation/local-quality-scorecard.md`. PR `#134` was merged as commit `862281f`, and [GitHub Release `v0.1.2`](https://github.com/linkyang01/doctor-link/releases/tag/v0.1.2) was published on 2026-07-13 by workflow `29223309411`.
 
 All repository-side, non-local, non-release closure work has been completed. Local Mac validation has been recorded in `docs/p5.10-local-validation.md`. Validation on additional target environments (offline workstation, customer delivery, production-like) remains optional when those environments differ from the recorded Mac setup.
 
@@ -40,7 +40,7 @@ P7.9 implemented P6 local knowledge base and enterprise archive runtime for loca
 
 P7.10 implements final validation and closure through P7 runtime E2E validation, CI coverage, self-validation coverage, final audit, README updates, and TODO closure.
 
-P6 and P7 are complete as repository-side local-first implementation work. Source version `0.1.2` is a locally validated release candidate. This does not mean Doctor link has published `v0.1.2`, passed cloud revalidation for the repaired commit, or implemented a hosted platform, account system, marketplace, real signing, hosted archive, hosted knowledge base, or PyPI distribution.
+P6 and P7 are complete as repository-side local-first implementation work. Version `0.1.2` is locally validated, cloud validated, merged, tagged, and published on GitHub. This does not mean Doctor link has implemented a hosted platform, account system, marketplace, real signing, hosted archive, hosted knowledge base, or PyPI distribution.
 
 ## Validation certification status
 
@@ -48,7 +48,7 @@ P6 and P7 are complete as repository-side local-first implementation work. Sourc
 - [x] Local Release Candidate validation passed (2026-07-13)
 - [x] First public GitHub Release (`v0.1.0-rc.1`, 2026-06-29)
 - [x] GitHub Release `v0.1.1` (2026-06-29)
-- [ ] GitHub Release `v0.1.2` published
+- [x] GitHub Release `v0.1.2` published (2026-07-13)
 - [x] Local Mac Validation Recorded (2026-06-29)
 - [x] GitHub-hosted Linux, macOS, and Windows validation
 - [x] Cross-platform CI jobs configured for Linux, macOS, and Windows

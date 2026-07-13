@@ -14,7 +14,7 @@ P5: Productization and Release Readiness is complete. P6 implementation requires
 
 P7.10 added the final validation and closure layer, including a P7 runtime validation script and CI coverage for the P7 command surface.
 
-Doctor link remains local-first. Source version `0.1.2` passed the repaired local suite and the complete GitHub Actions matrix on 2026-07-13: 273 tests, 85.09% branch coverage, Python 3.10–3.12, Ubuntu/macOS/Windows, security, package build, and isolated installation. See the 100-point certification [Actions run 29221918410](https://github.com/linkyang01/doctor-link/actions/runs/29221918410). The defined repository release-readiness score is 100/100. `v0.1.2` is not yet a published GitHub Release; successful CI is not release authorization. The project does not create a hosted platform, external account system, telemetry service, or marketplace.
+Doctor link remains local-first. Version `0.1.2` passed the repaired local suite and the complete GitHub Actions matrix on 2026-07-13: 273 tests, 85.09% branch coverage, Python 3.10–3.12, Ubuntu/macOS/Windows, security, package build, and isolated installation. See the 100-point certification [Actions run 29221918410](https://github.com/linkyang01/doctor-link/actions/runs/29221918410). The defined repository release-readiness score is 100/100. [GitHub Release `v0.1.2`](https://github.com/linkyang01/doctor-link/releases/tag/v0.1.2) was published from merge commit `862281f`; PyPI publication was not performed. The project does not create a hosted platform, external account system, telemetry service, or marketplace.
 
 ## Common Commands
 

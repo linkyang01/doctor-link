@@ -117,4 +117,4 @@ After publication, verify:
 
 ## Current boundary
 
-Source version `0.1.2` is locally and cloud validated in PR `#134`, but `v0.1.2` is not currently published. Publication remains a separate authorized action.
+Version `0.1.2` was locally and cloud validated, merged through PR `#134` as commit `862281f`, and published as [GitHub Release `v0.1.2`](https://github.com/linkyang01/doctor-link/releases/tag/v0.1.2) on 2026-07-13. Release workflow [29223309411](https://github.com/linkyang01/doctor-link/actions/runs/29223309411) created the immutable tag and uploaded the wheel and source distribution. PyPI publication was not authorized and was not performed.

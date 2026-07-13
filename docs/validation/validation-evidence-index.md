@@ -10,6 +10,10 @@ This index separates current repaired-source evidence, historical evidence, and 
 - 100-point certification commit: `8798b9af8e044431e370af83f5929a67f5361d48`
 - Implementation run: [29221790817](https://github.com/linkyang01/doctor-link/actions/runs/29221790817)
 - 100-point certification run: [29221918410](https://github.com/linkyang01/doctor-link/actions/runs/29221918410)
+- Final documentation CI run: [29223178425](https://github.com/linkyang01/doctor-link/actions/runs/29223178425)
+- Merge commit: `862281f38af6550a149a45fbf002560302e6423b`
+- Release workflow: [29223309411](https://github.com/linkyang01/doctor-link/actions/runs/29223309411)
+- Published release: [v0.1.2](https://github.com/linkyang01/doctor-link/releases/tag/v0.1.2)
 - Conclusion: `success`
 - Date: 2026-07-13
 
@@ -95,6 +99,17 @@ bash scripts/p7_runtime_validate.sh "$(pwd)"
 
 Artifacts may contain project-sensitive data. Review privacy and redaction output before sharing them.
 
+## Published release evidence
+
+GitHub Release `v0.1.2` was published on 2026-07-13. Its annotated tag resolves to merge commit `862281f38af6550a149a45fbf002560302e6423b`.
+
+| Asset | Size | SHA-256 |
+| --- | ---: | --- |
+| `doctor_link-0.1.2-py3-none-any.whl` | 150,053 bytes | `9df6283381a8facabb0938d33180db63dffc41bbb31c04e5120bc340cb619bae` |
+| `doctor_link-0.1.2.tar.gz` | 309,134 bytes | `0badcdd229e6a2a01e1551485655cef844447ad808697804838ab87aaba66eb8` |
+
+Both downloaded release assets passed Twine metadata validation. PyPI publication was disabled in the release workflow and was not performed.
+
 ## Historical evidence
 
 An earlier repository-root-cleanup validation was recorded for PR `#110`, merge commit `09830b934d92c41509daa75b929d82081c6c827d`, CI run `#312`, with a successful result. It remains historical evidence and must not replace the current repaired-source runs above.
@@ -105,8 +120,6 @@ The earlier local Mac record at `docs/p5.10-local-validation.md` covers commit `
 
 Current evidence proves the defined repository validation matrix. It does not prove:
 
-- PR merge or `main` branch deployment;
-- publication of `v0.1.2`;
 - PyPI availability;
 - customer-environment or production acceptance;
 - hosted platform, account, telemetry, marketplace, signing-key, archive, knowledge-base, or RBAC capabilities.

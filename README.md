@@ -27,7 +27,7 @@ Doctor link does not replace Codex, Cursor, Aider, OpenHands, Continue, Cline, W
 
 ## Verified status
 
-Source version: `0.1.2` release candidate.
+Current version: [`v0.1.2`](https://github.com/linkyang01/doctor-link/releases/tag/v0.1.2), published on 2026-07-13.
 
 The repaired implementation in [PR #134](https://github.com/linkyang01/doctor-link/pull/134) passed the complete repository validation matrix on 2026-07-13:
 
@@ -46,7 +46,7 @@ Evidence:
 - [validation evidence index](docs/validation/validation-evidence-index.md)
 - [100-point certification Actions run](https://github.com/linkyang01/doctor-link/actions/runs/29221918410)
 
-`v0.1.2` has not been published. Passing CI does not authorize a release, tag, GitHub Release, or PyPI upload.
+PR #134 was merged as commit `862281f`, and the authorized [GitHub Release `v0.1.2`](https://github.com/linkyang01/doctor-link/releases/tag/v0.1.2) was published by [release workflow 29223309411](https://github.com/linkyang01/doctor-link/actions/runs/29223309411). PyPI publication was not requested and was not performed.
 
 ## Main capabilities
 
