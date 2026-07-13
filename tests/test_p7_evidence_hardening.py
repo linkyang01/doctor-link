@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from doctor_link.core.collector import collect_into_package
-from doctor_link.core.command_runner import run_command
+from doctor_link.core.command_runner import resolve_command, run_command
 from doctor_link.core.environment_collector import collect_environment
 from doctor_link.core.models import DiagnosticEvent
 from doctor_link.core.package_builder import build_diagnostic_package
@@ -36,6 +36,20 @@ def test_command_runner_resolves_python_alias_without_path(tmp_path: Path) -> No
     assert result.returncode == 0
     assert result.stdout.strip() == "portable-python"
     assert result.executable == sys.executable
+
+
+def test_command_runner_resolves_windows_package_manager_launcher(monkeypatch) -> None:
+    launcher = r"C:\Program Files\nodejs\npm.CMD"
+
+    monkeypatch.setattr("doctor_link.core.command_runner.shutil.which", lambda executable, path=None: launcher)
+
+    assert resolve_command(["npm", "test"], env={"PATH": r"C:\Program Files\nodejs"}) == [launcher, "test"]
+
+
+def test_command_runner_does_not_rewrite_unknown_commands(monkeypatch) -> None:
+    monkeypatch.setattr("doctor_link.core.command_runner.shutil.which", lambda executable, path=None: "/tools/custom")
+
+    assert resolve_command(["custom", "check"]) == ["custom", "check"]
 
 
 def test_environment_collector_includes_tools_and_project_markers(tmp_path: Path) -> None:

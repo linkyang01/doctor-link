@@ -29,12 +29,13 @@ This validation proves that `doctor-link solve` can apply the same bounded repai
 
 ## Automated regression evidence
 
-The repository suite passed `329` tests with `85.39%` branch-aware coverage and an enforced `85%` floor. JavaScript/TypeScript-specific regressions prove:
+The repository suite passed `331` tests with `85.40%` branch-aware coverage and an enforced `85%` floor. JavaScript/TypeScript-specific regressions prove:
 
 - JavaScript and TypeScript source detection;
 - npm default discovery and pnpm/Yarn selection from metadata or lockfiles;
 - `node --test` fallback;
 - real npm execution with independent verification;
+- Windows package-manager launcher resolution without weakening the shell-free command boundary;
 - two-round repair where the first partial fix remains failed and the second completes the contract;
 - test-file tampering blocked before verification;
 - package test-script weakening blocked before verification;
@@ -78,8 +79,8 @@ The protected hashes were identical before and after repair:
 
 | Gate | Local result |
 | --- | ---: |
-| Full tests | 329 passed |
-| Branch-aware coverage | 85.39% |
+| Full tests | 331 passed |
+| Branch-aware coverage | 85.40% |
 | Ruff | passed |
 | Bandit medium/high | 0 findings |
 | Dependency audit | 0 known third-party vulnerabilities |

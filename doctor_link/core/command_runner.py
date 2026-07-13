@@ -11,6 +11,9 @@ from typing import Mapping, Sequence
 from doctor_link.core.models import utc_now_iso
 
 
+PORTABLE_PACKAGE_MANAGER_EXECUTABLES = frozenset({"bun", "corepack", "npm", "npx", "pnpm", "yarn"})
+
+
 @dataclass
 class CommandResult:
     command: list[str]
@@ -120,13 +123,21 @@ def resolve_command(command: Sequence[str], env: Mapping[str, str] | None = None
     Modern macOS installations commonly provide no ``python`` command, while
     cross-platform project configuration often uses that spelling. Bind it to
     the interpreter currently running Doctor link when the alias is absent.
+
+    Windows package-manager launchers commonly use ``.cmd`` files. ``which``
+    understands ``PATHEXT`` while ``CreateProcess`` does not resolve a bare
+    launcher name the same way, so bind supported package managers to the
+    concrete executable path before handing the argv list to subprocess.
     """
     resolved = list(command)
     if not resolved:
         return resolved
     search_path = env.get("PATH") if env else None
-    if resolved[0] == "python" and shutil.which("python", path=search_path) is None:
+    executable = shutil.which(resolved[0], path=search_path)
+    if resolved[0] == "python" and executable is None:
         resolved[0] = sys.executable
+    elif resolved[0].casefold() in PORTABLE_PACKAGE_MANAGER_EXECUTABLES and executable is not None:
+        resolved[0] = executable
     return resolved
 
 

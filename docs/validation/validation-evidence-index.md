@@ -4,7 +4,7 @@ This index separates current repaired-source evidence, historical evidence, and 
 
 ## Unreleased v0.3.0 candidate evidence
 
-The `v0.3.0` source candidate extends automatic solve to Node.js JavaScript/TypeScript projects. Local validation on 2026-07-13 passed 329 tests at 85.39% branch-aware coverage, Ruff, Bandit, dependency audit, build/content/Twine gates, isolated wheel installation, four repository validation flows, and the installed-wheel full-capability lab with 63/63 routes, 72 invocations, and ten complex scenarios.
+The `v0.3.0` source candidate extends automatic solve to Node.js JavaScript/TypeScript projects. Local validation on 2026-07-13 passed 331 tests at 85.40% branch-aware coverage, Ruff, Bandit, dependency audit, build/content/Twine gates, isolated wheel installation, four repository validation flows, and the installed-wheel full-capability lab with 63/63 routes, 72 invocations, and ten complex scenarios.
 
 A disposable Node.js inventory fixture also completed a live authorized Codex repair. Doctor link automatically selected `npm test`, reproduced two failing acceptance cases, protected `package.json` and the original test, accepted a one-file production fix in one round, independently reran all three tests, and returned `verified` with unchanged protected hashes. See [JavaScript/TypeScript solve validation](javascript-typescript-solve-validation.md).
 
@@ -43,7 +43,7 @@ The current CI evidence covers:
 - dependency consistency through `pip check`;
 - Ruff static checks;
 - 319 automated tests;
-- 85.39% branch-aware coverage with an 85% minimum;
+- 85.40% branch-aware coverage with an 85% minimum;
 - CLI entrypoint and diagnostic smoke flows;
 - strategy and read-only preflight validation;
 - E2E validation;
@@ -64,7 +64,7 @@ Current local repaired-source validation on macOS/Python 3.12 includes:
 | Check | Result |
 | --- | ---: |
 | Full regression suite | 319 passed |
-| Branch-aware coverage | 85.39% |
+| Branch-aware coverage | 85.40% |
 | Ruff | Passed |
 | Bandit medium/high | 0 findings |
 | Dependency vulnerabilities | 0 known |

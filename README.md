@@ -29,12 +29,12 @@ Doctor link does not replace Codex, Cursor, Aider, OpenHands, Continue, Cline, W
 
 Latest published version: [`v0.2.0`](https://github.com/linkyang01/doctor-link/releases/tag/v0.2.0), published on 2026-07-13.
 
-The current source is the unreleased `v0.3.0` candidate. Its JavaScript/TypeScript automatic-solve extension has passed 329 local tests, 85.39% branch-aware coverage, an installed-wheel lab covering 63 routes through 72 invocations and ten complex scenarios, and a live protected-contract Node.js repair. Cloud validation, merge, tag creation, and release publication are still pending. See the [JavaScript/TypeScript validation report](docs/validation/javascript-typescript-solve-validation.md).
+The current source is the unreleased `v0.3.0` candidate. Its JavaScript/TypeScript automatic-solve extension has passed 331 local tests, 85.40% branch-aware coverage, an installed-wheel lab covering 63 routes through 72 invocations and ten complex scenarios, and a live protected-contract Node.js repair. Cloud validation, merge, tag creation, and release publication are still pending. See the [JavaScript/TypeScript validation report](docs/validation/javascript-typescript-solve-validation.md).
 
 The verified automatic problem-solving release in [PR #145](https://github.com/linkyang01/doctor-link/pull/145) passed the complete repository validation matrix on 2026-07-13:
 
 - 319 automated tests;
-- 85.39% branch-aware coverage with an enforced 85% floor;
+- 85.40% branch-aware coverage with an enforced 85% floor;
 - Python 3.10, 3.11, and 3.12;
 - Ubuntu, macOS, and Windows smoke validation;
 - Ruff, Bandit, and dependency vulnerability checks;

@@ -12,6 +12,7 @@ Candidate scope for `v0.3.0`: verified automatic repair for Node.js JavaScript a
 
 - JavaScript/TypeScript project detection from `package.json` and common source roots.
 - Automatic npm, pnpm, Yarn, and Bun test selection from `packageManager` and lockfiles, with `node --test` fallback for compatible test files.
+- Cross-platform package-manager resolution binds Windows npm, pnpm, Yarn, Bun, and Corepack launchers to their concrete executable paths before safe subprocess execution.
 - Real npm integration regressions for one- and multi-round repairs, package-script weakening, and test-contract tampering.
 
 ### Changed
@@ -27,7 +28,7 @@ Candidate scope for `v0.3.0`: verified automatic repair for Node.js JavaScript a
 
 ### Validation
 
-- 329 automated tests pass with 85.39% branch-aware coverage and the enforced 85% floor.
+- 331 automated tests pass with 85.40% branch-aware coverage and the enforced 85% floor.
 - The installed-wheel full-capability lab covers all 63 CLI routes through 72 real invocations and ten complex scenario invariants, including a JavaScript/npm approval-gate scenario.
 - A disposable Node.js inventory project completed a live Codex repair: two failing acceptance cases became three passing tests in one round while the package manifest and original test hashes remained unchanged.
 
