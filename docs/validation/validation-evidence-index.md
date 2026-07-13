@@ -2,6 +2,14 @@
 
 This index separates current repaired-source evidence, historical evidence, and actions that have not occurred. A green workflow run certifies only the commit and scope named below.
 
+## Unreleased v0.3.0 candidate evidence
+
+The `v0.3.0` source candidate extends automatic solve to Node.js JavaScript/TypeScript projects. Local validation on 2026-07-13 passed 329 tests at 85.39% branch-aware coverage, Ruff, Bandit, dependency audit, build/content/Twine gates, isolated wheel installation, four repository validation flows, and the installed-wheel full-capability lab with 63/63 routes, 72 invocations, and ten complex scenarios.
+
+A disposable Node.js inventory fixture also completed a live authorized Codex repair. Doctor link automatically selected `npm test`, reproduced two failing acceptance cases, protected `package.json` and the original test, accepted a one-file production fix in one round, independently reran all three tests, and returned `verified` with unchanged protected hashes. See [JavaScript/TypeScript solve validation](javascript-typescript-solve-validation.md).
+
+This evidence is local source-candidate evidence only. Cloud CI, merge, immutable `v0.3.0` tag creation, GitHub Release publication, and registry publication have not yet occurred.
+
 ## Current repaired-source certification
 
 - Repository: `linkyang01/doctor-link`

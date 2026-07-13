@@ -36,6 +36,10 @@ Starts two independent `doctor-link record` processes against one after-state pa
 
 Creates a clean Git-backed Python project with a real duplicate-charge defect, runs both configured failing checks through `doctor-link solve`, and proves that the default result is `approval_required`: evidence and a Codex prompt preview are written, but no repair branch or code edit occurs without `--allow-repair`.
 
+### 7. JavaScript automatic solve approval gate
+
+Creates a clean Git-backed Node.js project with a real arithmetic defect and a `node:test` contract. The installed wheel must detect the project as JavaScript, discover `npm test`, reproduce the failure, hash-protect `package.json` and the test file, and stop at `approval_required` without editing code.
+
 ## Run
 
 Install development dependencies and build distribution artifacts first:
@@ -64,4 +68,4 @@ The output directory contains:
 - `command-logs/`: stdout and stderr for every command invocation;
 - diagnostic packages, handoff, workbench, archive, knowledge, integrity, privacy, conformance, CI, and distribution artifacts.
 
-A successful run means all 63 declared routes executed through 71 real command invocations and all nine scenario-level invariants passed. The automatic-solve scenario deliberately stops at the approval gate, so the lab does not call Codex, upload data, publish a release, or call a hosted service.
+A successful run means all 63 declared routes executed through 72 real command invocations and all ten scenario-level invariants passed. The automatic-solve scenarios deliberately stop at the approval gate, so the lab does not call Codex, upload data, publish a release, or call a hosted service. Node.js and npm are required for the JavaScript scenario.

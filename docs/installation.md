@@ -2,7 +2,7 @@
 
 Doctor link is a Python CLI project. This guide explains how to clone the repository, install it locally, run the CLI, and validate that the project works on a local machine.
 
-Version `0.2.0` is available from the authorized [GitHub Release](https://github.com/linkyang01/doctor-link/releases/tag/v0.2.0) and from source. PR `#145` passed Python 3.10–3.12 and Ubuntu/macOS/Windows validation before publication. Doctor link is not published on PyPI, so `pip install doctor-link==0.2.0` from PyPI is not supported.
+Version `0.2.0` is available from the authorized [GitHub Release](https://github.com/linkyang01/doctor-link/releases/tag/v0.2.0). The current repository source identifies as the unreleased `0.3.0` candidate; build it locally only when you intentionally want to validate the candidate before publication. PR `#145` passed Python 3.10–3.12 and Ubuntu/macOS/Windows validation before the `v0.2.0` publication. Doctor link is not published on PyPI, so `pip install doctor-link==0.2.0` or `0.3.0` from PyPI is not supported.
 
 ## 1. Requirements
 
@@ -12,6 +12,13 @@ Install these tools before starting:
 - Python 3.10 or later
 - pip
 - A terminal that supports shell scripts
+
+For automatic repair of a JavaScript/TypeScript project, also install:
+
+- Node.js compatible with that project;
+- the package manager selected by its `packageManager` field or lockfile (`npm`, `pnpm`, Yarn, or Bun).
+
+These Node.js tools are optional when Doctor link is used only for Python projects or for diagnostic-package workflows.
 
 Recommended Python versions:
 
@@ -104,7 +111,7 @@ If the command prints help text, the CLI entrypoint is installed successfully.
 ```bash
 python -m pip install build
 python -m build
-python -m pip install dist/doctor_link-0.2.0-py3-none-any.whl
+python -m pip install dist/doctor_link-0.3.0-py3-none-any.whl
 doctor-link --version
 ```
 

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import fnmatch
 import hashlib
 import json
+import os
 import re
 import shutil
 import uuid
@@ -23,6 +25,7 @@ from doctor_link.core.test_matrix_runner import load_test_matrix
 
 
 SOLVE_SCHEMA = "doctor-link-solve-session-v1"
+SUPPORTED_PROJECT_TYPES = {"javascript", "python"}
 FINAL_STATUSES = {
     "approval_required",
     "blocked",
@@ -32,20 +35,57 @@ FINAL_STATUSES = {
     "verified",
 }
 VERIFICATION_CONFIG_PATHS = {
+    ".yarnrc.yml",
     ".coveragerc",
+    "bun.lock",
+    "bun.lockb",
+    "jsconfig.json",
     "noxfile.py",
+    "npm-shrinkwrap.json",
+    "package-lock.json",
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
     "pyproject.toml",
     "pytest.ini",
     "setup.cfg",
+    "tsconfig.json",
     "tox.ini",
+    "yarn.lock",
 }
+VERIFICATION_CONFIG_PATTERNS = (
+    "cypress.config.*",
+    "jest.config.*",
+    "playwright.config.*",
+    "vitest.config.*",
+)
 VERIFICATION_CATALOG_PATHS = {
     ".doctorlink/reproduce.yml",
     ".doctorlink/reproduce.yaml",
     ".doctorlink/test-matrix.yml",
     ".doctorlink/test-matrix.yaml",
 }
-IGNORED_VERIFICATION_PARTS = {".git", ".pytest_cache", "__pycache__"}
+JAVASCRIPT_EXTENSIONS = {".cjs", ".cts", ".js", ".jsx", ".mjs", ".mts", ".ts", ".tsx"}
+VERIFICATION_TEST_DIRECTORIES = ("__tests__", "spec", "test", "tests")
+VERIFICATION_TEST_PATTERNS = (
+    "conftest.py",
+    "test_*.py",
+    "*_test.py",
+    *(f"*.test{extension}" for extension in sorted(JAVASCRIPT_EXTENSIONS)),
+    *(f"*.spec{extension}" for extension in sorted(JAVASCRIPT_EXTENSIONS)),
+)
+IGNORED_VERIFICATION_PARTS = {
+    ".cache",
+    ".git",
+    ".next",
+    ".pytest_cache",
+    ".venv",
+    "__pycache__",
+    "coverage",
+    "dist",
+    "node_modules",
+    "venv",
+}
 
 
 @dataclass
@@ -207,7 +247,7 @@ def solve_project(
     repair_timeout_seconds: int = 900,
     repair_executor: RepairExecutor | None = None,
 ) -> SolveResult:
-    """Reproduce, repair, and independently verify one bounded Python-project problem."""
+    """Reproduce, repair, and independently verify one bounded project problem."""
     root = project_root.expanduser().resolve()
     clean_problem = problem.strip()
     session_id = _session_id(root, clean_problem)
@@ -227,11 +267,11 @@ def solve_project(
         return _finish(result, "blocked", "Project root does not exist.", blocker="project_root_missing")
     if not clean_problem:
         return _finish(result, "blocked", "A concrete problem statement is required.", blocker="problem_missing")
-    if project_type != "python":
+    if project_type not in SUPPORTED_PROJECT_TYPES:
         return _finish(
             result,
             "blocked",
-            "This first automatic-solve release supports Python projects only.",
+            "Automatic solve supports Python and Node.js JavaScript/TypeScript projects.",
             blocker="unsupported_project_type",
         )
     if tool != "codex":
@@ -288,6 +328,31 @@ def solve_project(
             "blocked",
             "A reproduction or test command changed the Git working tree. Restore it before automatic repair.",
             blocker="checks_modified_worktree",
+        )
+    required_command_ids = {item.command_id for item in commands if item.required}
+    unavailable_checks = [
+        item for item in baseline if item.command_id in required_command_ids and item.return_code == 127
+    ]
+    if unavailable_checks:
+        result.warnings.extend(
+            f"{item.command_id}: {item.stderr.strip() or 'executable not found'}" for item in unavailable_checks
+        )
+        return _persist_and_finish(
+            result,
+            output_root,
+            "blocked",
+            "A required verification executable was not found. Install the project toolchain before automatic repair.",
+            blocker="verification_tool_missing",
+        )
+    timed_out_checks = [item for item in baseline if item.command_id in required_command_ids and item.timed_out]
+    if timed_out_checks:
+        result.warnings.extend(f"{item.command_id}: command timed out" for item in timed_out_checks)
+        return _persist_and_finish(
+            result,
+            output_root,
+            "blocked",
+            "A required baseline check timed out, so Doctor link could not prove the problem safely.",
+            blocker="baseline_check_timed_out",
         )
     if _checks_passed(commands, baseline):
         result.next_steps.append("Confirm the problem statement and provide a command that fails when the problem is present.")
@@ -477,16 +542,23 @@ def solve_project(
 
 def detect_project_type(project_root: Path) -> str:
     root = project_root.expanduser().resolve()
+    if not root.is_dir():
+        return "unsupported"
     python_markers = [root / "pyproject.toml", root / "setup.py", root / "setup.cfg", root / "requirements.txt"]
     if any(path.is_file() for path in python_markers):
         return "python"
-    common_python_sources = [root / "src", root / "app"]
+    if (root / "package.json").is_file():
+        return "javascript"
+    common_python_sources = [root / "src", root / "app", root / "tests"]
     if (
         any(root.glob("*.py"))
-        or (root / "tests").is_dir()
         or any(source.is_dir() and next(source.rglob("*.py"), None) is not None for source in common_python_sources)
     ):
         return "python"
+    if any(path.suffix.lower() in JAVASCRIPT_EXTENSIONS for path in root.iterdir() if path.is_file()):
+        return "javascript"
+    if any(_contains_javascript_source(source) for source in (root / "src", root / "app", root / "lib")):
+        return "javascript"
     return "unsupported"
 
 
@@ -514,9 +586,63 @@ def discover_solve_commands(
             SolveCommand(f"test-{job.job_id}", "test", job.command, required=job.required)
             for job in matrix.jobs
         )
-        if not matrix.jobs and (project_root / "tests").is_dir():
-            commands.append(SolveCommand("test-pytest", "test", "python -m pytest"))
+        if not matrix.jobs:
+            project_type = detect_project_type(project_root)
+            if project_type == "python" and (project_root / "tests").is_dir():
+                commands.append(SolveCommand("test-pytest", "test", "python -m pytest"))
+            elif project_type == "javascript":
+                javascript_command = _discover_javascript_test_command(project_root)
+                if javascript_command:
+                    commands.append(SolveCommand("test-javascript", "test", javascript_command))
     return _dedupe_commands(commands)
+
+
+def _discover_javascript_test_command(project_root: Path) -> str | None:
+    package_path = project_root / "package.json"
+    package_payload: dict[str, Any] = {}
+    if package_path.is_file():
+        try:
+            loaded = json.loads(package_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            loaded = {}
+        if isinstance(loaded, dict):
+            package_payload = loaded
+
+    scripts = package_payload.get("scripts")
+    test_script = scripts.get("test") if isinstance(scripts, dict) else None
+    if isinstance(test_script, str) and test_script.strip() and "no test specified" not in test_script.lower():
+        manager = _javascript_package_manager(project_root, package_payload)
+        return {
+            "bun": "bun run test",
+            "npm": "npm test",
+            "pnpm": "pnpm test",
+            "yarn": "yarn test",
+        }[manager]
+
+    if any(
+        path.suffix.lower() in {".cjs", ".js", ".mjs"}
+        and (".test." in path.name or ".spec." in path.name)
+        for path in _iter_project_files(project_root)
+    ):
+        return "node --test"
+    return None
+
+
+def _javascript_package_manager(project_root: Path, package_payload: dict[str, Any]) -> str:
+    declared = str(package_payload.get("packageManager") or "").partition("@")[0].lower()
+    if declared in {"bun", "npm", "pnpm", "yarn"}:
+        return declared
+    if (project_root / "pnpm-lock.yaml").is_file():
+        return "pnpm"
+    if (project_root / "yarn.lock").is_file():
+        return "yarn"
+    if (project_root / "bun.lock").is_file() or (project_root / "bun.lockb").is_file():
+        return "bun"
+    return "npm"
+
+
+def _contains_javascript_source(directory: Path) -> bool:
+    return directory.is_dir() and any(path.suffix.lower() in JAVASCRIPT_EXTENSIONS for path in _iter_project_files(directory))
 
 
 def build_repair_prompt(
@@ -551,7 +677,8 @@ def build_repair_prompt(
         )
     else:
         protected_summary.append(
-            "- Do not modify tests, test configuration, reproduction/test catalogs, or scripts referenced by verification commands."
+            "- Do not modify tests, package manifests or lockfiles, test configuration, reproduction/test catalogs, "
+            "or scripts referenced by verification commands."
         )
     if protected_examples:
         protected_summary.append("- Protected examples: " + ", ".join(f"`{item}`" for item in protected_examples))
@@ -565,6 +692,7 @@ def build_repair_prompt(
             "",
             f"Repair round: {round_number}",
             f"Project root: {result.project_root}",
+            f"Project type: {result.project_type}",
             f"Problem: {result.problem}",
             previous,
             "## Independent failing evidence",
@@ -593,7 +721,7 @@ def _run_solve_commands(root: Path, commands: list[SolveCommand], timeout_second
             item.command,
             cwd=root,
             timeout_seconds=timeout_seconds,
-            environment_overrides={"PYTHONDONTWRITEBYTECODE": "1"},
+            environment_overrides={"CI": "1", "NO_COLOR": "1", "PYTHONDONTWRITEBYTECODE": "1"},
         )
         results.append(
             SolveCommandResult(
@@ -676,13 +804,14 @@ def _discover_verification_input_paths(root: Path, commands: list[SolveCommand])
         if candidate.is_file():
             paths.add(candidate)
 
-    for directory_name in ("test", "tests"):
+    for directory_name in VERIFICATION_TEST_DIRECTORIES:
         directory = root / directory_name
         if directory.is_dir():
-            paths.update(path for path in directory.rglob("*") if _is_protected_file(root, path))
+            paths.update(path for path in _iter_project_files(directory) if _is_protected_file(root, path))
 
-    for pattern in ("conftest.py", "test_*.py", "*_test.py"):
-        paths.update(path for path in root.rglob(pattern) if _is_protected_file(root, path))
+    for path in _iter_project_files(root):
+        if any(fnmatch.fnmatch(path.name, pattern) for pattern in (*VERIFICATION_TEST_PATTERNS, *VERIFICATION_CONFIG_PATTERNS)):
+            paths.add(path)
 
     for command in commands:
         try:
@@ -692,6 +821,14 @@ def _discover_verification_input_paths(root: Path, commands: list[SolveCommand])
         for segment in segments:
             paths.update(_command_referenced_paths(root, segment.argv))
     return paths
+
+
+def _iter_project_files(root: Path):
+    for directory, directory_names, file_names in os.walk(root):
+        directory_names[:] = [name for name in directory_names if name not in IGNORED_VERIFICATION_PARTS]
+        base = Path(directory)
+        for file_name in file_names:
+            yield base / file_name
 
 
 def _is_protected_file(root: Path, path: Path) -> bool:

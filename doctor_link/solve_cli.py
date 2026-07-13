@@ -50,7 +50,7 @@ def solve_command(
     output: Path | None,
     json_output: bool,
 ) -> None:
-    """Reproduce, repair with Codex, and independently verify a Python project problem."""
+    """Reproduce, repair with Codex, and independently verify a Python or Node.js project problem."""
     result = solve_project(
         project_root,
         problem=problem,

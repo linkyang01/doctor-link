@@ -2,6 +2,12 @@
 
 Status date: 2026-07-13
 
+## Current source development
+
+The post-`v0.2.0` source extends automatic solve to Node.js JavaScript and TypeScript projects while preserving the same approval, branch isolation, protected-input, bounded-round, and independent-verification contract. It detects `package.json` or JavaScript/TypeScript source roots, selects npm, pnpm, Yarn, or Bun from package metadata and lockfiles, and falls back to `node --test` for compatible test files.
+
+New regressions cover real npm execution, one- and multi-round repair, test tampering, package-script and runner-configuration weakening, missing toolchains, and baseline timeouts. The `v0.3.0` local candidate passed 329 tests at 85.39% branch-aware coverage, all build/security/repository validation gates, and the installed-wheel lab across 63 routes, 72 invocations, and ten scenarios. A live Node.js inventory repair changed one production file, converted two failures into three passing tests in one Codex round, and preserved the package and test hashes. Cloud validation, merge, tag, and publication remain pending; see [the detailed validation report](validation/javascript-typescript-solve-validation.md). The published `v0.2.0` evidence below remains historical and unchanged.
+
 ## Published automatic-solve release
 
 Version `0.2.0` adds `doctor-link solve`, the first goal-aligned automatic problem-solving path. It supports clean Git-backed Python projects, reproduces the failure before editing, requires explicit `--allow-repair`, creates a dedicated repair branch, invokes Codex in a workspace-write sandbox for up to three rounds, and accepts the repair only after Doctor link independently reruns all required commands. Session prompts, Codex JSONL events, stderr, verification results, protected-input hashes, change receipts, and branch metadata remain local and reviewable.

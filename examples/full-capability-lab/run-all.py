@@ -198,6 +198,36 @@ def _initialize_git_fixture(root: Path) -> None:
             raise RuntimeError(f"Could not initialize automatic-solve fixture: {completed.stderr}")
 
 
+def _create_javascript_solve_fixture(root: Path) -> None:
+    tests = root / "tests"
+    tests.mkdir(parents=True)
+    (root / "package.json").write_text(
+        json.dumps(
+            {
+                "name": "doctor-link-full-capability-javascript",
+                "version": "0.0.1",
+                "private": True,
+                "scripts": {"test": "node --test"},
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (root / "calculator.js").write_text(
+        "exports.add = (left, right) => left - right;\n",
+        encoding="utf-8",
+    )
+    (tests / "calculator.test.js").write_text(
+        "const test = require('node:test');\n"
+        "const assert = require('node:assert/strict');\n"
+        "const { add } = require('../calculator');\n"
+        "test('add returns a sum', () => assert.equal(add(2, 3), 5));\n",
+        encoding="utf-8",
+    )
+    _initialize_git_fixture(root)
+
+
 def _write_report(runner: CapabilityRunner, output: Path) -> None:
     covered = {item.route for item in runner.results}
     missing = sorted(CAPABILITIES - covered)
@@ -250,6 +280,7 @@ def run_validation(executable: str, output: Path, dist_dir: Path | None = None) 
     security = scenario_inputs / "security-incident"
     extensions = scenario_inputs / "extension-governance"
     automatic_solve = scenario_inputs / "automatic-solve"
+    javascript_solve = scenario_inputs / "automatic-solve-javascript"
     shutil.copytree(lab_root / "repair-lifecycle", repair)
     shutil.copytree(lab_root / "security-incident", security)
     shutil.copytree(lab_root / "extension-governance", extensions)
@@ -261,6 +292,7 @@ def run_validation(executable: str, output: Path, dist_dir: Path | None = None) 
         encoding="utf-8",
     )
     _initialize_git_fixture(automatic_solve)
+    _create_javascript_solve_fixture(javascript_solve)
     reports = output / "DoctorReports"
     reports.mkdir(parents=True, exist_ok=True)
     runner = CapabilityRunner(executable, output)
@@ -356,6 +388,32 @@ def run_validation(executable: str, output: Path, dist_dir: Path | None = None) 
         contains='"status": "approval_required"',
     )
     runner.scenario_checks.append("automatic-solve-reproduces-and-gates-repair")
+    javascript_solve_run = runner.run(
+        "solve",
+        "solve",
+        javascript_solve,
+        "--problem",
+        "JavaScript addition subtracts",
+        "--out",
+        output / "automatic-solve-javascript",
+        "--json",
+        expected_codes=(2,),
+        contains='"status": "approval_required"',
+    )
+    javascript_solve_result = json.loads(javascript_solve_run.stdout)
+    javascript_commands = [
+        item.get("command")
+        for item in javascript_solve_result.get("commands", [])
+        if isinstance(item, dict)
+    ]
+    javascript_protected = set(javascript_solve_result.get("protected_verification_inputs", []))
+    if javascript_solve_result.get("project_type") != "javascript":
+        raise RuntimeError("Automatic solve did not detect the JavaScript fixture")
+    if javascript_commands != ["npm test"]:
+        raise RuntimeError(f"Automatic solve discovered unexpected JavaScript commands: {javascript_commands}")
+    if not {"package.json", "tests/calculator.test.js"}.issubset(javascript_protected):
+        raise RuntimeError("Automatic solve did not protect the JavaScript acceptance contract")
+    runner.scenario_checks.append("javascript-solve-discovers-npm-and-gates-repair")
 
     before_run = runner.run(
         "diagnose before",

@@ -6,7 +6,30 @@ Doctor link follows semantic versioning. Public release publishing requires expl
 
 ## Unreleased
 
-No changes yet.
+Candidate scope for `v0.3.0`: verified automatic repair for Node.js JavaScript and TypeScript projects.
+
+### Added
+
+- JavaScript/TypeScript project detection from `package.json` and common source roots.
+- Automatic npm, pnpm, Yarn, and Bun test selection from `packageManager` and lockfiles, with `node --test` fallback for compatible test files.
+- Real npm integration regressions for one- and multi-round repairs, package-script weakening, and test-contract tampering.
+
+### Changed
+
+- Automatic solve now supports both Python and Node.js JavaScript/TypeScript projects while retaining the same explicit approval, isolated branch, three-round limit, and independent acceptance contract.
+- Verification-input protection now covers package manifests, lockfiles, workspace files, TypeScript/JavaScript configuration, and common Jest, Vitest, Playwright, and Cypress configuration files.
+- Project checks run with non-interactive `CI=1` and `NO_COLOR=1` environment defaults.
+
+### Security
+
+- Missing required verification executables and timed-out baseline checks block before branch creation or Codex invocation.
+- Generated dependency, build, coverage, and cache directories are pruned from protected-input discovery without weakening source test protection.
+
+### Validation
+
+- 329 automated tests pass with 85.39% branch-aware coverage and the enforced 85% floor.
+- The installed-wheel full-capability lab covers all 63 CLI routes through 72 real invocations and ten complex scenario invariants, including a JavaScript/npm approval-gate scenario.
+- A disposable Node.js inventory project completed a live Codex repair: two failing acceptance cases became three passing tests in one round while the package manifest and original test hashes remained unchanged.
 
 ## [0.2.0] - 2026-07-13
 

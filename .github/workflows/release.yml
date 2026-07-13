@@ -10,11 +10,11 @@ on:
       tag:
         description: Git tag to create or update
         required: true
-        default: v0.2.0
+        default: v0.3.0
       body_path:
         description: Release notes markdown path in the repository
         required: true
-        default: docs/validation/v0.2.0-release-notes.md
+        default: docs/validation/v0.3.0-release-notes.md
       prerelease:
         description: Mark GitHub release as pre-release
         required: true
@@ -83,6 +83,8 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install dist/*.whl
           python -m pip check
+          node --version
+          npm --version
           python examples/full-capability-lab/run-all.py \
             --doctor-link "$(command -v doctor-link)" \
             --dist dist \

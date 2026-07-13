@@ -1,12 +1,12 @@
 # Automatic Solve with Codex
 
-`doctor-link solve` turns a concrete Python-project problem into a bounded repair and verification session. It is the shortest path from “this behavior is wrong” to a reviewable fix.
+`doctor-link solve` turns a concrete Python or Node.js JavaScript/TypeScript project problem into a bounded repair and verification session. It is the shortest path from “this behavior is wrong” to a reviewable fix.
 
 ## What it does
 
 The command performs six distinct jobs:
 
-1. confirms that the target is a Python Git repository with a clean working tree;
+1. confirms that the target is a supported Git repository with a clean working tree;
 2. discovers or accepts shell-free reproduction and regression commands;
 3. runs those commands to prove the problem exists;
 4. after explicit approval, creates a `doctor-link/solve-*` branch and invokes `codex exec` in a workspace-write sandbox;
@@ -20,12 +20,13 @@ Changing a test until it passes is also not sufficient. Protected verification i
 ## Prerequisites
 
 - Python 3.10 or later;
-- a Python project at the Git repository root;
+- a Python project or Node.js JavaScript/TypeScript project at the Git repository root;
+- Node.js and the package manager selected by the project when using the JavaScript/TypeScript path;
 - a clean Git working tree;
 - at least one executable reproduction or test command;
 - Codex CLI installed and authenticated for live repair.
 
-The first release intentionally supports Python projects only. Other project types return `blocked` instead of falling through to an unverified generic repair.
+The current source supports Python and Node.js JavaScript/TypeScript projects. Other project types return `blocked` instead of falling through to an unverified generic repair. In a mixed-language monorepo, run `solve` from the relevant package root and provide explicit commands when repository-wide discovery would be ambiguous.
 
 ## Step 1: reproduce and preview
 
@@ -75,9 +76,13 @@ When command flags are omitted, Doctor link reads:
 
 - command or test entries from `.doctorlink/reproduce.yml`;
 - jobs from `.doctorlink/test-matrix.yml`;
-- `python -m pytest` as a fallback when a `tests/` directory exists and no test matrix is configured.
+- `python -m pytest` as a Python fallback when a `tests/` directory exists and no test matrix is configured;
+- the non-placeholder `scripts.test` from `package.json`, using the declared `packageManager` or the `pnpm`, Yarn, Bun, or npm lockfile;
+- `node --test` when JavaScript `.test.*` or `.spec.*` files exist without a usable package test script.
 
 Configured commands use the existing shell-free Doctor link runner. Quoted arguments, leading environment assignments, and `&&` sequences are supported. Pipes, redirection, semicolons, background execution, and other shell control operators are rejected.
+
+For JavaScript/TypeScript discovery, the resulting outer command remains shell-free. A package manager may execute the repository-owned `scripts.test` value internally, so review `package.json` as project code before authorizing a repair. Doctor link sets `CI=1` and `NO_COLOR=1` for reproducible, non-interactive checks.
 
 ## Session evidence
 
@@ -113,14 +118,14 @@ Later rounds use `round-2/` and `round-3/`. Pass `--out <directory>` to select a
 
 - Doctor link refuses a dirty working tree so existing user changes are not confused with AI edits.
 - Reproduction and test commands run before branch creation and are checked again for unexpected repository changes.
-- Tests, test configuration, reproduction/test catalogs, and directly referenced verification scripts are hash-protected by default.
+- Tests, package manifests and lockfiles, JavaScript/TypeScript test-runner configuration, Python test configuration, reproduction/test catalogs, and directly referenced verification scripts are hash-protected by default.
 - A repair that changes protected verification inputs cannot return `verified`; without exception approval it is blocked immediately.
 - Codex receives workspace-write access only after `--allow-repair`.
 - Doctor link never passes `--dangerously-bypass-approvals-and-sandbox`.
 - Codex is instructed not to switch branches, commit, push, publish, or edit outside the workspace.
 - Doctor link does not automatically commit or push a verified change. Review the diff first.
 
-`--allow-repair` is also the network/data boundary. Doctor link sends the bounded prompt, failing command output, and the repository context Codex chooses to inspect through the user's existing Codex CLI authentication. Review the prompt preview and remove secrets or customer data before authorizing repair. Solve receipts remain local, but the Codex run is not an offline operation unless the user has separately configured a supported local provider outside this first release.
+`--allow-repair` is also the network/data boundary. Doctor link sends the bounded prompt, failing command output, and the repository context Codex chooses to inspect through the user's existing Codex CLI authentication. Review the prompt preview and remove secrets or customer data before authorizing repair. Solve receipts remain local, but the Codex run is not an offline operation unless the user has separately configured a supported local provider.
 
 To abandon a repair, switch back to the original branch and delete the repair branch after confirming that no wanted changes remain:
 
@@ -132,6 +137,8 @@ git branch -D <doctor-link/solve-branch>
 ## Examples of suitable problems
 
 - a Python API returns `200` while its persisted transaction failed;
+- a TypeScript service loses one update during concurrent writes;
+- a JavaScript package handles nested Unicode data correctly in unit tests but fails through its public entry point;
 - a checkout retry creates duplicate charges under a timing edge case;
 - a cache invalidation bug appears only when two configuration flags are combined;
 - a parser succeeds for simple files but corrupts nested Unicode data;
