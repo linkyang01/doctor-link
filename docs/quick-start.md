@@ -94,6 +94,27 @@ bash examples/shop-service-multi-bug/run-example.sh
 
 The script succeeds only when Doctor link correctly captures the known failures, returns non-zero from the failing subcommands, records assertion-linked evidence, keeps verification at `not_verified`, and emits a `needs_repair` handoff. See [Automated diagnosis reliability](automated-diagnosis-reliability.md).
 
+## 9. Automatically solve a Python problem
+
+Start with a preview. This executes the check but does not edit code:
+
+```bash
+doctor-link solve /path/to/python-project \
+  --problem "The total is rounded before tax" \
+  --test-command "python -m pytest tests/test_totals.py -q"
+```
+
+When the result is `approval_required`, review the generated prompt and authorize the repair:
+
+```bash
+doctor-link solve /path/to/python-project \
+  --problem "The total is rounded before tax" \
+  --test-command "python -m pytest tests/test_totals.py -q" \
+  --allow-repair
+```
+
+The target must be a clean Git repository. Doctor link creates a `doctor-link/solve-*` branch, invokes Codex with workspace-write sandboxing, and independently reruns the check after every repair round. See [Automatic Solve with Codex](automatic-solve.md).
+
 ## Boundary
 
 Quick start commands are local. They do not publish releases, upload packages, or require paid cloud services. Diagnostic packages can contain sensitive project evidence; inspect redaction and privacy results before sharing them or attaching them to a GitHub issue.

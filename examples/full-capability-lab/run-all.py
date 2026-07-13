@@ -69,6 +69,7 @@ CAPABILITIES = {
     "scan",
     "schema validate",
     "schema migrate",
+    "solve",
     "strategy validate",
     "test list",
     "test run",
@@ -183,6 +184,20 @@ def _extract_id(output: str, label: str) -> str:
     raise RuntimeError(f"Could not find {label!r} in output:\n{output}")
 
 
+def _initialize_git_fixture(root: Path) -> None:
+    commands = [
+        ["git", "init"],
+        ["git", "config", "user.name", "Doctor link Full Capability"],
+        ["git", "config", "user.email", "doctor-link@example.invalid"],
+        ["git", "add", "."],
+        ["git", "commit", "-m", "automatic solve fixture"],
+    ]
+    for command in commands:
+        completed = subprocess.run(command, cwd=root, text=True, capture_output=True, check=False)
+        if completed.returncode != 0:
+            raise RuntimeError(f"Could not initialize automatic-solve fixture: {completed.stderr}")
+
+
 def _write_report(runner: CapabilityRunner, output: Path) -> None:
     covered = {item.route for item in runner.results}
     missing = sorted(CAPABILITIES - covered)
@@ -234,9 +249,18 @@ def run_validation(executable: str, output: Path, dist_dir: Path | None = None) 
     repair = scenario_inputs / "repair-lifecycle"
     security = scenario_inputs / "security-incident"
     extensions = scenario_inputs / "extension-governance"
+    automatic_solve = scenario_inputs / "automatic-solve"
     shutil.copytree(lab_root / "repair-lifecycle", repair)
     shutil.copytree(lab_root / "security-incident", security)
     shutil.copytree(lab_root / "extension-governance", extensions)
+    shutil.copytree(lab_root / "repair-lifecycle", automatic_solve)
+    (automatic_solve / "src" / "service.py").write_text(
+        "def checkout(total: int) -> int:\n"
+        "    \"\"\"Broken fixture: duplicate the charge until Doctor link repairs it.\"\"\"\n"
+        "    return total * 2\n",
+        encoding="utf-8",
+    )
+    _initialize_git_fixture(automatic_solve)
     reports = output / "DoctorReports"
     reports.mkdir(parents=True, exist_ok=True)
     runner = CapabilityRunner(executable, output)
@@ -319,6 +343,19 @@ def run_validation(executable: str, output: Path, dist_dir: Path | None = None) 
     runner.run("strategy validate", "strategy", "validate", repair, "--json")
     runner.run("reproduce list", "reproduce", "list", repair, "--json")
     runner.run("test list", "test", "list", repair, "--json")
+    runner.run(
+        "solve",
+        "solve",
+        automatic_solve,
+        "--problem",
+        "Checkout duplicates charges",
+        "--out",
+        output / "automatic-solve",
+        "--json",
+        expected_codes=(2,),
+        contains='"status": "approval_required"',
+    )
+    runner.scenario_checks.append("automatic-solve-reproduces-and-gates-repair")
 
     before_run = runner.run(
         "diagnose before",

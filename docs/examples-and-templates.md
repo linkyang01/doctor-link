@@ -70,9 +70,21 @@ doctor-link diagnose after --project "Example" --summary "after fix" --before-pa
 doctor-link diagnose verify <after_package> --json
 ```
 
+## Example automatic solve workflow
+
+Preview a Python-project repair first:
+
+```bash
+doctor-link solve /path/to/project \
+  --problem "Checkout duplicates charges" \
+  --test-command "python -m pytest tests/test_checkout.py -q"
+```
+
+Only after reviewing the generated solve session should you repeat the command with `--allow-repair`. See [Automatic Solve with Codex](automatic-solve.md).
+
 ## Full capability validation lab
 
-`examples/full-capability-lab/` is the executable acceptance example for the complete public CLI. It performs 70 real command invocations across all 62 routes and checks eight linked scenarios, including concurrent evidence writes, multi-bug blocking, before/after repair, safe export and migration, secret redaction, integrity tampering, Adapter/Plugin execution, and governance/archive flows.
+`examples/full-capability-lab/` is the executable acceptance example for the complete public CLI. It performs 71 real command invocations across all 63 routes and checks nine linked scenarios, including automatic-solve approval gating, concurrent evidence writes, multi-bug blocking, before/after repair, safe export and migration, secret redaction, integrity tampering, Adapter/Plugin execution, and governance/archive flows.
 
 After building a wheel and source distribution, run:
 

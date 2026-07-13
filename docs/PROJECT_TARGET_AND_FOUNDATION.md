@@ -2,24 +2,24 @@
 
 ## 1. 项目最终目标
 
-Doctor link 是一个面向 AI Code / Codex / 非程序员用户的软件诊断协作工具。
+Doctor link 是一个面向 AI Code / Codex / 非程序员用户的软件问题自动解决工具。
 
-它的目标不是替代 AI 编码工具，也不是做普通日志查看器，而是补齐 AI 编码工具在复杂项目中最缺的一层：
+它的目标不是替代 AI 编码模型，也不是做普通日志查看器，而是把诊断、AI 修复和独立验证编排成一条可以直接运行的闭环：
 
-> 诊断上下文层。
+> 描述问题 → 自动复现 → Codex 修复 → 独立重测 → 交付证据。
 
-Doctor link 要把“模糊问题”转化为“有证据、有复现、有用户确认、有修复边界、有验证清单”的结构化诊断包，让 AI Code / Codex 能更准确地定位问题、修改代码，并在修改后验证是否真的修好。
+Doctor link 仍以诊断上下文层为地基，但不能停在“生成诊断包”。它要把“模糊问题”转化为可执行命令和结构化证据，在用户明确授权后创建隔离修复分支、调用 Codex 修改代码、最多迭代三轮，并用独立于 Codex 自述的复现和回归命令判断是否真的修好。
 
 ## 2. 一句话定位
 
-> Doctor link 是人和 AI 共用的软件诊断协作层，用于采集问题现场、组织证据、记录复现过程、保留用户确认的问题、生成 AI 修复任务，并验证修复结果。
+> Doctor link 是人和 AI 共用的软件问题解决编排层：它复现问题、约束 Codex 修复、独立验收结果，并保留可审计和可回滚的完整证据。
 
 ## 3. 不做什么
 
 Doctor link 不做以下事情：
 
 1. 不替代 Codex / Aider / OpenHands / Continue 等 AI 编码工具；
-2. 不直接负责自动修代码；
+2. 不自行充当代码生成模型，而是在用户授权后安全调用 Codex 完成修复；
 3. 不做普通日志查看器；
 4. 不做传统监控平台；
 5. 不绑定 Vly；
@@ -39,6 +39,29 @@ Doctor link 要做以下事情：
 8. 对比修复前后的诊断报告；
 9. 支持项目级诊断规则文件化；
 10. 通过适配器扩展到不同项目类型。
+11. 提供一条 `doctor-link solve` 自动解决入口；
+12. 在修复前要求干净 Git 工作区并创建独立修复分支；
+13. 保存每轮 AI 输入、事件、错误和独立验证回执；
+14. 只有全部必选复现与回归命令通过，才输出 `verified`。
+
+## 4.1 当前可交付的自动解决纵切面
+
+第一阶段只承诺 Python 项目，避免“支持所有语言”却无法可靠验收：
+
+```bash
+# 先复现并生成修复预演，不修改代码
+doctor-link solve /path/to/python-project \
+  --problem "提交订单后产生两次扣款" \
+  --test-command "python -m pytest tests/test_checkout.py -q"
+
+# 审查预演后明确授权，才创建分支并调用 Codex
+doctor-link solve /path/to/python-project \
+  --problem "提交订单后产生两次扣款" \
+  --test-command "python -m pytest tests/test_checkout.py -q" \
+  --allow-repair
+```
+
+如果项目已经配置 `.doctorlink/reproduce.yml` 和 `.doctorlink/test-matrix.yml`，可省略命令参数。Doctor link 会执行配置中的复现和测试命令；全部命令已经通过时返回 `not_reproduced`，不会允许 AI 无目标改代码。
 
 ## 5. 核心设计原则
 
@@ -103,7 +126,7 @@ Layer 1: Diagnostic Protocol
 Layer 2: Evidence Collection
 Layer 3: Human Diagnosis Surface
 Layer 4: AI Collaboration Package
-Layer 5: Fix Verification Loop
+Layer 5: Authorized Repair and Verification Loop
 ```
 
 ### 6.1 Layer 1：Diagnostic Protocol 诊断协议层
@@ -172,16 +195,18 @@ AI 任务必须包含：
 9. 修复目标；
 10. 修复后验证清单。
 
-### 6.5 Layer 5：Fix Verification Loop 修复验证闭环
+### 6.5 Layer 5：Authorized Repair and Verification Loop 授权修复与验证闭环
 
-负责判断 AI 是否真的修好了问题。
+负责在用户明确授权后创建隔离分支、调用 AI 修复，并判断 AI 是否真的修好了问题。AI 返回成功、写入补丁或退出码为 0，都不能替代 Doctor link 的独立重测。
 
 输出内容：
 
-- before-report.json；
-- after-report.json；
-- regression-result.json；
-- Go / No-Go 结论。
+- solve-session.json；
+- solve-summary.md；
+- round-N/prompt.md；
+- round-N/codex-events.jsonl；
+- round-N/verification.json；
+- verified / failed / blocked 结论。
 
 ## 7. 标准诊断包结构
 
