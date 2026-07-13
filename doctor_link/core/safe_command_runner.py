@@ -6,6 +6,7 @@ import shlex
 import time
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Mapping
 
 from doctor_link.core.command_runner import run_command
 
@@ -30,7 +31,12 @@ class SafeCommand:
 ENVIRONMENT_ASSIGNMENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=.*$", re.DOTALL)
 
 
-def run_safe_command_sequence(command_text: str, cwd: Path, timeout_seconds: int) -> SafeCommandSequenceResult:
+def run_safe_command_sequence(
+    command_text: str,
+    cwd: Path,
+    timeout_seconds: int,
+    environment_overrides: Mapping[str, str] | None = None,
+) -> SafeCommandSequenceResult:
     """Run one or more `&&`-chained commands without invoking a shell.
 
     Doctor link configuration is often stored in a repository. Treating those
@@ -50,6 +56,8 @@ def run_safe_command_sequence(command_text: str, cwd: Path, timeout_seconds: int
         elapsed = time.monotonic() - started
         remaining = max(1, int(timeout_seconds - elapsed))
         environment = dict(os.environ)
+        if environment_overrides:
+            environment.update(environment_overrides)
         environment.update(command.environment)
         result = run_command(command.argv, timeout_seconds=remaining, cwd=cwd, env=environment)
         stdout_parts.append(result.stdout)

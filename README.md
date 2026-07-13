@@ -4,9 +4,9 @@
 [![Python 3.10–3.12](https://img.shields.io/badge/python-3.10%E2%80%933.12-blue)](https://github.com/linkyang01/doctor-link/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-Doctor link is a local-first, human-AI shared diagnostic layer for software projects.
+Doctor link is a local-first, human-AI shared diagnostic and verified-repair layer for software projects.
 
-Doctor link 是一个本地优先、面向软件项目的人机协同诊断层。它把问题描述、运行证据、人工确认、AI 修复上下文和验证结果组织成同一套可追踪的诊断包。
+Doctor link 是一个本地优先、面向软件项目的人机协同诊断与修复验收层。它不仅组织问题、证据和 AI 上下文，还能在明确授权后驱动 Codex 修复 Python 项目，并独立重测是否真正解决。
 
 - [English documentation](docs/readme/README.en.md)
 - [中文文档](docs/readme/README.zh-CN.md)
@@ -59,6 +59,7 @@ PR #140 was merged as commit `fa779da`, and the authorized [GitHub Release `v0.1
 | Evidence collection | Logs, attachments, environment metadata, command results, redaction records, and integrity indexes. |
 | Human assertions | Explicit records of user-confirmed problems that AI output must not silently dismiss. |
 | Reproduction and tests | Shell-free configured command execution, test matrices, evidence write-back, and timeout metadata. |
+| Automatic solve | Python failure reproduction, explicit repair approval, isolated Git branch, bounded Codex rounds, and independent regression acceptance. |
 | Verification | Missing-evidence reporting, linked assertion coverage, failed-test blockers, before/after comparison, and conservative closure status. |
 | AI handoff | Tool-specific packages with explicit repair, evidence, and verification-review readiness states. |
 | Local workbench | Static local HTML for reviewing diagnostic packages without a hosted service. |
@@ -99,10 +100,33 @@ doctor-link view "$PACKAGE_DIR" --build-only
 
 See [Quick Start](docs/quick-start.md) and [Installation](docs/installation.md) for Windows alternatives and complete validation instructions.
 
+Automatically solve a reproducible Python-project problem:
+
+```bash
+# Preview only: reproduces the issue and writes the repair plan.
+doctor-link solve /path/to/project \
+  --problem "Checkout creates two charges" \
+  --test-command "python -m pytest tests/test_checkout.py -q"
+
+# Explicitly authorize branch creation and Codex edits.
+doctor-link solve /path/to/project \
+  --problem "Checkout creates two charges" \
+  --test-command "python -m pytest tests/test_checkout.py -q" \
+  --allow-repair
+```
+
+See [Automatic Solve with Codex](docs/automatic-solve.md) for command discovery, status codes, evidence files, and rollback.
+
 ## Typical diagnostic workflow
 
 ```text
 preflight → report → collect → assert → reproduce/test → verify → handoff/view
+```
+
+For the automatic Python path, the complete workflow is:
+
+```text
+solve preview → explicit approval → repair branch → Codex round → independent verification → verified/failed
 ```
 
 1. `preflight` checks readiness without running repository commands.
@@ -120,6 +144,8 @@ Failed reproductions, failed required test jobs, and incomplete verification ret
 - Doctor link is local-first and does not upload diagnostic packages by default.
 - Reproduction and test-matrix commands do not invoke a shell; pipelines, redirection, command substitution, and unsafe operators are rejected.
 - Adapter and plugin execution is dry-run by default and requires explicit `--allow-run` approval.
+- Automatic code repair requires `--allow-repair`, a clean Git working tree, and a failing executable check. Codex remains sandboxed to workspace-write; Doctor link does not auto-commit or push.
+- `--allow-repair` invokes the authenticated Codex service and may send the bounded prompt, failing output, and inspected repository context. Review the preview and remove sensitive data before authorization.
 - Generated packages may still contain project-sensitive evidence. Review privacy and redaction reports before sharing them.
 - Do not attach secrets or private diagnostic packages to public GitHub issues.
 
@@ -161,6 +187,7 @@ GitHub Actions runs the full Python matrix, security checks, package installatio
 - [Installation](docs/installation.md)
 - [CLI reference](docs/cli-reference.md)
 - [Automated diagnosis reliability](docs/automated-diagnosis-reliability.md)
+- [Automatic Solve with Codex](docs/automatic-solve.md)
 - [Full capability validation](docs/full-capability-validation.md)
 - Platform integration roadmap: [English](docs/platform-integration-roadmap.md) | [中文](docs/platform-integration-roadmap.zh-CN.md)
 - [Product overview](docs/product-overview.md)

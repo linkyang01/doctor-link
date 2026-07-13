@@ -2,6 +2,14 @@
 
 Status date: 2026-07-13
 
+## Unreleased automatic-solve work
+
+The current development branch adds `doctor-link solve`, the first goal-aligned automatic problem-solving path. It supports clean Git-backed Python projects, reproduces the failure before editing, requires explicit `--allow-repair`, creates a dedicated repair branch, invokes Codex in a workspace-write sandbox for up to three rounds, and accepts the repair only after Doctor link independently reruns all required commands. Session prompts, Codex JSONL events, stderr, verification results, and branch metadata remain local and reviewable.
+
+Local validation passed 313 tests at 85.32% branch-aware coverage. The final clean wheel passed 63/63 public routes through 71 invocations and nine complex scenario invariants. A live disposable Git/Python inventory fixture also completed the full path: Doctor link reproduced three failing assertions, Codex fixed the implementation in one round, and the original independent test command passed all three checks.
+
+This source-level work is not part of the published `v0.1.3` release until it is merged, revalidated in GitHub Actions, and separately authorized for release publication.
+
 ## Current status
 
 Doctor link has completed P0 through P5.10, has passed P5.10 cloud validation on GitHub Actions, has passed cloud self-validation, has completed P6.1 through P6.11 as planning, schema, specification, conformance, ecosystem asset, and quality-closure documentation, and has completed P7.0 through P7.10 as local runtime implementation and final validation closure.

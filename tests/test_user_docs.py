@@ -6,6 +6,7 @@ from pathlib import Path
 REQUIRED_DOCS = [
     "docs/quick-start.md",
     "docs/cli-reference.md",
+    "docs/automatic-solve.md",
     "docs/diagnostic-package-format.md",
     "docs/ai-coding-workflow.md",
     "docs/local-workbench.md",
@@ -32,6 +33,7 @@ def test_cli_reference_mentions_core_command_groups() -> None:
         "doctor-link handoff",
         "doctor-link diagnose verify",
         "doctor-link health",
+        "doctor-link solve",
     ]:
         assert command in text
 

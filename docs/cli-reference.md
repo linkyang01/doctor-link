@@ -100,6 +100,34 @@ Assignments must precede the executable. Sequential `&&` commands are supported,
 
 When `--package-dir` is supplied, each reproduction or test job writes its JSON result into the package and updates `doctor-report.json`, `evidence-list.md`, and `timeline.md`. Stable IDs replace the prior result when the same job is rerun.
 
+## Automatic solve
+
+Preview a bounded Python-project repair without modifying code:
+
+```bash
+doctor-link solve /path/to/project \
+  --problem "Checkout creates two charges" \
+  --reproduce-command "python -m pytest tests/test_checkout.py::test_single_charge -q" \
+  --test-command "python -m pytest tests/test_checkout.py -q" \
+  --json
+```
+
+After reviewing the preview, authorize branch creation and Codex edits:
+
+```bash
+doctor-link solve /path/to/project \
+  --problem "Checkout creates two charges" \
+  --reproduce-command "python -m pytest tests/test_checkout.py::test_single_charge -q" \
+  --test-command "python -m pytest tests/test_checkout.py -q" \
+  --allow-repair \
+  --max-rounds 3 \
+  --command-timeout 120 \
+  --repair-timeout 900 \
+  --json
+```
+
+The first release supports Python projects. It requires a clean Git repository and either explicit commands, configured reproduction/test catalogs, or a discoverable `tests/` directory. Without `--allow-repair`, the command may reproduce the problem and write a prompt preview, but it does not create a branch, invoke Codex, or edit code. See [Automatic Solve with Codex](automatic-solve.md).
+
 ## CI and distribution readiness
 
 ```bash
@@ -170,9 +198,10 @@ Commands print JSON before returning their final exit status, so CI can parse th
 | `test run` | all required jobs passed | at least one required job failed; optional job failures remain visible but do not fail the command |
 | `verify` | `candidate_verified`, `ready`, or `verified` | `missing_evidence`, `not_verified`, or another incomplete status |
 | `diagnose verify` | diagnosis pipeline reports success | pipeline remains incomplete or blocked |
+| `solve` | `verified` | `approval_required` (2), `not_reproduced` (3), `blocked` (4), or `failed` (5) |
 
 See [Automated diagnosis reliability](automated-diagnosis-reliability.md) for assertion, evidence, concurrency, and handoff rules.
 
 ## Safety boundary
 
-CLI commands are local-first. They do not publish releases or upload diagnostic packages by default.
+CLI commands are local-first. They do not publish releases or upload diagnostic packages by default. `solve` requires explicit `--allow-repair`, keeps Codex in a workspace-write sandbox, and never auto-commits or pushes the repair branch.

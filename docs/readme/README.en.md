@@ -6,6 +6,8 @@ Doctor link is a human-AI shared diagnostic layer for software projects. It help
 
 Doctor link does not replace Codex, Aider, OpenHands, Continue, Cursor, or other AI coding tools. It prepares high-quality diagnostic context so AI tools can debug with less guessing, less unrelated editing, and stronger verification.
 
+The current source also provides `doctor-link solve`. For a Python project in a clean Git repository, it first reproduces the failure and writes a repair preview. Only after `--allow-repair` does Doctor link create an isolated branch, invoke Codex for up to three rounds, and independently rerun every required command. A Codex claim is not success; only passing checks produce `verified`.
+
 ## Current Status
 
 Doctor link has completed the P0-P6 protocol, schema, productization, and ecosystem planning work. P7 converted the planned local runtime capabilities into implemented, tested, and documented CLI behavior. Post-P7 hardening fixes have also been completed.
@@ -18,13 +20,15 @@ Doctor link remains local-first. Version `0.1.3` passed the repaired local suite
 
 Version `0.1.3` guarantees non-zero exits for failed reproductions, required tests, and incomplete verification; automated package evidence write-back; before-to-after assertion inheritance; linked passing after-state evidence before candidate verification; and transaction/atomic-write protection for concurrent package updates. See [Automated Diagnosis Reliability](../automated-diagnosis-reliability.md).
 
-The full-capability lab executes every one of the 62 public CLI routes against source and a cleanly installed wheel. It combines 70 real command invocations with eight complex repair, concurrency, privacy, integrity, migration, extension, governance, and archive scenarios. See [Full Capability Validation](../full-capability-validation.md).
+The current-source full-capability lab executes all 63 public CLI routes through 71 real command invocations and nine automatic-solve, repair, concurrency, privacy, integrity, migration, extension, governance, and archive scenario invariants. Published `v0.1.3` retains its historical certification of 62 routes, 70 invocations, and eight scenarios. See [Full Capability Validation](../full-capability-validation.md).
 
 ## Common Commands
 
 ```bash
 doctor-link wizard --folder . --tool cursor
 doctor-link preflight . --json
+doctor-link solve /path/to/python-project --problem "Checkout duplicates charges" --test-command "python -m pytest tests/test_checkout.py -q"
+doctor-link solve /path/to/python-project --problem "Checkout duplicates charges" --test-command "python -m pytest tests/test_checkout.py -q" --allow-repair
 doctor-link init
 doctor-link scan <library>
 doctor-link plan <library>
@@ -66,6 +70,7 @@ python examples/full-capability-lab/run-all.py --dist dist
 - `../quick-start.md`
 - `../cli-reference.md`
 - `../automated-diagnosis-reliability.md`
+- `../automatic-solve.md`
 - `../full-capability-validation.md`
 - `../platform-integration-roadmap.md`
 - `../github-repository-guide.md`
@@ -78,8 +83,8 @@ python examples/full-capability-lab/run-all.py --dist dist
 
 ## Runtime Coverage
 
-P7 implements local runtime support for evidence hardening, local workbench hardening, AI handoff runtime, CI automation, distribution readiness, adapter runtime, plugin runtime, integrity and privacy gates, local knowledge indexing, and local archive helpers.
+P7 implements local runtime support for evidence hardening, local workbench hardening, AI handoff runtime, CI automation, distribution readiness, adapter runtime, plugin runtime, integrity and privacy gates, local knowledge indexing, and local archive helpers. The current source adds the first Python automatic-solve vertical slice on top of that foundation.
 
 ## Boundaries
 
-Doctor link does not currently provide hosted Web platform, cloud synchronization, external account system, telemetry, marketplace, real signing keys or key management, hosted enterprise archive, hosted diagnostic knowledge base, or real RBAC. PyPI publication remains optional.
+Doctor link does not currently provide hosted Web platform, cloud synchronization, external account system, telemetry, marketplace, real signing keys or key management, hosted enterprise archive, hosted diagnostic knowledge base, or real RBAC. Automatic repair currently supports Python projects only, requires explicit approval, and never auto-commits, pushes, or publishes. `--allow-repair` uses existing Codex authentication to call the service, so users should review the preview and remove sensitive data first. PyPI publication remains optional.

@@ -8,7 +8,7 @@ Doctor link maintains an installed-package validation lab at [`examples/full-cap
 | --- | --- |
 | Unit and regression tests | Function-level behavior, edge cases, and previously fixed defects. |
 | Full capability inventory | The declared matrix exactly matches the live Click command tree. |
-| Complex scenario runner | All 62 routes execute as real subprocesses with isolated output. |
+| Complex scenario runner | All 63 routes execute as real subprocesses with isolated output. |
 | Installed-wheel run | The built distribution, entrypoint, dependencies, examples, and runtime files work outside the source import path. |
 | Cross-platform smoke | Core source installation and commands work on Ubuntu, macOS, and Windows. |
 
@@ -18,7 +18,7 @@ The matrix covers:
 
 - workspace and discovery: `init`, `scan`, `plan`, `preflight`, `env`, `probe`;
 - reporting and evidence: `report`, `legacy-report`, `ai-task`, `collect`, `assert`, `record`, `vly-proof`;
-- automated diagnosis: `strategy validate`, `reproduce list/run`, `test list/run`, `diagnose before/after/compare/verify`, `compare`, `verify`;
+- automated diagnosis and repair: `strategy validate`, `reproduce list/run`, `test list/run`, `diagnose before/after/compare/verify`, `compare`, `verify`, `solve`;
 - AI collaboration: `handoff list/check/generate`, `ai-result`, `diagnosis-history`, `assertion-check`, `risk-review`;
 - local user experience: `view`, `workbench-note`, `home`, `wizard`, `diagnose-now`, `doctor-package`;
 - standards and operations: `schema validate/migrate`, `conformance run`, `ci report`, `distribution check`, `health`;
@@ -32,6 +32,8 @@ The matrix covers:
 The lab does not turn known failures into shell success. Raw secret scans, unsafe export gates, and tampered integrity checks must return non-zero. The runner records those invocations as `expected_failure` only when the exit code and evidence match the scenario contract.
 
 The six-bug service similarly succeeds at the scenario level only when its known application failures remain blocked from verification and AI handoff closure.
+
+The automatic-solve fixture is a clean Git-backed Python project with a real duplicate-charge defect. The lab proves that Doctor link executes the failing checks and returns `approval_required` without invoking Codex or editing code, preserving the explicit repair boundary in an installed-wheel run.
 
 Package export is exercised in both directions: raw secrets must be blocked by default, while a reviewed safe package exports with portable paths. A legacy export manifest must migrate with backups and without overwriting a formal package manifest.
 

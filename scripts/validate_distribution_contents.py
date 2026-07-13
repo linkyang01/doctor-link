@@ -11,6 +11,8 @@ WHEEL_REQUIRED_SUFFIXES = {
     "doctor_link/entrypoint.py",
     "doctor_link/core/preflight.py",
     "doctor_link/core/safe_command_runner.py",
+    "doctor_link/core/solve.py",
+    "doctor_link/solve_cli.py",
     "doctor_link/py.typed",
 }
 SDIST_REQUIRED_SUFFIXES = {
@@ -19,6 +21,7 @@ SDIST_REQUIRED_SUFFIXES = {
     "MANIFEST.in",
     ".doctorlink/collect.yml",
     "docs/installation.md",
+    "docs/automatic-solve.md",
     "schemas/v1/doctor-report.schema.json",
     "scripts/e2e_validate.sh",
     "scripts/p7_runtime_validate.sh",

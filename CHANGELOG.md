@@ -6,7 +6,28 @@ Doctor link follows semantic versioning. Public release publishing requires expl
 
 ## Unreleased
 
-No changes yet.
+### Added
+
+- `doctor-link solve` for an end-to-end Python-project loop: reproduce a concrete failure, preview the bounded Codex task, require explicit repair approval, create an isolated Git branch, run up to three Codex repair rounds, and independently verify every required command.
+- Local solve-session receipts containing prompts, Codex JSONL events, stderr, per-round verification results, final status, branch metadata, and rollback guidance.
+- Automatic command discovery from `.doctorlink/reproduce.yml`, `.doctorlink/test-matrix.yml`, or a `python -m pytest` fallback.
+- Complex automatic-solve regressions for approval gating, non-reproduction, dirty-worktree protection, unsafe commands, one- and multi-round success, exhausted rounds, and Codex sandbox arguments.
+
+### Changed
+
+- Product positioning now makes verified problem resolution the user-facing goal while retaining the diagnostic context layer as its evidence foundation.
+- Shell-free command execution accepts internal environment overrides so automatic checks can prevent Python bytecode artifacts from dirtying a clean repository.
+
+### Security
+
+- Automatic repair refuses dirty or non-Git workspaces, requires `--allow-repair`, uses `codex exec --sandbox workspace-write --json`, never bypasses the Codex sandbox, and does not auto-commit, push, or publish.
+
+### Validation
+
+- 313 automated tests passed with 85.32% branch-aware coverage and the enforced 85% floor.
+- The final clean wheel passed all 63 public routes through 71 real invocations and nine complex scenario invariants.
+- A disposable Git/Python inventory project completed a live Codex repair: three baseline failures became three passing tests in one round, and Doctor link returned `verified` from its independent rerun.
+- Ruff, Bandit, dependency vulnerability audit, wheel/sdist build, distribution-content validation, and Twine validation passed.
 
 ## [0.1.3] - 2026-07-13
 

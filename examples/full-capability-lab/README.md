@@ -4,7 +4,7 @@ This lab runs every Doctor link CLI capability through realistic local scenarios
 
 ## Coverage contract
 
-- 62/62 capability routes, including the version entrypoint;
+- 63/63 capability routes, including the version entrypoint;
 - at least one real process execution for every route;
 - successful and expected-blocked outcomes checked separately;
 - machine-readable per-command logs and a final coverage report;
@@ -31,6 +31,10 @@ Discovers and validates an Adapter and Plugin, records dry runs without executio
 ### 5. Concurrent package writers
 
 Starts two independent `doctor-link record` processes against one after-state package and verifies that both records survive.
+
+### 6. Automatic solve approval gate
+
+Creates a clean Git-backed Python project with a real duplicate-charge defect, runs both configured failing checks through `doctor-link solve`, and proves that the default result is `approval_required`: evidence and a Codex prompt preview are written, but no repair branch or code edit occurs without `--allow-repair`.
 
 ## Run
 
@@ -60,4 +64,4 @@ The output directory contains:
 - `command-logs/`: stdout and stderr for every command invocation;
 - diagnostic packages, handoff, workbench, archive, knowledge, integrity, privacy, conformance, CI, and distribution artifacts.
 
-A successful run means all 62 declared routes executed through 70 real command invocations and all eight scenario-level invariants passed. It does not upload data, publish a release, or call a hosted service.
+A successful run means all 63 declared routes executed through 71 real command invocations and all nine scenario-level invariants passed. The automatic-solve scenario deliberately stops at the approval gate, so the lab does not call Codex, upload data, publish a release, or call a hosted service.
