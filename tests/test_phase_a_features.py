@@ -19,7 +19,7 @@ from doctor_link.entrypoint import main
 def test_cli_version_flag() -> None:
     result = CliRunner().invoke(main, ["--version"])
     assert result.exit_code == 0
-    assert "0.1.3" in result.output
+    assert "0.2.0" in result.output
 
 
 def test_report_uses_diagnosis_project_name(tmp_path: Path) -> None:
