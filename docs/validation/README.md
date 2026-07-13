@@ -21,6 +21,7 @@ PyPI publication: not performed
 - [100-point quality scorecard](local-quality-scorecard.md) — weighted repository-readiness rubric and receipts.
 - [Release checklist](release-candidate-checklist.md) — completed engineering, merge, and GitHub publication gates.
 - [v0.1.2 release notes](v0.1.2-release-notes.md) — published release contents and installation guidance.
+- [v0.1.3 release notes](v0.1.3-release-notes.md) — current reliability and privacy-safe export release contents.
 - [GitHub Release v0.1.2](https://github.com/linkyang01/doctor-link/releases/tag/v0.1.2) — authoritative publication page and assets.
 
 ## Supporting records
