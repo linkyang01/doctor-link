@@ -8,6 +8,7 @@ from typing import Any
 from doctor_link.core.diagnosis_workflow import read_workflow_metadata
 from doctor_link.core.report_comparator import write_report_comparison_to_package
 from doctor_link.core.verification_runner import run_verification
+from doctor_link.core.package_transaction import atomic_write_json, atomic_write_text, package_transaction
 
 
 @dataclass
@@ -78,7 +79,7 @@ def run_diagnosis_verify(after_package: Path, write_back: bool = True) -> Diagno
     else:
         notes.append("before_report is missing; comparison was not generated")
     result = run_verification(after_package, write_back=write_back)
-    success = result.status == "verified" and not result.missing_evidence
+    success = result.status in {"verified", "candidate_verified", "ready"} and not result.missing_evidence and not result.blocking_test_records
     if not success:
         notes.append("pipeline is not successful until verification evidence is complete")
     summary = DiagnosisPipelineSummary(
@@ -104,11 +105,12 @@ def _read_verification(package_dir: Path) -> dict[str, Any]:
 
 def _write_summary(package_dir: Path, summary: DiagnosisPipelineSummary) -> None:
     payload = summary.to_dict()
-    (package_dir / "diagnosis-pipeline-summary.json").write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-    (package_dir / "diagnosis-pipeline-summary.md").write_text(summary.to_markdown(), encoding="utf-8")
-    report_path = package_dir / "doctor-report.json"
-    if report_path.exists():
-        report = json.loads(report_path.read_text(encoding="utf-8"))
-        if isinstance(report, dict):
-            report["diagnosis_pipeline_summary"] = payload
-            report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    with package_transaction(package_dir):
+        atomic_write_json(package_dir / "diagnosis-pipeline-summary.json", payload)
+        atomic_write_text(package_dir / "diagnosis-pipeline-summary.md", summary.to_markdown())
+        report_path = package_dir / "doctor-report.json"
+        if report_path.exists():
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+            if isinstance(report, dict):
+                report["diagnosis_pipeline_summary"] = payload
+                atomic_write_json(report_path, report)

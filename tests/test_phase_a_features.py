@@ -19,7 +19,7 @@ from doctor_link.entrypoint import main
 def test_cli_version_flag() -> None:
     result = CliRunner().invoke(main, ["--version"])
     assert result.exit_code == 0
-    assert "0.1.2" in result.output
+    assert "0.1.3" in result.output
 
 
 def test_report_uses_diagnosis_project_name(tmp_path: Path) -> None:
@@ -58,7 +58,7 @@ def test_verify_lists_missing_evidence_and_next_commands(tmp_path: Path) -> None
     )
 
     result = CliRunner().invoke(main, ["verify", str(package)])
-    assert result.exit_code == 0, result.output
+    assert result.exit_code == 1, result.output
     assert "Missing evidence:" in result.output
     assert "Next commands:" in result.output
 

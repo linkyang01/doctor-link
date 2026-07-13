@@ -47,7 +47,11 @@ doctor-link record "$PACKAGE_DIR" \
   --expected "Doctor link can diagnose its own repository" \
   --actual "Doctor link generated a self-diagnostic package" >/dev/null
 
-doctor-link verify "$PACKAGE_DIR" --write-back >/dev/null
+if doctor-link verify "$PACKAGE_DIR" --write-back --json > "$ROOT_DIR/verification.json"; then
+  echo "Expected self-validation package to request comparison/assertion evidence" >&2
+  exit 1
+fi
+grep -q '"status": "missing_evidence"' "$ROOT_DIR/verification.json"
 test -f "$PACKAGE_DIR/verification-result.json"
 
 doctor-link schema validate "$PACKAGE_DIR" --write --json > "$ROOT_DIR/schema-validation-final.json"

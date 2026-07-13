@@ -32,8 +32,14 @@ doctor-link vly-proof <library> --package-dir <package_dir>
 doctor-link assert <package_dir> --statement "This is the problem"
 doctor-link verify <package_dir> --write-back
 doctor-link compare before.json after.json --package-dir <package_dir>
-doctor-link doctor-package <package_dir> --out DoctorReports/package.zip
+doctor-link doctor-package <package_dir> --out DoctorReports/package.zip --json
+doctor-link doctor-package <package_dir> --out DoctorReports/reviewed.zip --allow-unsafe-export
+doctor-link schema migrate <package_dir> --json
 ```
+
+`doctor-package` runs the privacy export gate by default and returns non-zero when sensitive patterns remain. `--allow-unsafe-export` is an explicit reviewed override and is recorded in `package-export-manifest.json`. Export manifests and package README files contain portable relative paths only.
+
+`schema migrate` recognizes only legacy export-shaped `manifest.json` files. It writes `package-export-manifest.json`, preserves the original as `manifest.legacy-export.json`, backs up the old package README, and leaves formal package manifests untouched.
 
 ## Local workbench
 
@@ -83,6 +89,16 @@ doctor-link diagnose compare <after_package> --json
 doctor-link diagnose verify <after_package> --json
 doctor-link health DoctorReports --json
 ```
+
+Configured reproduction and test commands support leading environment assignments without a shell:
+
+```yaml
+command: PYTHONPATH=src MODE=regression python -m pytest tests/test_auth.py
+```
+
+Assignments must precede the executable. Sequential `&&` commands are supported, while redirection, pipelines, command substitution, and other shell control operators remain rejected.
+
+When `--package-dir` is supplied, each reproduction or test job writes its JSON result into the package and updates `doctor-report.json`, `evidence-list.md`, and `timeline.md`. Stable IDs replace the prior result when the same job is rerun.
 
 ## CI and distribution readiness
 
@@ -146,7 +162,16 @@ doctor-link archive export DoctorReports/archive DoctorReports/archive.zip --jso
 
 ## Exit behavior
 
-Most commands print output paths and return non-zero when validation fails or inputs are invalid.
+Commands print JSON before returning their final exit status, so CI can parse the result and still rely on the process code:
+
+| Command | Exit 0 | Non-zero |
+| --- | --- | --- |
+| `reproduce run` | `passed` or manual reproduction | failed, timed out, missing, or invalid reproduction |
+| `test run` | all required jobs passed | at least one required job failed; optional job failures remain visible but do not fail the command |
+| `verify` | `candidate_verified`, `ready`, or `verified` | `missing_evidence`, `not_verified`, or another incomplete status |
+| `diagnose verify` | diagnosis pipeline reports success | pipeline remains incomplete or blocked |
+
+See [Automated diagnosis reliability](automated-diagnosis-reliability.md) for assertion, evidence, concurrency, and handoff rules.
 
 ## Safety boundary
 

@@ -21,7 +21,12 @@ from doctor_link import __version__
 from doctor_link.core.diagnosis_strategy import load_diagnosis_strategy, project_context_from_library
 from doctor_link.core.friendly_errors import friendly_path_error, wrap_io_error
 from doctor_link.core.package_builder import build_diagnostic_package, event_from_scan
-from doctor_link.core.package_exporter import PackageExportOptions, export_package
+from doctor_link.core.package_exporter import (
+    InsufficientDiskSpaceError,
+    PackageExportOptions,
+    UnsafePackageExportError,
+    export_package,
+)
 from doctor_link.core.preflight import run_preflight
 from doctor_link.core.redactor import RedactionOptions
 from doctor_link.core.report_comparator import write_report_comparison, write_report_comparison_to_package
@@ -329,16 +334,18 @@ def verify_command(package_dir: Path, write_back: bool, json_output: bool) -> No
     result = run_verification(package_dir, write_back=write_back, config=merged)
     if json_output:
         click.echo(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
-        return
-    click.echo(f"Verification status: {result.status}")
-    if result.missing_evidence:
-        click.echo("Missing evidence:")
-        for item in result.missing_evidence:
-            click.echo(f"  - {item}")
-    if result.next_commands:
-        click.echo("Next commands:")
-        for item in result.next_commands:
-            click.echo(f"  - {item}")
+    else:
+        click.echo(f"Verification status: {result.status}")
+        if result.missing_evidence:
+            click.echo("Missing evidence:")
+            for item in result.missing_evidence:
+                click.echo(f"  - {item}")
+        if result.next_commands:
+            click.echo("Next commands:")
+            for item in result.next_commands:
+                click.echo(f"  - {item}")
+    if result.status not in {"candidate_verified", "ready", "verified"}:
+        raise click.exceptions.Exit(1)
 
 
 @main.command("compare")
@@ -362,11 +369,43 @@ def compare_command(before: Path, after: Path, package_dir: Path | None, output:
 @click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
 @click.option("--out", "output", type=click.Path(path_type=Path), required=True, help="Output zip path.")
 @click.option("--include-web", is_flag=True, help="Include generated web view assets if present.")
-def doctor_package_command(package_dir: Path, output: Path, include_web: bool) -> None:
+@click.option("--exclude-attachments", is_flag=True, help="Exclude evidence attachments from the archive.")
+@click.option("--exclude-logs", is_flag=True, help="Exclude collected logs from the archive.")
+@click.option("--exclude-screenshots", is_flag=True, help="Exclude screenshots from the archive.")
+@click.option("--max-file-size", type=click.IntRange(min=0), default=None, help="Skip files larger than this byte limit.")
+@click.option("--privacy-policy", type=click.Path(exists=True, dir_okay=False, path_type=Path), default=None, help="Optional privacy policy used by the default export gate.")
+@click.option("--allow-unsafe-export", is_flag=True, help="Explicitly export after reviewing blocked privacy findings.")
+@click.option("--json", "json_output", is_flag=True, help="Print JSON output.")
+def doctor_package_command(
+    package_dir: Path,
+    output: Path,
+    include_web: bool,
+    exclude_attachments: bool,
+    exclude_logs: bool,
+    exclude_screenshots: bool,
+    max_file_size: int | None,
+    privacy_policy: Path | None,
+    allow_unsafe_export: bool,
+    json_output: bool,
+) -> None:
     """Export a diagnostic package archive."""
-    options = PackageExportOptions(include_web_assets=include_web)
-    path = export_package(package_dir, output, options=options)
-    click.echo(f"Exported diagnostic package: {path}")
+    options = PackageExportOptions(
+        include_web_assets=include_web,
+        exclude_attachments=exclude_attachments,
+        exclude_logs=exclude_logs,
+        exclude_screenshots=exclude_screenshots,
+        max_file_size=max_file_size,
+        privacy_policy=privacy_policy,
+        allow_unsafe_export=allow_unsafe_export,
+    )
+    try:
+        result = export_package(package_dir, output, options=options)
+    except (UnsafePackageExportError, InsufficientDiskSpaceError, ValueError) as exc:
+        raise click.ClickException(str(exc)) from exc
+    if json_output:
+        click.echo(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+        return
+    click.echo(f"Exported diagnostic package: {result.output_zip}")
 
 
 @main.command("view")

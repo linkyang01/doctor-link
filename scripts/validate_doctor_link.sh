@@ -67,7 +67,11 @@ doctor-link compare DoctorReports/before-validation.json "$PACKAGE_DIR/doctor-re
   --out DoctorReports/comparison-validation \
   --package-dir "$PACKAGE_DIR" >/dev/null
 
-doctor-link verify "$PACKAGE_DIR" --write-back >/dev/null
+if doctor-link verify "$PACKAGE_DIR" --write-back --json > DoctorReports/verification-validation.json; then
+  echo "Expected the partial validation record to keep verification blocked" >&2
+  exit 1
+fi
+grep -q '"status": "not_verified"' DoctorReports/verification-validation.json
 test -f "$PACKAGE_DIR/verification-result.json"
 
 doctor-link schema validate "$PACKAGE_DIR" --write --json >/dev/null
@@ -89,7 +93,11 @@ test -n "$AFTER_PACKAGE"
 test -f "$AFTER_PACKAGE/doctor-report.json"
 
 doctor-link diagnose compare "$AFTER_PACKAGE" --json >/dev/null
-doctor-link diagnose verify "$AFTER_PACKAGE" --json >/dev/null
+if doctor-link diagnose verify "$AFTER_PACKAGE" --json > DoctorReports/diagnosis-verification-validation.json; then
+  echo "Expected the evidence-free after package to remain incomplete" >&2
+  exit 1
+fi
+grep -q '"success": false' DoctorReports/diagnosis-verification-validation.json
 doctor-link schema validate "$AFTER_PACKAGE" --write --json >/dev/null
 
 doctor-link health DoctorReports --json >/dev/null

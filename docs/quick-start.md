@@ -86,6 +86,14 @@ doctor-link diagnose before --project "Demo" --summary "before" --out DoctorRepo
 doctor-link health DoctorReports --json
 ```
 
+For a complete runnable scenario with known passing and failing checks:
+
+```bash
+bash examples/shop-service-multi-bug/run-example.sh
+```
+
+The script succeeds only when Doctor link correctly captures the known failures, returns non-zero from the failing subcommands, records assertion-linked evidence, keeps verification at `not_verified`, and emits a `needs_repair` handoff. See [Automated diagnosis reliability](automated-diagnosis-reliability.md).
+
 ## Boundary
 
 Quick start commands are local. They do not publish releases, upload packages, or require paid cloud services. Diagnostic packages can contain sensitive project evidence; inspect redaction and privacy results before sharing them or attaching them to a GitHub issue.

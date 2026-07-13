@@ -6,7 +6,51 @@ Doctor link follows semantic versioning. Public release publishing requires expl
 
 ## Unreleased
 
-No unreleased changes.
+No changes yet.
+
+## [0.1.3] - 2026-07-13
+
+Reliability, evidence integrity, privacy-safe package export, installed-wheel full-capability validation, and platform-integration planning release.
+
+### Added
+
+- Safe leading environment assignments such as `PYTHONPATH=src python ...` in configured reproduction and test commands, without invoking a shell.
+- Transactional diagnostic-package updates with cross-process locking and atomic file replacement.
+- Automatic reproduction and test-matrix evidence recording with stable IDs, assertion links, timeline entries, and rerun replacement.
+- Complex regression scenarios for false-success exits, concurrent record writes, assertion inheritance, failed-test blockers, and handoff status accuracy.
+- Installed-package full capability lab covering all 62 public command routes across repair, migration, multi-bug, security, integrity, extension, governance, archive, and concurrency scenarios.
+- Versioned package-export manifest schema and automatic CLI inventory enforcement.
+
+### Changed
+
+- `reproduce run`, required `test run` jobs, `verify`, and `diagnose verify` now return non-zero when their machine-readable result is unsuccessful.
+- After-state packages inherit before-state user assertions and investigation boundaries.
+- Before/after comparison resolves an assertion only when a linked after-state test record passes; a missing assertion is not proof of resolution.
+- Verification includes failed, partial, and unknown test records in blockers and rerun instructions, while replacing stale verification commands on later runs.
+- Handoff compatibility distinguishes `needs_repair`, `needs_evidence`, `ready_for_verification_review`, and `ready`, and exposes the current verification status.
+- The six-bug shop-service example now creates the package before running checks, attaches all automated evidence, and validates the expected unresolved status.
+- GitHub Actions now executes the full capability lab against the cleanly installed wheel and uploads its per-command evidence.
+
+### Fixed
+
+- Prevented concurrent CLI processes from silently overwriting each other's package updates.
+- Prevented stale comparison and verification sections from accumulating and incorrectly implying `candidate_verified`.
+- Prevented failed reproductions and required test jobs from printing failure JSON while returning shell exit code 0.
+- Repaired `doctor-package --include-web` and exposed the documented attachment/log/screenshot/size filters.
+- Prevented package export manifests from being misclassified as AI handoff manifests during Schema and Conformance validation.
+- Made `doctor-package` run the privacy export gate by default, with an explicit audited `--allow-unsafe-export` override.
+- Removed absolute local paths from archived export manifests and package README files.
+- Added `schema migrate` to convert legacy export-shaped `manifest.json` files while preserving backups and refusing formal manifests.
+- Made zip export atomic with destination-capacity preflight so interruptions and low-disk failures preserve the previous complete archive.
+- Added large-file-count, command-timeout, interrupted-export, retry, and insufficient-disk regression coverage.
+
+### Validation
+
+- 298 automated tests passed with 85.25% branch-aware coverage and an enforced 85% minimum.
+- All 62 public routes passed through 70 real installed-package command invocations and eight complex scenario invariants.
+- Python 3.10, 3.11, and 3.12 passed.
+- Ubuntu, macOS, and Windows smoke jobs passed.
+- Ruff, Bandit, pip-audit, distribution-content validation, Twine, and isolated wheel installation passed.
 
 ## [0.1.2] - 2026-07-13
 

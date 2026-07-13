@@ -58,7 +58,7 @@ def test_compare_reports_marks_resolved_assertions_candidate_verified(tmp_path: 
         {
             "category": "playback_failure",
             "status": "ai_ready",
-            "user_assertions": [{"user_statement": "Subtitle missing"}],
+            "user_assertions": [{"assertion_id": "assertion-subtitle", "user_statement": "Subtitle missing"}],
             "evidence": [{"evidence_id": "evd_before"}],
             "timeline": [{"order": 1}],
             "test_records": [],
@@ -69,10 +69,16 @@ def test_compare_reports_marks_resolved_assertions_candidate_verified(tmp_path: 
         {
             "category": "playback_fixed_candidate",
             "status": "verification_ready",
-            "user_assertions": [],
+            "user_assertions": [{"assertion_id": "assertion-subtitle", "user_statement": "Subtitle missing"}],
             "evidence": [{"evidence_id": "evd_before"}, {"evidence_id": "evd_after"}],
             "timeline": [{"order": 1}, {"order": 2}],
-            "test_records": [{"name": "rerun subtitle"}],
+            "test_records": [
+                {
+                    "name": "rerun subtitle",
+                    "status": "passed",
+                    "related_assertion_ids": ["assertion-subtitle"],
+                }
+            ],
         },
     )
 
@@ -81,7 +87,7 @@ def test_compare_reports_marks_resolved_assertions_candidate_verified(tmp_path: 
     assert comparison.status == "candidate_verified"
     assert comparison.resolved_user_assertions == ["Subtitle missing"]
     assert comparison.remaining_user_assertions == []
-    assert "confirm with recorded test evidence" in " ".join(comparison.notes)
+    assert "linked passing after-state test evidence" in " ".join(comparison.notes)
 
 
 def test_write_report_comparison_outputs_json_and_markdown(tmp_path: Path) -> None:
@@ -106,7 +112,7 @@ def test_write_report_comparison_to_package_adds_verification_evidence(tmp_path:
         {
             "category": "playback_failure",
             "status": "ai_ready",
-            "user_assertions": [{"user_statement": "Audio missing"}],
+            "user_assertions": [{"assertion_id": "assertion-audio", "user_statement": "Audio missing"}],
             "evidence": [{"evidence_id": "evd_before"}],
             "timeline": [{"order": 1}],
             "test_records": [],
@@ -121,9 +127,11 @@ def test_write_report_comparison_to_package_adds_verification_evidence(tmp_path:
 
     after_report = package.root_dir / "doctor-report.json"
     payload = json.loads(after_report.read_text(encoding="utf-8"))
-    payload["user_assertions"] = []
+    payload["user_assertions"] = [{"assertion_id": "assertion-audio", "user_statement": "Audio missing"}]
     payload["evidence"].append({"evidence_id": "evd_after"})
-    payload["test_records"] = [{"name": "rerun audio"}]
+    payload["test_records"] = [
+        {"name": "rerun audio", "status": "passed", "related_assertion_ids": ["assertion-audio"]}
+    ]
     after_report.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
     evidence = write_report_comparison_to_package(before, package.root_dir)

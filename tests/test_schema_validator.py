@@ -7,6 +7,7 @@ from click.testing import CliRunner
 
 from doctor_link.core.models import DiagnosticEvent
 from doctor_link.core.package_builder import build_diagnostic_package
+from doctor_link.core.package_exporter import export_package
 from doctor_link.core.schema_validator import validate_diagnostic_package
 from doctor_link.p4_cli import main
 
@@ -20,6 +21,7 @@ SCHEMA_FILES = [
     "ai-repair-result.schema.json",
     "diagnosis-history.schema.json",
     "manifest.schema.json",
+    "package-export-manifest.schema.json",
     "adapter-manifest.schema.json",
     "plugin-manifest.schema.json",
     "ai-tool-integration.schema.json",
@@ -71,3 +73,30 @@ def test_schema_validate_cli_writes_result_files(tmp_path: Path) -> None:
     assert payload["valid"] is True
     assert (package.root_dir / "schema-validation-result.json").exists()
     assert (package.root_dir / "schema-validation-result.md").exists()
+
+
+def test_exported_package_remains_schema_valid(tmp_path: Path) -> None:
+    package = build_diagnostic_package(DiagnosticEvent(project="Schema Export"), tmp_path)
+    assert package.root_dir is not None
+    export_package(package.root_dir, tmp_path / "package.zip")
+
+    result = validate_diagnostic_package(package.root_dir)
+
+    assert result.valid
+    assert "package-export-manifest.json" in result.checked_files
+
+
+def test_schema_validator_accepts_legacy_export_manifest_with_warning(tmp_path: Path) -> None:
+    package = build_diagnostic_package(DiagnosticEvent(project="Legacy Export"), tmp_path)
+    assert package.root_dir is not None
+    exported = export_package(package.root_dir, tmp_path / "package.zip")
+    manifest = Path(exported.manifest_path)
+    payload = json.loads(manifest.read_text(encoding="utf-8"))
+    payload.pop("schema")
+    (package.root_dir / "manifest.json").write_text(json.dumps(payload), encoding="utf-8")
+    manifest.unlink()
+
+    result = validate_diagnostic_package(package.root_dir)
+
+    assert result.valid
+    assert any("Legacy package export manifest" in item.message for item in result.findings)

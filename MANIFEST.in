@@ -14,9 +14,11 @@ prune examples/basic-project/.doctor-link
 prune examples/python-api-bug/.doctor-link
 prune examples/python-api-bug/src/__pycache__
 prune examples/python-api-bug/tests/__pycache__
+prune examples/full-capability-lab/repair-lifecycle/.doctor-link
 prune .doctor-link
 prune .doctorlink-e2e
 prune .doctorlink-p7-runtime
+prune .doctorlink-full-capability
 prune DoctorReports
 prune DoctorWorkspace
 global-exclude *.py[cod]

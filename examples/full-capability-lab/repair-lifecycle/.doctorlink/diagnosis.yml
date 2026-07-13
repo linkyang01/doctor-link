@@ -1,0 +1,10 @@
+diagnosis:
+  project_type: repair-lifecycle
+  default_commands:
+    - python --version
+  evidence_rules:
+    - collect local logs and command output
+  verification_rules:
+    - require linked passing evidence for inherited assertions
+  excluded_paths:
+    - .git

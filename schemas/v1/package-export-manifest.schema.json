@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://doctor-link.local/schemas/v1/package-export-manifest.schema.json",
+  "title": "Doctor link Package Export Manifest",
+  "type": "object",
+  "required": [
+    "schema",
+    "package_dir",
+    "output_zip",
+    "exported_at",
+    "validation",
+    "included_files",
+    "skipped_files",
+    "manifest_path",
+    "package_readme_path",
+    "privacy_gate"
+  ],
+  "properties": {
+    "schema": { "const": "doctor-link-package-export-manifest-v1" },
+    "package_dir": { "const": "." },
+    "output_zip": { "type": "string", "pattern": "^[^/\\\\:]+$" },
+    "exported_at": { "type": "string" },
+    "validation": { "type": "object" },
+    "included_files": { "type": "array", "items": { "type": "object" } },
+    "skipped_files": { "type": "array", "items": { "type": "object" } },
+    "manifest_path": { "const": "package-export-manifest.json" },
+    "package_readme_path": { "const": "package-readme.md" },
+    "redaction_report_path": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "string", "pattern": "^[^/\\\\:]+$" }
+      ]
+    },
+    "privacy_gate": {
+      "type": "object",
+      "required": ["status", "scanned_files", "findings_count", "override_used"],
+      "properties": {
+        "status": { "enum": ["passed", "blocked", "not_run"] },
+        "scanned_files": { "type": "integer", "minimum": 0 },
+        "findings_count": { "type": "integer", "minimum": 0 },
+        "override_used": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}

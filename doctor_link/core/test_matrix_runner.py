@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-import json
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
 import yaml
 
-from doctor_link.core.models import EvidenceItem, TimelineStep
+from doctor_link.core.automated_evidence import record_automated_result
 from doctor_link.core.safe_command_runner import run_safe_command_sequence
 
 
@@ -18,6 +17,8 @@ class TestMatrixJob:
     command: str
     required: bool = True
     related_verification_steps: list[str] = field(default_factory=list)
+    related_assertion_ids: list[str] = field(default_factory=list)
+    related_assertion_statements: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -37,6 +38,7 @@ class TestMatrixCatalog:
 class TestMatrixRunResult:
     job_id: str
     status: str
+    required: bool = True
     return_code: int | None = None
     stdout: str = ""
     stderr: str = ""
@@ -82,6 +84,8 @@ def load_test_matrix(project_root: Path) -> TestMatrixCatalog:
                 command=command,
                 required=bool(item.get("required", True)),
                 related_verification_steps=[str(value) for value in item.get("related_verification_steps", []) or []],
+                related_assertion_ids=[str(value) for value in item.get("related_assertion_ids", []) or []],
+                related_assertion_statements=[str(value) for value in item.get("related_assertion_statements", []) or []],
             )
         )
     if not jobs and isinstance(cases_raw, list):
@@ -97,7 +101,7 @@ def run_test_matrix(project_root: Path, package_dir: Path | None = None, job_id:
     results: list[TestMatrixRunResult] = []
     for job in selected:
         completed = run_safe_command_sequence(job.command, cwd=project_root, timeout_seconds=timeout_seconds)
-        result = TestMatrixRunResult(job_id=job.job_id, status="passed" if completed.returncode == 0 else "failed", return_code=completed.returncode, stdout=completed.stdout, stderr=completed.stderr)
+        result = TestMatrixRunResult(job_id=job.job_id, status="passed" if completed.returncode == 0 else "failed", required=job.required, return_code=completed.returncode, stdout=completed.stdout, stderr=completed.stderr)
         if package_dir is not None:
             result.evidence_id = write_test_matrix_evidence(package_dir, job, result)
         results.append(result)
@@ -105,27 +109,23 @@ def run_test_matrix(project_root: Path, package_dir: Path | None = None, job_id:
 
 
 def write_test_matrix_evidence(package_dir: Path, job: TestMatrixJob, result: TestMatrixRunResult) -> str:
-    evidence_dir = package_dir / "evidence" / "test-results"
-    evidence_dir.mkdir(parents=True, exist_ok=True)
     evidence_id = f"test-matrix-{job.job_id}"
-    output_path = evidence_dir / f"{job.job_id}.json"
-    relative_path = str(output_path.relative_to(package_dir))
-    output_path.write_text(json.dumps({"job": job.to_dict(), "result": result.to_dict()}, ensure_ascii=False, indent=2), encoding="utf-8")
-    evidence = EvidenceItem(evidence_id=evidence_id, kind="test_result", title=f"Test matrix {job.job_id}", source="doctor-link test run", path=relative_path, content=f"Status: {result.status}")
-    _append_evidence(package_dir, evidence)
-    step = TimelineStep(step_id=evidence_id, action="run_test_matrix", target=job.job_id, actual_result=f"Status: {result.status}", status=result.status, evidence_ids=[evidence_id])
-    _append_timeline(package_dir, step)
-    return evidence_id
-
-
-def _append_evidence(package_dir: Path, item: EvidenceItem) -> None:
-    path = package_dir / "evidence-list.md"
-    existing = path.read_text(encoding="utf-8") if path.exists() else "# Evidence List\n\n"
-    path.write_text(existing.rstrip() + f"\n- `{item.evidence_id}` ({item.kind}): {item.title} — {item.path}\n", encoding="utf-8")
-
-
-def _append_timeline(package_dir: Path, step: TimelineStep) -> None:
-    path = package_dir / "timeline.md"
-    existing = path.read_text(encoding="utf-8") if path.exists() else "# Timeline\n\n"
-    label = step.target or step.step_id
-    path.write_text(existing.rstrip() + f"\n- `{step.step_id}` Run test matrix {label}: {step.actual_result}\n", encoding="utf-8")
+    payload = {"job": job.to_dict(), "result": result.to_dict()}
+    payload["result"]["evidence_id"] = evidence_id
+    actual = result.stdout.strip() or result.stderr.strip() or f"Status: {result.status}"
+    return record_automated_result(
+        package_dir,
+        output_relative_path=f"evidence/test-results/{job.job_id}.json",
+        output_payload=payload,
+        evidence_id=evidence_id,
+        evidence_kind="test_result",
+        evidence_title=f"Test matrix {job.job_id}",
+        evidence_source="doctor-link test run",
+        action="run_test_matrix",
+        target=job.job_id,
+        status=result.status,
+        expected="; ".join(job.related_verification_steps) or "Command exits successfully",
+        actual=actual,
+        explicit_assertion_ids=job.related_assertion_ids,
+        assertion_statements=job.related_assertion_statements,
+    )

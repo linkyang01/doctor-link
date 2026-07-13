@@ -99,7 +99,7 @@ def test_p4_pipeline_smoke(tmp_path: Path) -> None:
     after_package = _package_from_output(after.output, "Created after package:")
 
     verify = runner.invoke(main, ["diagnose", "verify", str(after_package), "--json"])
-    assert verify.exit_code == 0, verify.output
+    assert verify.exit_code == 1, verify.output
     verify_payload = json.loads(verify.output)
     assert verify_payload["comparison_status"] == "generated"
     assert verify_payload["success"] is False

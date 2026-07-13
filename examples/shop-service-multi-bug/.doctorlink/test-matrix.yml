@@ -2,12 +2,18 @@ jobs:
   - id: test-login-fails
     title: "P1 auth login returns timeout"
     command: PYTHONPATH=src python3 -c "from auth.service import login; r=login('u','p'); assert r['error']=='timeout'"
+    related_assertion_statements:
+      - "P1: login timeout in auth.log"
   - id: test-api-wrong-status
     title: "P3 api returns 500 for 404 user"
     command: PYTHONPATH=src python3 -c "from api.routes import get_user; assert get_user(404)['status']==500"
+    related_assertion_statements:
+      - "P3: GET /users/404 returns 500"
   - id: test-pool-exhaust
     title: "P5 db pool raises on 3rd acquire"
     command: PYTHONPATH=src python3 -c "from db.pool import acquire; acquire(); acquire(); acquire()"
+    related_assertion_statements:
+      - "P5: DB pool exhausted after two connections"
   - id: test-health-ok
     title: "Sanity: python imports work"
     command: PYTHONPATH=src python3 -c "import auth.service, api.routes, db.pool, cache.client; print('ok')"

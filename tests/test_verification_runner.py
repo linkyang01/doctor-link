@@ -42,7 +42,7 @@ def test_verify_reports_not_verified_when_comparison_not_verified(tmp_path: Path
     package_dir = _build_package(tmp_path)
     payload = _read_report(package_dir)
     payload["evidence"] = [{"evidence_id": "evd_1"}]
-    payload["test_records"] = [{"name": "rerun"}]
+    payload["test_records"] = [{"name": "rerun", "status": "passed"}]
     payload["report_comparison"] = {"status": "not_verified"}
     _write_report(package_dir, payload)
 
@@ -56,7 +56,7 @@ def test_verify_reports_candidate_verified_when_inputs_are_complete(tmp_path: Pa
     package_dir = _build_package(tmp_path)
     payload = _read_report(package_dir)
     payload["evidence"] = [{"evidence_id": "evd_1"}]
-    payload["test_records"] = [{"name": "rerun"}]
+    payload["test_records"] = [{"name": "rerun", "status": "passed"}]
     payload["report_comparison"] = {"status": "candidate_verified"}
     payload["vly_core_proof"] = {"go_no_go": "GO"}
     _write_report(package_dir, payload)
@@ -73,7 +73,7 @@ def test_verify_write_back_updates_package_context(tmp_path: Path) -> None:
     package_dir = _build_package(tmp_path)
     payload = _read_report(package_dir)
     payload["evidence"] = [{"evidence_id": "evd_1"}]
-    payload["test_records"] = [{"name": "rerun"}]
+    payload["test_records"] = [{"name": "rerun", "status": "passed"}]
     payload["report_comparison"] = {"status": "candidate_verified"}
     _write_report(package_dir, payload)
 

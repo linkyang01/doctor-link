@@ -8,6 +8,7 @@ from typing import Any, Literal
 from doctor_link.core.config_loader import VerificationConfig
 
 from doctor_link.core.models import utc_now_iso
+from doctor_link.core.package_transaction import atomic_write_json, atomic_write_text, package_transaction
 
 VerificationStatus = Literal["ready", "missing_evidence", "not_verified", "candidate_verified", "needs_review"]
 
@@ -38,6 +39,7 @@ class VerificationResult:
     report_comparison_status: str | None = None
     vly_core_proof_status: str | None = None
     assertion_test_coverage: list[dict[str, Any]] = field(default_factory=list)
+    blocking_test_records: list[str] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
@@ -73,6 +75,9 @@ class VerificationResult:
             "## Assertion test coverage",
             *_coverage_list(self.assertion_test_coverage),
             "",
+            "## Blocking test records",
+            *_list(self.blocking_test_records),
+            "",
             "## Notes",
             *_list(self.notes),
             "",
@@ -94,6 +99,16 @@ def run_verification(
     package_dir = package_dir.resolve()
     if not package_dir.is_dir():
         raise FileNotFoundError(f"Diagnostic package not found: {package_dir}")
+
+    with package_transaction(package_dir):
+        return _run_verification_locked(package_dir, write_back, config)
+
+
+def _run_verification_locked(
+    package_dir: Path,
+    write_back: bool,
+    config: VerificationConfig | None,
+) -> VerificationResult:
 
     report = _read_json(package_dir / "doctor-report.json")
     user_assertions = _read_json(package_dir / "user-assertions.json", default=[])
@@ -189,9 +204,24 @@ def _assess_tests(
             statement = assertion.get("user_statement") if isinstance(assertion, dict) else None
             if statement:
                 result.tests_to_rerun.append(f"Rerun a test that verifies user assertion: {statement}")
+    for index, record in enumerate(test_records, start=1):
+        if not isinstance(record, dict):
+            continue
+        status = str(record.get("status") or "unknown")
+        if status == "passed":
+            continue
+        name = str(record.get("name") or record.get("test_id") or f"test-{index}")
+        result.blocking_test_records.append(name)
+        result.tests_to_rerun.append(f"Rerun `{name}` and record a passing result before closure.")
+    result.tests_to_rerun = _dedupe(result.tests_to_rerun)
+    result.blocking_test_records = _dedupe(result.blocking_test_records)
 
 
 def _assess_status(result: VerificationResult) -> None:
+    if result.blocking_test_records:
+        result.status = "not_verified"
+        result.notes.append("One or more recorded tests are not passing.")
+        return
     if result.report_comparison_status == "not_verified":
         result.status = "not_verified"
         result.notes.append("Report comparison says the fix is not verified.")
@@ -232,30 +262,46 @@ def _add_next_commands(result: VerificationResult, package_dir: Path) -> None:
 
 
 def _write_outputs(package_dir: Path, result: VerificationResult) -> None:
-    (package_dir / "verification-result.json").write_text(
-        json.dumps(result.to_dict(), ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
-    (package_dir / "verification-plan.md").write_text(result.to_markdown(), encoding="utf-8")
+    atomic_write_json(package_dir / "verification-result.json", result.to_dict())
+    atomic_write_text(package_dir / "verification-plan.md", result.to_markdown())
 
 
 def _write_back(package_dir: Path, report: dict[str, Any], result: VerificationResult) -> None:
+    previous_result = report.get("verification_result")
+    previous_commands = (
+        previous_result.get("next_commands", [])
+        if isinstance(previous_result, dict) and isinstance(previous_result.get("next_commands"), list)
+        else []
+    )
     report["verification_result"] = result.to_dict()
     ai_task = report.setdefault("ai_task", {})
-    ai_task.setdefault("verification_steps", []).extend(result.next_commands)
-    if result.status in {"missing_evidence", "not_verified"}:
-        ai_task.setdefault("requested_work", []).append("Resolve verification blockers before marking the fix complete.")
-    (package_dir / "doctor-report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-
-    _append(
-        package_dir / "summary.md",
-        f"\n## Verification runner result\n\n- Status: `{result.status}`\n- Summary: {result.summary}\n",
+    existing_steps = ai_task.get("verification_steps", [])
+    if not isinstance(existing_steps, list):
+        existing_steps = []
+    ai_task["verification_steps"] = _dedupe(
+        [*([item for item in existing_steps if item not in previous_commands]), *result.next_commands]
     )
-    _append(
+    blocker_request = "Resolve verification blockers before marking the fix complete."
+    requested_work = ai_task.get("requested_work", [])
+    if not isinstance(requested_work, list):
+        requested_work = []
+    requested_work = [item for item in requested_work if item != blocker_request]
+    if result.status in {"missing_evidence", "not_verified"}:
+        requested_work.append(blocker_request)
+    ai_task["requested_work"] = _dedupe(requested_work)
+    atomic_write_json(package_dir / "doctor-report.json", report)
+
+    _replace_heading_section(
+        package_dir / "summary.md",
+        "## Verification runner result",
+        f"## Verification runner result\n\n- Status: `{result.status}`\n- Summary: {result.summary}\n",
+    )
+    _replace_heading_section(
         package_dir / "ai-task.md",
+        "## Verification runner result",
         "\n".join(
             [
-                "\n## Verification runner result",
+                "## Verification runner result",
                 "",
                 f"- Status: `{result.status}`",
                 f"- Summary: {result.summary}",
@@ -297,7 +343,30 @@ def _summary(result: VerificationResult) -> str:
 
 def _append(path: Path, text: str) -> None:
     current = path.read_text(encoding="utf-8") if path.exists() else ""
-    path.write_text(current.rstrip() + "\n" + text.lstrip("\n"), encoding="utf-8")
+    atomic_write_text(path, current.rstrip() + "\n" + text.lstrip("\n"))
+
+
+def _replace_heading_section(path: Path, heading: str, replacement: str) -> None:
+    current = path.read_text(encoding="utf-8") if path.exists() else ""
+    kept: list[str] = []
+    skipping = False
+    for line in current.splitlines():
+        if line.strip() == heading:
+            skipping = True
+            continue
+        if skipping and line.startswith("## "):
+            skipping = False
+        if not skipping:
+            kept.append(line)
+    atomic_write_text(path, "\n".join(kept).rstrip() + "\n\n" + replacement.strip() + "\n")
+
+
+def _dedupe(values: list[str]) -> list[str]:
+    result: list[str] = []
+    for value in values:
+        if value not in result:
+            result.append(value)
+    return result
 
 
 def _list(items: list[str]) -> list[str]:

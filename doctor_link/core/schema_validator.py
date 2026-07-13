@@ -60,7 +60,7 @@ def validate_diagnostic_package(package_dir: Path) -> SchemaValidationResult:
         if path.exists():
             _validate_file(path, relative, result)
 
-    for manifest_name in ["handoff-manifest.json", "manifest.json"]:
+    for manifest_name in ["handoff-manifest.json", "manifest.json", "package-export-manifest.json"]:
         path = package_dir / manifest_name
         if path.exists():
             _validate_file(path, manifest_name, result)
@@ -134,12 +134,65 @@ def _validate_named_payload(relative: str, payload: Any, result: SchemaValidatio
         if not isinstance(payload, list):
             result.add(relative, "error", "Expected an array of records.")
         return
-    if relative in {"handoff-manifest.json", "manifest.json"}:
+    if relative == "handoff-manifest.json":
         if _object(relative, payload, result):
             _required(relative, payload, result, ["tool", "source_package", "instruction_file", "included_files", "missing_files"])
             _schema_version(relative, payload, result)
             _list(relative, payload, result, "included_files")
             _list(relative, payload, result, "missing_files")
+        return
+    if relative == "manifest.json":
+        if _looks_like_legacy_export_manifest(payload):
+            _validate_package_export_manifest(relative, payload, result, legacy=True)
+        elif _object(relative, payload, result):
+            _required(relative, payload, result, ["package_id", "schema_version", "files"])
+            _schema_version(relative, payload, result)
+            _list(relative, payload, result, "files")
+        return
+    if relative == "package-export-manifest.json":
+        _validate_package_export_manifest(relative, payload, result, legacy=False)
+
+
+def _looks_like_legacy_export_manifest(payload: Any) -> bool:
+    return isinstance(payload, dict) and "output_zip" in payload and "included_files" in payload
+
+
+def _validate_package_export_manifest(
+    relative: str,
+    payload: Any,
+    result: SchemaValidationResult,
+    *,
+    legacy: bool,
+) -> None:
+    if not _object(relative, payload, result):
+        return
+    required = [
+        "package_dir",
+        "output_zip",
+        "exported_at",
+        "validation",
+        "included_files",
+        "skipped_files",
+        "manifest_path",
+        "package_readme_path",
+    ]
+    if not legacy:
+        required.insert(0, "schema")
+        required.append("privacy_gate")
+    _required(relative, payload, result, required)
+    _dict(relative, payload, result, "validation")
+    _list(relative, payload, result, "included_files")
+    _list(relative, payload, result, "skipped_files")
+    if legacy:
+        result.add(relative, "warning", "Legacy package export manifest filename; re-export to migrate.")
+        return
+    _dict(relative, payload, result, "privacy_gate")
+    if payload.get("package_dir") != ".":
+        result.add(relative, "error", "package_dir must be `.` in a portable export manifest.")
+    for field_name in ["output_zip", "manifest_path", "package_readme_path", "redaction_report_path"]:
+        value = payload.get(field_name)
+        if value is not None and not _portable_filename(value):
+            result.add(relative, "error", f"{field_name} must be a portable filename without directories.")
 
 
 def _object(relative: str, payload: Any, result: SchemaValidationResult) -> bool:
@@ -171,6 +224,12 @@ def _list(relative: str, payload: dict[str, Any], result: SchemaValidationResult
 def _dict(relative: str, payload: dict[str, Any], result: SchemaValidationResult, key: str) -> None:
     if key in payload and not isinstance(payload[key], dict):
         result.add(relative, "error", f"Field `{key}` must be an object.")
+
+
+def _portable_filename(value: Any) -> bool:
+    if not isinstance(value, str) or not value or value in {".", ".."}:
+        return False
+    return "/" not in value and "\\" not in value and ":" not in value
 
 
 def _to_markdown(result: SchemaValidationResult) -> str:

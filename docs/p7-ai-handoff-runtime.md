@@ -58,8 +58,13 @@ The compatibility report includes:
 Compatibility status values include:
 
 - `ready`
+- `ready_for_verification_review`
+- `needs_evidence`
+- `needs_repair`
 - `needs_review`
 - `blocked_missing_required_files`
+
+The compatibility report also includes `verification_status`. A failed or unknown test record keeps verification at `not_verified`, which produces `needs_repair`; missing evidence produces `needs_evidence`; and `candidate_verified` produces `ready_for_verification_review`. Historical comparison text cannot override the latest verification result.
 
 ### Tool-specific instruction generation
 
@@ -92,8 +97,10 @@ The handoff builder now enforces a conservative local file policy:
 
 The handoff runtime inspects `verification-result.json` and surfaces:
 
+- current verification status;
 - missing evidence;
 - tests or verification actions to rerun;
+- failed, partial, or unknown blocking test records;
 - missing evidence list file.
 
 ### Privacy warnings

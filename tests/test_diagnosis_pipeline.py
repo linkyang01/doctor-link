@@ -51,7 +51,7 @@ def test_diagnose_compare_and_verify_cli(tmp_path: Path) -> None:
     verify_result = runner.invoke(main, ["diagnose", "verify", str(after), "--json"])
 
     assert compare_result.exit_code == 0, compare_result.output
-    assert verify_result.exit_code == 0, verify_result.output
+    assert verify_result.exit_code == 1, verify_result.output
     compare_payload = json.loads(compare_result.output)
     verify_payload = json.loads(verify_result.output)
     assert compare_payload["comparison_status"] == "generated"

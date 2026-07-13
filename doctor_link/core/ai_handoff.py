@@ -73,6 +73,7 @@ class HandoffProfile:
 class HandoffCompatibilityReport:
     tool: str
     status: str
+    verification_status: str | None = None
     required_missing: list[str] = field(default_factory=list)
     optional_missing: list[str] = field(default_factory=list)
     included_files: list[str] = field(default_factory=list)
@@ -263,7 +264,7 @@ def build_handoff_package(package_dir: Path, tool: str = DEFAULT_HANDOFF_TOOL, o
     compatibility.included_files = included
     compatibility.skipped_files.extend(skipped)
     compatibility.required_missing = [item for item in profile.required_files if not (package_dir / item).exists()]
-    compatibility.optional_missing = [item for item in profile.optional_files if not (package_dir / item).exists()]
+    compatibility.optional_missing = [item for item in profile.optional_files if not _optional_file_exists(package_dir, item)]
     compatibility.status = _compatibility_status(compatibility)
 
     instruction = _render_instruction(package_dir, profile, included, compatibility)
@@ -279,6 +280,7 @@ def build_handoff_package(package_dir: Path, tool: str = DEFAULT_HANDOFF_TOOL, o
         "included_files": included,
         "missing_files": missing,
         "compatibility_status": compatibility.status,
+        "verification_status": compatibility.verification_status,
         "instruction_file": profile.instruction_file,
         "human_assertion_rule": "Do not dismiss user-confirmed problems without evidence.",
         "required_missing": compatibility.required_missing,
@@ -311,7 +313,7 @@ def check_handoff_compatibility(package_dir: Path, tool: str = DEFAULT_HANDOFF_T
         raise FileNotFoundError(f"Diagnostic package not found: {package_dir}")
     profile = get_handoff_profile(tool)
     required_missing = [item for item in profile.required_files if not (package_dir / item).exists()]
-    optional_missing = [item for item in profile.optional_files if not (package_dir / item).exists()]
+    optional_missing = [item for item in profile.optional_files if not _optional_file_exists(package_dir, item)]
     included: list[str] = []
     skipped: list[dict[str, str]] = []
     for relative in _candidate_handoff_files(package_dir, profile):
@@ -326,6 +328,7 @@ def check_handoff_compatibility(package_dir: Path, tool: str = DEFAULT_HANDOFF_T
     report = HandoffCompatibilityReport(
         tool=profile.tool,
         status="pending",
+        verification_status=_verification_status(package_dir),
         required_missing=required_missing,
         optional_missing=optional_missing,
         included_files=included,
@@ -537,6 +540,11 @@ def _render_instruction(package_dir: Path, profile: HandoffProfile, included: li
         "## Compatibility status",
         compatibility.status,
         "",
+        "## Current verification state",
+        f"- Status: `{compatibility.verification_status or 'not_run'}`",
+        *[f"- Warning: {item}" for item in compatibility.missing_evidence_warnings],
+        "- The latest verification result takes precedence over historical evidence embedded in the package.",
+        "",
         "## Required rule",
         "The human user has confirmed one or more issues. Do not dismiss user-confirmed problems as normal behavior without evidence.",
         "",
@@ -612,10 +620,15 @@ def _missing_evidence_warnings(package_dir: Path) -> list[str]:
     warnings: list[str] = []
     verification = _load_any(package_dir / "verification-result.json", {})
     if isinstance(verification, dict):
+        status = str(verification.get("status") or "not_run")
+        if status not in {"candidate_verified", "ready", "verified"}:
+            warnings.append(f"current verification status: {status}")
         for item in verification.get("missing_evidence", []) if isinstance(verification.get("missing_evidence"), list) else []:
             warnings.append(f"verification-result missing evidence: {item}")
         for item in verification.get("tests_to_rerun", []) if isinstance(verification.get("tests_to_rerun"), list) else []:
             warnings.append(f"verification requires rerun: {item}")
+        for item in verification.get("blocking_test_records", []) if isinstance(verification.get("blocking_test_records"), list) else []:
+            warnings.append(f"blocking test record: {item}")
     if not (package_dir / "evidence-list.md").exists():
         warnings.append("evidence-list.md is missing")
     return warnings
@@ -652,9 +665,35 @@ def _profile_guidance(profile: HandoffProfile) -> list[str]:
 def _compatibility_status(report: HandoffCompatibilityReport) -> str:
     if report.required_missing:
         return "blocked_missing_required_files"
-    if report.missing_evidence_warnings or report.privacy_warnings:
+    if report.privacy_warnings:
         return "needs_review"
+    if report.verification_status == "not_verified":
+        return "needs_repair"
+    if report.verification_status == "missing_evidence" or report.missing_evidence_warnings:
+        return "needs_evidence"
+    if report.verification_status == "candidate_verified":
+        return "ready_for_verification_review"
     return "ready"
+
+
+def _verification_status(package_dir: Path) -> str | None:
+    verification = _load_any(package_dir / "verification-result.json", {})
+    if isinstance(verification, dict) and verification.get("status"):
+        return str(verification["status"])
+    report = _load_any(package_dir / "doctor-report.json", {})
+    if isinstance(report, dict):
+        embedded = report.get("verification_result")
+        if isinstance(embedded, dict) and embedded.get("status"):
+            return str(embedded["status"])
+    return None
+
+
+def _optional_file_exists(package_dir: Path, relative: str) -> bool:
+    if (package_dir / relative).exists():
+        return True
+    if relative in {"report-comparison.json", "report-comparison.md"}:
+        return (package_dir / "evidence" / "test-results" / relative).exists()
+    return False
 
 
 def _next_repair_session_id(package_dir: Path) -> str:
