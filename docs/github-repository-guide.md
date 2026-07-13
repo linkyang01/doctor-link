@@ -132,14 +132,14 @@ Do not dispatch this workflow merely because CI is green. A release requires exp
 
 ## Current validation evidence
 
-The current `0.1.3` implementation was validated in PR `#140`.
+The current `0.2.0` implementation was validated in PR `#145`.
 
-- final PR CI: `29245883700`;
-- Release workflow: `29246045227`;
+- final PR CI: `29256743976`;
+- Release workflow: `29256955705`;
 - result: eight of eight jobs passed;
 - operating systems: Ubuntu, macOS 15, Windows;
 - Python versions: 3.10, 3.11, 3.12;
-- installed-package capability coverage: 62/62 routes, 70 invocations, eight complex scenarios.
+- installed-package capability coverage: 63/63 routes, 71 invocations, nine complex scenarios.
 
 See the [cloud certificate](validation/cloud-validation-certificate.md), [evidence index](validation/validation-evidence-index.md), and [100-point scorecard](validation/local-quality-scorecard.md).
 

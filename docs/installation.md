@@ -2,7 +2,7 @@
 
 Doctor link is a Python CLI project. This guide explains how to clone the repository, install it locally, run the CLI, and validate that the project works on a local machine.
 
-Version `0.1.3` is available from the authorized [GitHub Release](https://github.com/linkyang01/doctor-link/releases/tag/v0.1.3) and from source. PR `#140` passed Python 3.10–3.12 and Ubuntu/macOS/Windows validation before publication. Doctor link is not published on PyPI, so `pip install doctor-link==0.1.3` from PyPI is not supported.
+Version `0.2.0` is available from the authorized [GitHub Release](https://github.com/linkyang01/doctor-link/releases/tag/v0.2.0) and from source. PR `#145` passed Python 3.10–3.12 and Ubuntu/macOS/Windows validation before publication. Doctor link is not published on PyPI, so `pip install doctor-link==0.2.0` from PyPI is not supported.
 
 ## 1. Requirements
 
@@ -104,16 +104,16 @@ If the command prints help text, the CLI entrypoint is installed successfully.
 ```bash
 python -m pip install build
 python -m build
-python -m pip install dist/doctor_link-0.1.3-py3-none-any.whl
+python -m pip install dist/doctor_link-0.2.0-py3-none-any.whl
 doctor-link --version
 ```
 
 ### Install the published GitHub Release wheel
 
-Download `doctor_link-0.1.3-py3-none-any.whl` from the [v0.1.3 release page](https://github.com/linkyang01/doctor-link/releases/tag/v0.1.3), then run:
+Download `doctor_link-0.2.0-py3-none-any.whl` from the [v0.2.0 release page](https://github.com/linkyang01/doctor-link/releases/tag/v0.2.0), then run:
 
 ```bash
-python -m pip install ./doctor_link-0.1.3-py3-none-any.whl
+python -m pip install ./doctor_link-0.2.0-py3-none-any.whl
 doctor-link --version
 ```
 

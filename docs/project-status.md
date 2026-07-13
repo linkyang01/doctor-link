@@ -2,13 +2,13 @@
 
 Status date: 2026-07-13
 
-## Unreleased automatic-solve work
+## Published automatic-solve release
 
-The current development branch adds `doctor-link solve`, the first goal-aligned automatic problem-solving path. It supports clean Git-backed Python projects, reproduces the failure before editing, requires explicit `--allow-repair`, creates a dedicated repair branch, invokes Codex in a workspace-write sandbox for up to three rounds, and accepts the repair only after Doctor link independently reruns all required commands. Session prompts, Codex JSONL events, stderr, verification results, and branch metadata remain local and reviewable.
+Version `0.2.0` adds `doctor-link solve`, the first goal-aligned automatic problem-solving path. It supports clean Git-backed Python projects, reproduces the failure before editing, requires explicit `--allow-repair`, creates a dedicated repair branch, invokes Codex in a workspace-write sandbox for up to three rounds, and accepts the repair only after Doctor link independently reruns all required commands. Session prompts, Codex JSONL events, stderr, verification results, protected-input hashes, change receipts, and branch metadata remain local and reviewable.
 
 Local validation passed 319 tests at 85.39% branch-aware coverage. The final clean wheel passed 63/63 public routes through 71 invocations and nine complex scenario invariants. A live disposable Git/Python inventory fixture also completed the full path: Doctor link reproduced three failing assertions, Codex fixed the implementation in one round, and the original independent test command passed all three checks. Adversarial validation now also proves that modifying tests, test configuration, directly referenced verification scripts, or post-check golden files cannot produce ordinary `verified`; the default result is blocked, while explicitly authorized verification-input changes return `review_required`.
 
-This source-level work is not part of the published `v0.1.3` release until it is merged, revalidated in GitHub Actions, and separately authorized for release publication.
+The release candidate passed all eight GitHub Actions jobs in PR `#145`, was merged as commit `40a547c`, and was published as [GitHub Release `v0.2.0`](https://github.com/linkyang01/doctor-link/releases/tag/v0.2.0) by workflow `29256955705`. PyPI publication was disabled and was not performed.
 
 ## Current status
 
@@ -22,7 +22,7 @@ Post-P7 hardening has also been completed:
 - Adapter and Plugin run commands default to dry-run and require `--allow-run` for actual local command execution;
 - completed TODO trackers are archived under `docs/archive/completed-todos/`.
 
-Version `0.1.3` passed local and GitHub Actions validation on 2026-07-13: 298 tests, 85.25% branch-aware coverage, Ruff, E2E, self-validation, P7 runtime validation, clean wheel/sdist build, Twine validation, isolated installed-wheel full-capability validation, zero medium/high Bandit findings, and zero known third-party dependency vulnerabilities. GitHub Actions run `29245883700` passed Python 3.10, 3.11, 3.12, security, package install, Ubuntu, macOS, and Windows jobs. The installed-package lab passed all 62 public CLI routes through 70 real invocations and eight complex scenarios. The defined repository release-readiness score remains 100/100 under `docs/validation/local-quality-scorecard.md`. PR `#140` was merged as commit `fa779da`, and [GitHub Release `v0.1.3`](https://github.com/linkyang01/doctor-link/releases/tag/v0.1.3) was published on 2026-07-13 by workflow `29246045227`; PyPI was disabled.
+Version `0.2.0` passed local and GitHub Actions validation on 2026-07-13: 319 tests, 85.39% branch-aware coverage, Ruff, E2E, self-validation, P7 runtime validation, clean wheel/sdist build, Twine validation, isolated installed-wheel full-capability validation, zero medium/high Bandit findings, and zero known third-party dependency vulnerabilities. GitHub Actions run `29256743976` passed Python 3.10, 3.11, 3.12, security, package install, Ubuntu, macOS, and Windows jobs. The installed-package lab passed all 63 public CLI routes through 71 real invocations and nine complex scenarios. The defined repository release-readiness score remains 100/100 under `docs/validation/local-quality-scorecard.md`. PR `#145` was merged as commit `40a547c`, and [GitHub Release `v0.2.0`](https://github.com/linkyang01/doctor-link/releases/tag/v0.2.0) was published on 2026-07-13 by workflow `29256955705`; PyPI was disabled.
 
 All repository-side, non-local, non-release closure work has been completed. Local Mac validation has been recorded in `docs/p5.10-local-validation.md`. Validation on additional target environments (offline workstation, customer delivery, production-like) remains optional when those environments differ from the recorded Mac setup.
 
@@ -48,16 +48,17 @@ P7.9 implemented P6 local knowledge base and enterprise archive runtime for loca
 
 P7.10 implements final validation and closure through P7 runtime E2E validation, CI coverage, self-validation coverage, final audit, README updates, and TODO closure.
 
-P6 and P7 are complete as repository-side local-first implementation work. Version `0.1.3` is locally validated, cloud validated, merged, tagged, and published on GitHub. This does not mean Doctor link has implemented a hosted platform, account system, marketplace, real signing, hosted archive, hosted knowledge base, or PyPI distribution.
+P6 and P7 are complete as repository-side local-first implementation work. Version `0.2.0` is locally validated, cloud validated, merged, tagged, and published on GitHub. This does not mean Doctor link has implemented a hosted platform, account system, marketplace, real signing, hosted archive, hosted knowledge base, or PyPI distribution.
 
 ## Validation certification status
 
-- [x] Current implementation cloud CI revalidated (PR #140, run 29245883700)
+- [x] Current implementation cloud CI revalidated (PR #145, run 29256743976)
 - [x] Local Release Candidate validation passed (2026-07-13)
 - [x] First public GitHub Release (`v0.1.0-rc.1`, 2026-06-29)
 - [x] GitHub Release `v0.1.1` (2026-06-29)
 - [x] GitHub Release `v0.1.2` published (2026-07-13)
 - [x] GitHub Release `v0.1.3` published (2026-07-13, workflow 29246045227)
+- [x] GitHub Release `v0.2.0` published (2026-07-13, workflow 29256955705)
 - [x] Local Mac Validation Recorded (2026-06-29)
 - [x] GitHub-hosted Linux, macOS, and Windows validation
 - [x] Cross-platform CI jobs configured for Linux, macOS, and Windows

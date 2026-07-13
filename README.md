@@ -27,28 +27,28 @@ Doctor link does not replace Codex, Cursor, Aider, OpenHands, Continue, Cline, W
 
 ## Verified status
 
-Current version: [`v0.1.3`](https://github.com/linkyang01/doctor-link/releases/tag/v0.1.3), published on 2026-07-13.
+Current version: [`v0.2.0`](https://github.com/linkyang01/doctor-link/releases/tag/v0.2.0), published on 2026-07-13.
 
-The reliability and privacy-safe export implementation in [PR #140](https://github.com/linkyang01/doctor-link/pull/140) passed the complete repository validation matrix on 2026-07-13:
+The verified automatic problem-solving release in [PR #145](https://github.com/linkyang01/doctor-link/pull/145) passed the complete repository validation matrix on 2026-07-13:
 
-- 298 automated tests;
-- 85.25% branch-aware coverage with an enforced 85% floor;
+- 319 automated tests;
+- 85.39% branch-aware coverage with an enforced 85% floor;
 - Python 3.10, 3.11, and 3.12;
 - Ubuntu, macOS, and Windows smoke validation;
 - Ruff, Bandit, and dependency vulnerability checks;
 - wheel and source-distribution build, content inspection, Twine validation, and isolated installation;
 - E2E, self-validation, project validation, and P7 runtime validation;
-- all 62 public CLI routes through 70 real installed-package invocations and eight complex scenarios.
+- all 63 public CLI routes through 71 real installed-package invocations and nine complex scenarios.
 
 Evidence:
 
 - [100/100 repository-readiness scorecard](docs/validation/local-quality-scorecard.md)
 - [cloud validation certificate](docs/validation/cloud-validation-certificate.md)
 - [validation evidence index](docs/validation/validation-evidence-index.md)
-- [v0.1.3 final PR CI](https://github.com/linkyang01/doctor-link/actions/runs/29245883700)
-- [v0.1.3 Release workflow](https://github.com/linkyang01/doctor-link/actions/runs/29246045227)
+- [v0.2.0 final PR CI](https://github.com/linkyang01/doctor-link/actions/runs/29256743976)
+- [v0.2.0 Release workflow](https://github.com/linkyang01/doctor-link/actions/runs/29256955705)
 
-PR #140 was merged as commit `fa779da`, and the authorized [GitHub Release `v0.1.3`](https://github.com/linkyang01/doctor-link/releases/tag/v0.1.3) was published by [release workflow 29246045227](https://github.com/linkyang01/doctor-link/actions/runs/29246045227). The workflow installed the final wheel and reran the full capability lab before tagging. PyPI publication was disabled and was not performed.
+PR #145 was merged as commit `40a547c`, and the authorized [GitHub Release `v0.2.0`](https://github.com/linkyang01/doctor-link/releases/tag/v0.2.0) was published by [release workflow 29256955705](https://github.com/linkyang01/doctor-link/actions/runs/29256955705). The workflow installed the final wheel, reran the full capability lab, and created an immutable tag before uploading both distributions. PyPI publication was disabled and was not performed.
 
 ## Main capabilities
 

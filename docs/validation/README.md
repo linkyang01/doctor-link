@@ -6,11 +6,11 @@ This directory contains the evidence, checklists, certificates, and release-stat
 
 ```text
 Local repaired-source validation: passed (2026-07-13)
-GitHub Actions cloud validation: passed (PR #140)
-Current certification matrix: 8/8 jobs passed (run 29245883700)
+GitHub Actions cloud validation: passed (PR #145)
+Current certification matrix: 8/8 jobs passed (run 29256743976)
 Evidence-based repository readiness: 100/100
-PR merge: completed (commit fa779da)
-GitHub Release v0.1.3: published (2026-07-13)
+PR merge: completed (commit 40a547c)
+GitHub Release v0.2.0: published (2026-07-13)
 PyPI publication: not performed
 ```
 
@@ -21,9 +21,9 @@ PyPI publication: not performed
 - [100-point quality scorecard](local-quality-scorecard.md) — weighted repository-readiness rubric and receipts.
 - [Release checklist](release-candidate-checklist.md) — completed engineering, merge, and GitHub publication gates.
 - [v0.1.2 release notes](v0.1.2-release-notes.md) — published release contents and installation guidance.
-- [v0.1.3 release notes](v0.1.3-release-notes.md) — current reliability and privacy-safe export release contents.
-- [v0.2.0 release notes](v0.2.0-release-notes.md) — automatic problem-solving release candidate contents and validation contract.
-- [GitHub Release v0.1.3](https://github.com/linkyang01/doctor-link/releases/tag/v0.1.3) — authoritative current publication page and assets.
+- [v0.1.3 release notes](v0.1.3-release-notes.md) — historical reliability and privacy-safe export release contents.
+- [v0.2.0 release notes](v0.2.0-release-notes.md) — current automatic problem-solving release contents and validation contract.
+- [GitHub Release v0.2.0](https://github.com/linkyang01/doctor-link/releases/tag/v0.2.0) — authoritative current publication page and assets.
 
 ## Supporting records
 
