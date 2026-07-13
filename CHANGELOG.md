@@ -31,6 +31,7 @@ Candidate scope for `v0.3.0`: verified automatic repair for Node.js JavaScript a
 - 331 automated tests pass with 85.40% branch-aware coverage and the enforced 85% floor.
 - The installed-wheel full-capability lab covers all 63 CLI routes through 72 real invocations and ten complex scenario invariants, including a JavaScript/npm approval-gate scenario.
 - A disposable Node.js inventory project completed a live Codex repair: two failing acceptance cases became three passing tests in one round while the package manifest and original test hashes remained unchanged.
+- GitHub Actions run `29261286975` passed all eight Python, security, package, Ubuntu, macOS, and Windows jobs for code commit `9cec5d1`.
 
 ## [0.2.0] - 2026-07-13
 

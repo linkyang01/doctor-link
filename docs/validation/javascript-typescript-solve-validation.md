@@ -2,7 +2,7 @@
 
 - Validation date: 2026-07-13
 - Candidate version: `0.3.0`
-- Status: local candidate validation passed; cloud validation and publication pending
+- Status: local and cloud candidate validation passed; merge and publication pending
 
 ## Scope
 
@@ -94,10 +94,23 @@ The protected hashes were identical before and after repair:
 | P7 runtime validation | passed |
 | Installed-wheel capability lab | 63/63 routes, 72 invocations, 10 scenarios |
 
+## Cloud validation
+
+[GitHub Actions run `29261286975`](https://github.com/linkyang01/doctor-link/actions/runs/29261286975) validated code commit `9cec5d1` on PR `#147`. All eight jobs passed:
+
+- Python 3.10, 3.11, and 3.12;
+- security checks;
+- wheel build and installed-package capability validation;
+- Ubuntu JavaScript solve smoke validation;
+- macOS JavaScript solve smoke validation;
+- Windows JavaScript solve smoke validation.
+
+The Windows job directly exercised the real npm repair and verification-input protection cases that exposed the original launcher-resolution defect.
+
 ## Honest limits
 
 - The live repair used Node.js `26.0.0`, npm `11.12.1`, and the existing authenticated Codex CLI.
 - npm and `node --test` executed locally. pnpm, Yarn, and Bun selection is covered by automated discovery regressions but was not runtime-tested locally because those executables were not all installed.
 - TypeScript is detected and its project test command can be executed, but Doctor link does not transpile TypeScript or install a runner; the repository must provide its own working toolchain.
 - Mixed-language monorepos should run from the target package root and use explicit commands when root-level discovery is ambiguous.
-- Cloud Python and cross-platform jobs must pass on the candidate commit before this evidence can be upgraded from local candidate validation to release certification.
+- The candidate is not merged, tagged, or published. A successful PR run certifies only the named commit and configured CI environments, not arbitrary customer or production environments.

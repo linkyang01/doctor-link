@@ -1,12 +1,12 @@
 # Doctor link Cloud Validation Certificate
 
-Status: Current repaired implementation cloud validation passed
+Status: v0.3.0 candidate cloud validation passed; merge and publication pending
 
 ## Certification Type
 
 This certificate records GitHub Actions cloud validation for Doctor link.
 
-It does not claim target customer environment validation, production validation, PyPI publication, hosted service readiness, or enterprise deployment acceptance. GitHub Release `v0.2.0` was published after this validation succeeded.
+It does not claim target customer environment validation, production validation, PyPI publication, hosted service readiness, or enterprise deployment acceptance. GitHub Release `v0.2.0` remains the latest published version; `v0.3.0` is an unmerged candidate.
 
 ## Project
 
@@ -14,16 +14,16 @@ It does not claim target customer environment validation, production validation,
 - Repository: `linkyang01/doctor-link`
 - Validation type: GitHub Actions Cloud Validation
 - Validation scope: repository-side CI and package validation
-- Current source candidate: `0.2.0` (release candidate commit `76e3966`, PR `#145`)
-- Local Mac validation: recorded (2026-06-29); additional target environments optional
+- Current source candidate: `0.3.0` (validated code commit `9cec5d1`, PR `#147`)
+- Local Mac validation: passed (2026-07-13); additional target environments optional
 
 ## Cloud Validation Evidence
 
-Current repaired implementation validation:
+Current `v0.3.0` candidate validation:
 
-- PR: `#145 Prepare v0.2.0 release`
-- Release candidate commit: `76e396631caff79e7aee4eb1cb70d6a89aea1dd8`
-- CI run: [`29256743976`](https://github.com/linkyang01/doctor-link/actions/runs/29256743976)
+- PR: `#147 Prepare v0.3.0 JavaScript and TypeScript solve`
+- Validated code commit: `9cec5d1062597c9f05465384f43dfda47418c60e`
+- CI run: [`29261286975`](https://github.com/linkyang01/doctor-link/actions/runs/29261286975)
 - CI result: `success`
 
 Validated jobs and checks:
@@ -38,7 +38,7 @@ Validated jobs and checks:
 - P7 runtime validation: passed
 - Wheel build: passed
 - Installed wheel smoke test: passed
-- Installed wheel full-capability lab: 63/63 routes, 71 invocations, 9 complex scenarios
+- Installed wheel full-capability lab: 63/63 routes, 72 invocations, 10 complex scenarios
 - Package validation job: passed
 - Security checks: passed
 - Ubuntu smoke: passed
@@ -78,6 +78,8 @@ This certificate does not certify:
 
 ## Certification Conclusion
 
-Doctor link passed repository-side GitHub Actions cloud validation. PR `#145` was subsequently merged as commit `40a547c`, and [GitHub Release `v0.2.0`](https://github.com/linkyang01/doctor-link/releases/tag/v0.2.0) was published with wheel and sdist assets by [release workflow 29256955705](https://github.com/linkyang01/doctor-link/actions/runs/29256955705). The release workflow installed the final wheel and reran the full capability lab before tagging. PyPI publication was disabled and not performed.
+Doctor link `v0.3.0` candidate code commit `9cec5d1` passed repository-side GitHub Actions cloud validation, including JavaScript solve regressions on Ubuntu, macOS, and Windows. PR `#147` remains a draft; it has not been merged, tagged, or published.
 
-Local Mac validation has been recorded (2026-06-29). PyPI publication, customer delivery, or production handoff on a different target environment should still be preceded by validation on that environment when it differs materially from the recorded Mac setup.
+The previous [GitHub Release `v0.2.0`](https://github.com/linkyang01/doctor-link/releases/tag/v0.2.0) was published from merged commit `40a547c` by [release workflow 29256955705](https://github.com/linkyang01/doctor-link/actions/runs/29256955705). PyPI publication was disabled and not performed.
+
+Local Mac validation was rerun on 2026-07-13. PyPI publication, customer delivery, or production handoff on a different target environment should still be preceded by validation on that environment when it differs materially from the recorded Mac and GitHub runner setup.

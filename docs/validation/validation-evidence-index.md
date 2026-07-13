@@ -8,9 +8,9 @@ The `v0.3.0` source candidate extends automatic solve to Node.js JavaScript/Type
 
 A disposable Node.js inventory fixture also completed a live authorized Codex repair. Doctor link automatically selected `npm test`, reproduced two failing acceptance cases, protected `package.json` and the original test, accepted a one-file production fix in one round, independently reran all three tests, and returned `verified` with unchanged protected hashes. See [JavaScript/TypeScript solve validation](javascript-typescript-solve-validation.md).
 
-This evidence is local source-candidate evidence only. Cloud CI, merge, immutable `v0.3.0` tag creation, GitHub Release publication, and registry publication have not yet occurred.
+Cloud validation also passed for the candidate code. PR [#147](https://github.com/linkyang01/doctor-link/pull/147) code commit `9cec5d1062597c9f05465384f43dfda47418c60e` passed all eight jobs in [GitHub Actions run 29261286975](https://github.com/linkyang01/doctor-link/actions/runs/29261286975), including real JavaScript solve regressions on Ubuntu, macOS, and Windows. Merge, immutable `v0.3.0` tag creation, GitHub Release publication, and registry publication have not yet occurred.
 
-## Current repaired-source certification
+## Published v0.2.0 certification
 
 - Repository: `linkyang01/doctor-link`
 - Pull request: [#145 Prepare v0.2.0 release](https://github.com/linkyang01/doctor-link/pull/145)
@@ -43,7 +43,7 @@ The current CI evidence covers:
 - dependency consistency through `pip check`;
 - Ruff static checks;
 - 319 automated tests;
-- 85.40% branch-aware coverage with an 85% minimum;
+- 85.39% branch-aware coverage with an 85% minimum;
 - CLI entrypoint and diagnostic smoke flows;
 - strategy and read-only preflight validation;
 - E2E validation;
@@ -64,7 +64,7 @@ Current local repaired-source validation on macOS/Python 3.12 includes:
 | Check | Result |
 | --- | ---: |
 | Full regression suite | 319 passed |
-| Branch-aware coverage | 85.40% |
+| Branch-aware coverage | 85.39% |
 | Ruff | Passed |
 | Bandit medium/high | 0 findings |
 | Dependency vulnerabilities | 0 known |
