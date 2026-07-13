@@ -2,6 +2,8 @@
 
 This document describes how to use Doctor link in GitHub Actions for pull request diagnostics.
 
+For the repository's own CI, package, security, manual, self-validation, and release workflows, see [GitHub Repository and Workflow Guide](github-repository-guide.md). The workflow below is an integration example for another project; it is not the same as Doctor link's internal CI matrix.
+
 ## Goals
 
 - Run Doctor link in CI without publishing anything.
@@ -38,6 +40,7 @@ jobs:
 
       - name: Validate diagnosis strategy
         run: |
+          doctor-link preflight . --json
           doctor-link strategy validate . --json
 
       - name: Create before diagnostic package
@@ -97,3 +100,6 @@ A future integration may summarize:
 - This workflow does not require paid cloud services.
 - This workflow does not create external accounts.
 - PR comments remain optional and require explicit repository permissions.
+- Uploaded reports may contain sensitive repository evidence; configure artifact retention and access accordingly.
+- Do not expose secrets through command output, workflow summaries, PR comments, or public artifacts.
+- Pin or review third-party Actions according to the consuming repository's supply-chain policy.

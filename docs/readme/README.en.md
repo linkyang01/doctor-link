@@ -14,12 +14,13 @@ P5: Productization and Release Readiness is complete. P6 implementation requires
 
 P7.10 added the final validation and closure layer, including a P7 runtime validation script and CI coverage for the P7 command surface.
 
-Doctor link remains local-first. The latest public GitHub Release (`v0.1.2`, Latest, 2026-06-29) is published with wheel and sdist assets. It does not create a hosted platform, external account system, telemetry service, or marketplace. PyPI publication is optional.
+Doctor link remains local-first. Source version `0.1.2` passed the repaired local suite and the complete GitHub Actions matrix on 2026-07-13: 273 tests, 85.09% branch coverage, Python 3.10–3.12, Ubuntu/macOS/Windows, security, package build, and isolated installation. See the 100-point certification [Actions run 29221918410](https://github.com/linkyang01/doctor-link/actions/runs/29221918410). The defined repository release-readiness score is 100/100. `v0.1.2` is not yet a published GitHub Release; successful CI is not release authorization. The project does not create a hosted platform, external account system, telemetry service, or marketplace.
 
 ## Common Commands
 
 ```bash
 doctor-link wizard --folder . --tool cursor
+doctor-link preflight . --json
 doctor-link init
 doctor-link scan <library>
 doctor-link plan <library>
@@ -42,8 +43,11 @@ Adapter and Plugin `run` commands are dry-run by default. They validate manifest
 
 ```bash
 ruff check doctor_link tests scripts
-pytest -q --cov=doctor_link
+pytest -q --cov=doctor_link --cov-branch --cov-fail-under=85
+bandit -r doctor_link -ll
+pip-audit
 python -m build
+python scripts/validate_distribution_contents.py dist
 bash scripts/validate_doctor_link.sh
 bash scripts/e2e_validate.sh "$(pwd)"
 bash scripts/p7_runtime_validate.sh "$(pwd)"
@@ -54,7 +58,9 @@ bash scripts/p7_runtime_validate.sh "$(pwd)"
 - `../installation.md`
 - `../quick-start.md`
 - `../cli-reference.md`
+- `../github-repository-guide.md`
 - `../project-status.md`
+- `../validation/local-quality-scorecard.md`
 - `../p7-final-audit.md`
 - `../p7-self-validation.md`
 - `../acceptance-review.md`

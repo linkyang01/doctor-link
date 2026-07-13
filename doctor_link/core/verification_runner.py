@@ -5,6 +5,8 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Literal
 
+from doctor_link.core.config_loader import VerificationConfig
+
 from doctor_link.core.models import utc_now_iso
 
 VerificationStatus = Literal["ready", "missing_evidence", "not_verified", "candidate_verified", "needs_review"]
@@ -78,7 +80,11 @@ class VerificationResult:
         return "\n".join(lines)
 
 
-def run_verification(package_dir: Path, write_back: bool = False) -> VerificationResult:
+def run_verification(
+    package_dir: Path,
+    write_back: bool = False,
+    config: VerificationConfig | None = None,
+) -> VerificationResult:
     """Generate a verification result from a diagnostic package.
 
     The runner does not claim production readiness. It checks whether evidence,
@@ -112,15 +118,32 @@ def run_verification(package_dir: Path, write_back: bool = False) -> Verificatio
     )
 
     _assess_missing_evidence(result, evidence, checklist_present, test_records, report_comparison, vly_core_proof, coverage)
+    if config is not None:
+        _apply_required_signals(result, config.required_signals)
     _assess_tests(result, test_records, user_assertions, coverage)
     _assess_status(result)
     _add_next_commands(result, package_dir)
     result.summary = _summary(result)
 
     _write_outputs(package_dir, result)
-    if write_back:
+    if write_back or (config is not None and config.write_back):
         _write_back(package_dir, report, result)
     return result
+
+
+def _apply_required_signals(result: VerificationResult, required_signals: list[str]) -> None:
+    """Apply configured verification requirements without duplicating findings."""
+    signal_missing = {
+        "test_records": result.test_record_count == 0,
+        "report_comparison": result.report_comparison_status is None,
+        "fix_verification_checklist": not result.checklist_present,
+        "assertion_test_coverage": any(
+            item.get("status") != "covered" for item in result.assertion_test_coverage
+        ),
+    }
+    for signal in required_signals:
+        if signal_missing.get(signal, False) and signal not in result.missing_evidence:
+            result.missing_evidence.append(signal)
 
 
 def _assess_missing_evidence(

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import shutil
 import subprocess
+import sys
 import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -40,14 +41,15 @@ def run_command(command: Sequence[str], timeout_seconds: int = 30, cwd: Path | N
     evidence was produced without requiring shell history or hidden context.
     """
     command_list = list(command)
-    executable = command_list[0] if command_list else None
-    executable_found = shutil.which(executable) is not None if executable else None
+    resolved_command = resolve_command(command_list, env)
+    executable = resolved_command[0] if resolved_command else None
+    executable_found = shutil.which(executable, path=env.get("PATH") if env else None) is not None if executable else None
     cwd_text = str(cwd.resolve()) if cwd is not None else None
     started_at = utc_now_iso()
     started_monotonic = time.monotonic()
     try:
         completed = subprocess.run(
-            command_list,
+            resolved_command,
             capture_output=True,
             text=True,
             timeout=timeout_seconds,
@@ -110,6 +112,22 @@ def run_command(command: Sequence[str], timeout_seconds: int = 30, cwd: Path | N
             executable_found=False,
             error="file_not_found",
         )
+
+
+def resolve_command(command: Sequence[str], env: Mapping[str, str] | None = None) -> list[str]:
+    """Resolve portable executable aliases without invoking a shell.
+
+    Modern macOS installations commonly provide no ``python`` command, while
+    cross-platform project configuration often uses that spelling. Bind it to
+    the interpreter currently running Doctor link when the alias is absent.
+    """
+    resolved = list(command)
+    if not resolved:
+        return resolved
+    search_path = env.get("PATH") if env else None
+    if resolved[0] == "python" and shutil.which("python", path=search_path) is None:
+        resolved[0] = sys.executable
+    return resolved
 
 
 def _coerce_output(value: object) -> str:

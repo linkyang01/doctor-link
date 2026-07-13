@@ -25,6 +25,19 @@ def test_command_runner_records_runtime_metadata(tmp_path: Path) -> None:
     assert payload["executable_found"] is True
 
 
+def test_command_runner_resolves_python_alias_without_path(tmp_path: Path) -> None:
+    result = run_command(
+        ["python", "-c", "print('portable-python')"],
+        timeout_seconds=10,
+        cwd=tmp_path,
+        env={"PATH": ""},
+    )
+
+    assert result.returncode == 0
+    assert result.stdout.strip() == "portable-python"
+    assert result.executable == sys.executable
+
+
 def test_environment_collector_includes_tools_and_project_markers(tmp_path: Path) -> None:
     (tmp_path / "pyproject.toml").write_text("[project]\nname='demo'\n", encoding="utf-8")
 

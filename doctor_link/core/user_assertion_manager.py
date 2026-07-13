@@ -15,6 +15,7 @@ def add_user_assertion(
     severity: str = "error",
     related_file: str | None = None,
     next_ai_instruction: str | None = None,
+    related_evidence_ids: list[str] | None = None,
 ) -> UserAssertion:
     """Add a human-confirmed problem to an existing diagnostic package."""
     package_dir = package_dir.resolve()
@@ -30,6 +31,7 @@ def add_user_assertion(
         actual_behavior=actual_behavior,
         why_user_thinks_it_is_wrong=why_user_thinks_it_is_wrong,
         related_file=related_file,
+        related_evidence_ids=related_evidence_ids or [],
         ai_disagreed_or_missed=True,
         next_ai_instruction=next_ai_instruction,
     )

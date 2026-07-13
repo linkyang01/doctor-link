@@ -1,6 +1,6 @@
 # Release Policy
 
-Doctor link uses semantic versioning for public releases.
+Doctor link uses semantic versioning and an explicit-authorization release model. Successful tests, a merged PR, and a published package are different states and must be documented separately.
 
 ## Versioning
 
@@ -10,49 +10,111 @@ Version format:
 MAJOR.MINOR.PATCH
 ```
 
-Rules:
+- MAJOR: incompatible protocol, schema, package, or CLI behavior changes.
+- MINOR: backward-compatible features, commands, package fields, or documented capability groups.
+- PATCH: backward-compatible fixes, security hardening, documentation corrections, and test improvements.
 
-- MAJOR: incompatible protocol or CLI behavior changes.
-- MINOR: backward-compatible features, commands, package fields, or documentation groups.
-- PATCH: backward-compatible bug fixes, documentation fixes, and test-only changes.
-
-Pre-release identifiers may be used for internal validation:
+Pre-release identifiers may be used for validation:
 
 ```text
 0.2.0-alpha.1
 0.2.0-rc.1
 ```
 
-## Source of truth
+## Release states
 
-The package version in `pyproject.toml` is the source of truth.
+Use these terms precisely:
 
-Any release preparation PR must keep these files aligned:
+| State | Meaning |
+| --- | --- |
+| Source candidate | Version exists in the repository but may not have complete validation. |
+| Locally validated | Named commit passed recorded local gates. |
+| Cloud validated | Named commit passed the configured GitHub Actions matrix. |
+| Merged | Candidate commit is reachable from `main`. |
+| Tagged | Immutable `v<version>` tag exists. |
+| GitHub Release published | Release page and assets exist for the tag. |
+| Registry published | Package exists on PyPI or another named registry. |
 
-- `pyproject.toml`
-- `CHANGELOG.md`
-- draft release notes under `docs/release-notes/`
+Do not call a version “Latest” unless GitHub Releases shows it as the current published release.
 
-## Approval rule
+## Sources of truth
+
+The package version in `pyproject.toml` is authoritative for build metadata. Release preparation must align:
+
+- `pyproject.toml`;
+- `CHANGELOG.md`;
+- version-specific release notes;
+- README and installation status;
+- project and validation status documents;
+- the requested Git tag.
+
+The GitHub Release page is authoritative for GitHub publication. The package registry is authoritative for registry availability.
+
+## Authorization rule
 
 No publishing is allowed without explicit user authorization.
 
-This includes:
+No public distribution is allowed without explicit authorization for the exact version and destination.
 
+Separate authorization is required before:
+
+- creating a release tag;
 - creating a GitHub Release;
 - uploading release assets;
-- publishing to PyPI or another package registry;
-- tagging a release intended for public distribution.
+- publishing to PyPI or another registry.
 
-P5 may prepare draft release notes and release checklists only. It must stop before publishing.
+A request to fix code, open a PR, merge a PR, or make CI green does not implicitly authorize publication.
 
-## Release readiness checks
+## Required engineering gates
 
-Before a release can be requested:
+Before requesting a release:
 
-- tests pass in CI;
-- package build smoke passes;
-- README and user docs are current;
-- CHANGELOG has an entry for the target version;
-- privacy and redaction documentation are current;
-- examples are runnable or clearly marked as documentation examples.
+- the candidate commit is identified;
+- the PR is reviewed and merged unless a different ref is explicitly authorized;
+- Python 3.10, 3.11, and 3.12 jobs pass;
+- Ubuntu, macOS, and Windows smoke jobs pass;
+- Ruff and branch-aware coverage pass;
+- Bandit and dependency audit pass;
+- E2E and P7 runtime validation pass;
+- wheel and sdist content checks pass;
+- Twine metadata passes;
+- isolated wheel installation and dependency consistency pass;
+- changelog, release notes, installation, security, and validation documents are current;
+- no secrets or private evidence are present in tracked files or release assets.
+
+## Automated release workflow
+
+`.github/workflows/release.yml` is manually dispatched with:
+
+- `ref`: branch or commit to release;
+- `tag`: expected `v<package-version>` tag;
+- `body_path`: release-note Markdown file;
+- `prerelease`: GitHub prerelease flag;
+- `publish_pypi`: optional registry upload switch.
+
+The workflow reruns quality/security gates, confirms the requested tag matches `pyproject.toml`, rejects an existing tag, builds and validates distributions, creates an annotated immutable tag, and publishes GitHub assets. PyPI upload occurs only when requested and when `PYPI_API_TOKEN` exists.
+
+## Immutable tags
+
+An existing release tag must never be moved or overwritten. If a published artifact is wrong:
+
+1. stop further distribution;
+2. document the problem;
+3. prepare a new patch version;
+4. rerun the complete validation sequence;
+5. publish the new version with explicit authorization.
+
+## Post-release verification
+
+After publication, verify:
+
+- the tag points to the intended commit;
+- release notes render correctly;
+- wheel and sdist assets are attached;
+- checksums match locally validated artifacts when checksums are published;
+- installation from the actual published location succeeds;
+- README and validation status name the published version accurately.
+
+## Current boundary
+
+Source version `0.1.2` is locally and cloud validated in PR `#134`, but `v0.1.2` is not currently published. Publication remains a separate authorized action.

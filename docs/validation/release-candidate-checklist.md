@@ -1,6 +1,6 @@
 # Doctor link Release Candidate Checklist
 
-Status: `v0.1.2 published (Latest Release, 2026-06-29)`
+Status: `v0.1.2 locally and cloud validated release candidate; merge and publication pending`
 
 ## Repository and CI
 
@@ -9,18 +9,23 @@ Status: `v0.1.2 published (Latest Release, 2026-06-29)`
 - [x] Completed TODO trackers archived under `docs/archive/completed-todos/`.
 - [x] English and Chinese README files moved under `docs/readme/`.
 - [x] Root `README.md` is a lightweight entrypoint.
-- [x] GitHub Actions CI passed.
-- [x] Python 3.10 passed.
-- [x] Python 3.11 passed.
-- [x] Python 3.12 passed.
+- [x] Repaired implementation commit pushed and GitHub Actions CI passed (PR #134, run 29221790817).
+- [x] Current repaired implementation passed on Python 3.10 in cloud CI.
+- [x] Current repaired implementation passed on Python 3.11 in cloud CI.
+- [x] Current repaired implementation passed on Python 3.12 locally and in cloud CI.
 - [x] Ruff passed.
 - [x] Pytest passed.
 - [x] CLI smoke tests passed.
 - [x] E2E validation passed.
 - [x] P7 runtime validation passed.
 - [x] Wheel build passed.
+- [x] Source distribution build passed.
+- [x] Wheel and source distribution content validation passed.
+- [x] Twine metadata validation passed.
+- [x] Dependency consistency and vulnerability checks passed.
 - [x] Installed wheel smoke test passed.
-- [x] Package job passed.
+- [x] Current repaired implementation package job passed in cloud CI.
+- [x] Linux, macOS, and Windows smoke jobs passed in cloud CI.
 
 ## Runtime Capability Coverage
 
@@ -38,7 +43,8 @@ Status: `v0.1.2 published (Latest Release, 2026-06-29)`
 
 ## Release Boundaries
 
-- [x] GitHub Release published (`v0.1.0-rc.1`, Latest, 2026-06-29).
+- [x] Historical GitHub Release tag `v0.1.1` exists.
+- [ ] GitHub Release `v0.1.2` published.
 - [x] Release tag published (`v0.1.0-rc.1`).
 - [ ] PyPI publication performed (optional; GitHub wheel is the primary install path).
 - [x] No hosted service introduced.
@@ -54,11 +60,11 @@ Status: `v0.1.2 published (Latest Release, 2026-06-29)`
 - [x] Local Mac validation record (2026-06-29).
 - [x] Final release notes for `v0.1.0-rc.1`.
 - [x] GitHub Release and tag published (`v0.1.0-rc.1`).
-- [ ] Additional target-environment validation (optional, e.g. Windows).
+- [x] GitHub-hosted Linux, macOS, and Windows validation.
 - [ ] PyPI publication (optional).
 
 ## Decision
 
-Doctor link `v0.1.0-rc.1` is published on GitHub with wheel and sdist assets after cloud CI validation and local Mac validation (2026-06-29).
+Doctor link source version `0.1.2` passed repaired local validation and the complete configured GitHub Actions matrix on 2026-07-13. It may be published only after the PR is reviewed and merged and explicit release authorization is given.
 
 Customer delivery or production-like environments that differ materially from the recorded Mac setup should still be validated on those targets before handoff.

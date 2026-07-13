@@ -24,8 +24,7 @@ jobs:
       - name: Install package and validation tools
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e .
-          python -m pip install pytest pytest-cov build ruff
+          python -m pip install -e '.[dev]'
 
       - name: Run static checks
         run: |
@@ -33,13 +32,15 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          pytest -q --cov=doctor_link --cov-report=term-missing --cov-report=xml
+          pytest -q --cov=doctor_link --cov-branch --cov-fail-under=85 --cov-report=term-missing --cov-report=xml
 
       - name: Build wheel and source distribution
         run: |
           python -m build
           test -n "$(find dist -name '*.whl' -print -quit)"
           test -n "$(find dist -name '*.tar.gz' -print -quit)"
+          python scripts/validate_distribution_contents.py dist
+          python -m twine check dist/*
 
       - name: Run usability validation script
         run: |
@@ -48,6 +49,11 @@ jobs:
       - name: Run E2E validation script
         run: |
           bash scripts/e2e_validate.sh "$(pwd)"
+
+      - name: Run security checks
+        run: |
+          bandit -r doctor_link -ll
+          pip-audit
 
       - name: Write validation summary
         if: always()

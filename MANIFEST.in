@@ -1,0 +1,23 @@
+include CHANGELOG.md
+include CONTRIBUTING.md
+include LICENSE
+include README.md
+include SECURITY.md
+include VERSION
+recursive-include .doctorlink *.yml
+recursive-include docs *.md *.yml
+recursive-include examples *
+recursive-include schemas *.json
+recursive-include scripts *.sh *.ps1 *.command *.py
+recursive-include tests *.py *.json *.md *.log
+prune examples/basic-project/.doctor-link
+prune examples/python-api-bug/.doctor-link
+prune examples/python-api-bug/src/__pycache__
+prune examples/python-api-bug/tests/__pycache__
+prune .doctor-link
+prune .doctorlink-e2e
+prune .doctorlink-p7-runtime
+prune DoctorReports
+prune DoctorWorkspace
+global-exclude *.py[cod]
+global-exclude .DS_Store

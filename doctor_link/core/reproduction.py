@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import subprocess
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
@@ -9,6 +8,7 @@ from typing import Any
 import yaml
 
 from doctor_link.core.models import EvidenceItem, TimelineStep
+from doctor_link.core.safe_command_runner import run_safe_command_sequence
 
 
 @dataclass
@@ -56,7 +56,10 @@ def load_reproduction_catalog(project_root: Path) -> ReproductionCatalog:
     path = reproduce_path(project_root)
     if not path.exists():
         return ReproductionCatalog(path=str(path), warnings=["Missing .doctorlink/reproduce.yml"])
-    raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    try:
+        raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except (OSError, yaml.YAMLError) as exc:
+        return ReproductionCatalog(path=str(path), warnings=[f"Invalid reproduce.yml: {exc}"])
     entries_raw = raw.get("reproductions", raw.get("entries", [])) if isinstance(raw, dict) else []
     warnings: list[str] = []
     entries: list[ReproductionEntry] = []
@@ -104,7 +107,7 @@ def run_reproduction(project_root: Path, reproduction_id: str, package_dir: Path
     elif not entry.command:
         result = ReproductionRunResult(reproduction_id=entry.reproduction_id, status="missing_command")
     else:
-        completed = subprocess.run(entry.command, shell=True, cwd=project_root, text=True, capture_output=True, timeout=timeout_seconds, check=False)
+        completed = run_safe_command_sequence(entry.command, cwd=project_root, timeout_seconds=timeout_seconds)
         result = ReproductionRunResult(
             reproduction_id=entry.reproduction_id,
             status="passed" if completed.returncode == 0 else "failed",
