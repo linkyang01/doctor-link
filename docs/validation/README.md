@@ -22,6 +22,7 @@ PyPI publication: not performed
 - [Release checklist](release-candidate-checklist.md) — completed engineering, merge, and GitHub publication gates.
 - [v0.1.2 release notes](v0.1.2-release-notes.md) — published release contents and installation guidance.
 - [v0.1.3 release notes](v0.1.3-release-notes.md) — current reliability and privacy-safe export release contents.
+- [v0.2.0 release notes](v0.2.0-release-notes.md) — automatic problem-solving release candidate contents and validation contract.
 - [GitHub Release v0.1.3](https://github.com/linkyang01/doctor-link/releases/tag/v0.1.3) — authoritative current publication page and assets.
 
 ## Supporting records

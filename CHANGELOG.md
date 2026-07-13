@@ -6,6 +6,12 @@ Doctor link follows semantic versioning. Public release publishing requires expl
 
 ## Unreleased
 
+No changes yet.
+
+## [0.2.0] - 2026-07-13
+
+Verified automatic problem-solving release with bounded Codex repair, independent regression acceptance, and protected verification inputs.
+
 ### Added
 
 - `doctor-link solve` for an end-to-end Python-project loop: reproduce a concrete failure, preview the bounded Codex task, require explicit repair approval, create an isolated Git branch, run up to three Codex repair rounds, and independently verify every required command.
