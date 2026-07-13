@@ -31,6 +31,7 @@ EXCLUDABLE_DIRS = {
 class PackageExportOptions:
     """Options for exporting a diagnostic package."""
 
+    include_web_assets: bool = False
     exclude_attachments: bool = False
     exclude_logs: bool = False
     exclude_screenshots: bool = False
@@ -61,6 +62,7 @@ class PackageValidationResult:
 
 @dataclass
 class PackageExportResult:
+    schema: str
     package_dir: str
     output_zip: str
     exported_at: str
@@ -127,11 +129,12 @@ def export_package(
     included = [item for item in files if item.included]
     skipped = [item for item in files if not item.included]
 
-    manifest_path = package_dir / "manifest.json"
+    manifest_path = package_dir / "package-export-manifest.json"
     readme_path = package_dir / "package-readme.md"
     redaction_report = package_dir / "redaction-report.md"
 
     result = PackageExportResult(
+        schema="doctor-link-package-export-manifest-v1",
         package_dir=str(package_dir),
         output_zip=str(output_zip),
         exported_at=utc_now_iso(),
@@ -176,6 +179,8 @@ def _collect_files(package_dir: Path, options: PackageExportOptions) -> list[Pac
 
 
 def _skip_reason(relative: Path, size: int, options: PackageExportOptions) -> str | None:
+    if not options.include_web_assets and _is_under(relative, Path(".doctorlink-web")):
+        return "excluded web assets"
     if options.exclude_attachments and _is_under(relative, EXCLUDABLE_DIRS["attachments"]):
         return "excluded attachments"
     if options.exclude_logs and _is_under(relative, EXCLUDABLE_DIRS["logs"]):

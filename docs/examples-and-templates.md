@@ -70,6 +70,18 @@ doctor-link diagnose after --project "Example" --summary "after fix" --before-pa
 doctor-link diagnose verify <after_package> --json
 ```
 
+## Full capability validation lab
+
+`examples/full-capability-lab/` is the executable acceptance example for the complete public CLI. It performs 68 real command invocations across all 61 routes and checks seven linked scenarios, including concurrent evidence writes, multi-bug blocking, before/after repair, secret redaction, integrity tampering, Adapter/Plugin execution, and governance/archive flows.
+
+After building a wheel and source distribution, run:
+
+```bash
+python examples/full-capability-lab/run-all.py --dist dist
+```
+
+The generated JSON and Markdown reports retain the route inventory, arguments, exit codes, scenario assertions, and per-command logs. See [Full Capability Validation](full-capability-validation.md) for the coverage contract.
+
 ## Example verification result
 
 `verification-result.json` records whether evidence is complete. Pipeline success remains false when verification evidence is missing.

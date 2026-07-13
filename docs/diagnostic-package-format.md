@@ -22,6 +22,7 @@ DoctorReports/
     ├── verification-result.json
     ├── diagnosis-workflow.json
     ├── diagnosis-pipeline-summary.json
+    ├── package-export-manifest.json
     ├── project-health.json
     └── evidence/
 ```
@@ -53,6 +54,13 @@ DoctorReports/
 - `ai-repair-result.json`: AI repair result records.
 - `diagnosis-history.json`: multi-round diagnosis records.
 - `repair-risk-review.json`: repair risk review.
+
+## Export files
+
+- `package-export-manifest.json`: files included or skipped by `doctor-package`, export destination, validation summary, and redaction-report presence.
+- `package-readme.md`: human-readable archive contents and warnings.
+
+The explicit filename avoids collision with the versioned package-level `manifest.json` schema and `handoff-manifest.json`.
 
 ## Evidence directory
 

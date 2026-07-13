@@ -17,6 +17,11 @@ EXAMPLE_CONFIGS = [
     "examples/python-api-bug/.doctorlink/reproduce.yml",
     "examples/python-api-bug/.doctorlink/test-matrix.yml",
     "examples/media-playback-library/.doctorlink/diagnosis.yml",
+    "examples/full-capability-lab/repair-lifecycle/.doctorlink/diagnosis.yml",
+    "examples/full-capability-lab/repair-lifecycle/.doctorlink/reproduce.yml",
+    "examples/full-capability-lab/repair-lifecycle/.doctorlink/test-matrix.yml",
+    "examples/full-capability-lab/extension-governance/.doctorlink/adapters/lab-adapter/adapter.yml",
+    "examples/full-capability-lab/extension-governance/.doctorlink/plugins/lab-plugin/plugin.yml",
 ]
 
 EXAMPLE_ARTIFACTS = [
@@ -54,6 +59,15 @@ def test_shop_service_multi_bug_readme_mentions_run_script() -> None:
     assert "run-example.sh" in text
     assert "shop-service-multi-bug" in text
     assert "P1" in text
+
+
+def test_full_capability_lab_documents_complete_route_coverage() -> None:
+    text = Path("examples/full-capability-lab/README.md").read_text(encoding="utf-8")
+
+    assert "61/61" in text
+    assert "run-all.py" in text
+    assert "repair lifecycle" in text.casefold()
+    assert "security" in text.casefold()
 
 
 def test_examples_guide_mentions_required_template_categories() -> None:

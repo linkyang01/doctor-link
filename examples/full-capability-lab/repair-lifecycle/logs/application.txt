@@ -1,0 +1,2 @@
+2026-07-13T00:00:00Z INFO checkout request completed
+customer=validation@example.com token=full-capability-secret

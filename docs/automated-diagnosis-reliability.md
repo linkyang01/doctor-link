@@ -109,6 +109,8 @@ bash examples/shop-service-multi-bug/run-example.sh
 
 The example validates that five reproductions pass as expected, the database reproduction fails as expected, one required matrix job fails, four assertions receive linked evidence, verification remains `not_verified`, and handoff remains `needs_repair`. A zero exit from the script means Doctor link represented the unresolved defects correctly; it does not mean the example application was repaired.
 
+For an installed-package run across every public CLI route, see [Full Capability Validation](full-capability-validation.md) and the [`full-capability-lab`](../examples/full-capability-lab/README.md).
+
 ## Privacy and integrity boundary
 
 Evidence remains local unless the user exports or shares it. Before external handoff, run the privacy/redaction and integrity gates documented in [Sensitive Data Handling](sensitive-data-handling.md) and [Export Security Checklist](export-security-checklist.md). Concurrency and status changes do not bypass those gates.

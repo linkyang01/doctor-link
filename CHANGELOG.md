@@ -12,6 +12,8 @@ Doctor link follows semantic versioning. Public release publishing requires expl
 - Transactional diagnostic-package updates with cross-process locking and atomic file replacement.
 - Automatic reproduction and test-matrix evidence recording with stable IDs, assertion links, timeline entries, and rerun replacement.
 - Complex regression scenarios for false-success exits, concurrent record writes, assertion inheritance, failed-test blockers, and handoff status accuracy.
+- Installed-package full capability lab covering all 61 public command routes across repair, multi-bug, security, integrity, extension, governance, archive, and concurrency scenarios.
+- Versioned package-export manifest schema and automatic CLI inventory enforcement.
 
 ### Changed
 
@@ -21,12 +23,15 @@ Doctor link follows semantic versioning. Public release publishing requires expl
 - Verification includes failed, partial, and unknown test records in blockers and rerun instructions, while replacing stale verification commands on later runs.
 - Handoff compatibility distinguishes `needs_repair`, `needs_evidence`, `ready_for_verification_review`, and `ready`, and exposes the current verification status.
 - The six-bug shop-service example now creates the package before running checks, attaches all automated evidence, and validates the expected unresolved status.
+- GitHub Actions now executes the full capability lab against the cleanly installed wheel and uploads its per-command evidence.
 
 ### Fixed
 
 - Prevented concurrent CLI processes from silently overwriting each other's package updates.
 - Prevented stale comparison and verification sections from accumulating and incorrectly implying `candidate_verified`.
 - Prevented failed reproductions and required test jobs from printing failure JSON while returning shell exit code 0.
+- Repaired `doctor-package --include-web` and exposed the documented attachment/log/screenshot/size filters.
+- Prevented package export manifests from being misclassified as AI handoff manifests during Schema and Conformance validation.
 
 ## [0.1.2] - 2026-07-13
 

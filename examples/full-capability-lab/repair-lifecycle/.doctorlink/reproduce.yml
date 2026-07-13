@@ -1,0 +1,8 @@
+reproductions:
+  - id: checkout-fixed
+    title: Checkout returns one charge
+    kind: command
+    command: PYTHONPATH=src CHECKOUT_MODE=fixed python -c "from service import checkout; assert checkout(5) == 5; print('checkout-ok')"
+    expected: checkout-ok
+    related_assertion_statements:
+      - "Checkout duplicates charges"

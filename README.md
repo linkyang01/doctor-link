@@ -159,6 +159,7 @@ GitHub Actions runs the full Python matrix, security checks, package installatio
 - [Installation](docs/installation.md)
 - [CLI reference](docs/cli-reference.md)
 - [Automated diagnosis reliability](docs/automated-diagnosis-reliability.md)
+- [Full capability validation](docs/full-capability-validation.md)
 - [Product overview](docs/product-overview.md)
 - [Architecture overview](docs/architecture-overview.md)
 - [GitHub repository and workflow guide](docs/github-repository-guide.md)

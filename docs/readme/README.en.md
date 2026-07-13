@@ -18,6 +18,8 @@ Doctor link remains local-first. Version `0.1.2` passed the repaired local suite
 
 Current unreleased hardening additionally guarantees non-zero exits for failed reproductions, required tests, and incomplete verification; automated package evidence write-back; before-to-after assertion inheritance; linked passing after-state evidence before candidate verification; and transaction/atomic-write protection for concurrent package updates. See [Automated Diagnosis Reliability](../automated-diagnosis-reliability.md).
 
+The unreleased full-capability lab also executes every one of the 61 public CLI routes against source and a cleanly installed wheel. It combines 68 real command invocations with seven complex repair, concurrency, privacy, integrity, extension, governance, and archive scenarios. See [Full Capability Validation](../full-capability-validation.md).
+
 ## Common Commands
 
 ```bash
@@ -55,6 +57,7 @@ python scripts/validate_distribution_contents.py dist
 bash scripts/validate_doctor_link.sh
 bash scripts/e2e_validate.sh "$(pwd)"
 bash scripts/p7_runtime_validate.sh "$(pwd)"
+python examples/full-capability-lab/run-all.py --dist dist
 ```
 
 ## Documentation
@@ -63,6 +66,7 @@ bash scripts/p7_runtime_validate.sh "$(pwd)"
 - `../quick-start.md`
 - `../cli-reference.md`
 - `../automated-diagnosis-reliability.md`
+- `../full-capability-validation.md`
 - `../github-repository-guide.md`
 - `../project-status.md`
 - `../validation/local-quality-scorecard.md`

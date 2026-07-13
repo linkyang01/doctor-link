@@ -41,7 +41,10 @@ Evidence can be highly sensitive depending on what was collected:
 Use `doctor-link doctor-package` options to reduce exported content when possible:
 
 ```bash
-doctor-link doctor-package <package_dir> --exclude-attachments --exclude-logs --max-file-size 1000000
+doctor-link doctor-package <package_dir> --out package.zip \
+  --exclude-attachments --exclude-logs --max-file-size 1000000
 ```
+
+Generated `.doctorlink-web` assets are excluded by default. Add `--include-web` when the local HTML workbench should be part of the archive.
 
 Review the zip before sharing.

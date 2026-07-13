@@ -1,0 +1,13 @@
+schema: doctor-link-plugin-v1
+id: lab-plugin
+name: Full Capability Plugin
+version: 0.1.0
+extension_points:
+  - verification
+permissions:
+  - run_local_command
+commands:
+  verification:
+    - python
+    - -c
+    - "print('plugin-full-capability-ok')"

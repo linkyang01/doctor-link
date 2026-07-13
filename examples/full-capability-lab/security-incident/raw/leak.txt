@@ -1,0 +1,3 @@
+password=diagnostic-password
+token=abcdefghijklmnopqrstuvwxyz123456
+owner=security@example.com

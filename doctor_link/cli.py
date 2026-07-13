@@ -364,9 +364,27 @@ def compare_command(before: Path, after: Path, package_dir: Path | None, output:
 @click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
 @click.option("--out", "output", type=click.Path(path_type=Path), required=True, help="Output zip path.")
 @click.option("--include-web", is_flag=True, help="Include generated web view assets if present.")
-def doctor_package_command(package_dir: Path, output: Path, include_web: bool) -> None:
+@click.option("--exclude-attachments", is_flag=True, help="Exclude evidence attachments from the archive.")
+@click.option("--exclude-logs", is_flag=True, help="Exclude collected logs from the archive.")
+@click.option("--exclude-screenshots", is_flag=True, help="Exclude screenshots from the archive.")
+@click.option("--max-file-size", type=click.IntRange(min=0), default=None, help="Skip files larger than this byte limit.")
+def doctor_package_command(
+    package_dir: Path,
+    output: Path,
+    include_web: bool,
+    exclude_attachments: bool,
+    exclude_logs: bool,
+    exclude_screenshots: bool,
+    max_file_size: int | None,
+) -> None:
     """Export a diagnostic package archive."""
-    options = PackageExportOptions(include_web_assets=include_web)
+    options = PackageExportOptions(
+        include_web_assets=include_web,
+        exclude_attachments=exclude_attachments,
+        exclude_logs=exclude_logs,
+        exclude_screenshots=exclude_screenshots,
+        max_file_size=max_file_size,
+    )
     path = export_package(package_dir, output, options=options)
     click.echo(f"Exported diagnostic package: {path}")
 

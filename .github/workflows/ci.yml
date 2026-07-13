@@ -144,6 +144,10 @@ jobs:
           doctor-link preflight . --json
           bash scripts/validate_doctor_link.sh /tmp/DoctorLinkValidation
           bash scripts/p7_runtime_validate.sh "$(pwd)"
+          python examples/full-capability-lab/run-all.py \
+            --doctor-link "$(command -v doctor-link)" \
+            --dist dist \
+            --out .doctorlink-full-capability
 
       - name: Upload package artifacts
         uses: actions/upload-artifact@v4
@@ -153,6 +157,7 @@ jobs:
           path: |
             dist/**
             .doctorlink-p7-runtime/**
+            .doctorlink-full-capability/**
           if-no-files-found: error
 
   security:

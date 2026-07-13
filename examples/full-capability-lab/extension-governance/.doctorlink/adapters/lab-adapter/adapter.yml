@@ -1,0 +1,11 @@
+schema: doctor-link-adapter-v1
+id: lab-adapter
+name: Full Capability Adapter
+version: 0.1.0
+capabilities:
+  - verification
+commands:
+  verification:
+    - python
+    - -c
+    - "print('adapter-full-capability-ok')"
