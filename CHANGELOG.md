@@ -6,24 +6,71 @@ Doctor link follows semantic versioning. Public release publishing requires expl
 
 ## Unreleased
 
-### Fixed
+No unreleased changes.
 
-- Reconciled CLI, core runtime, tests, and validation scripts after interface drift.
-- Restored `collect`, `verify`, `strategy validate`, Vly proof, workbench JSON, AI result/history, assertion compliance, and risk-review workflows.
-- Restored all local E2E, self-validation, P7 runtime, and installed-wheel validation paths.
-- Made configured `python` commands portable on systems that only expose the active interpreter by absolute path.
+## [0.1.2] - 2026-07-13
+
+Release-readiness repair, security hardening, distribution validation, cross-platform CI, and GitHub documentation expansion.
 
 ### Added
 
-- Added `doctor-link preflight` for read-only configuration, command, catalog, tool, and environment readiness checks.
-- Added clean wheel/sdist content validation, Twine checks, dependency consistency checks, and source-package runtime-artifact exclusions.
-- Added cross-platform CI smoke coverage for Linux, macOS, and Windows.
+- AI handoff profiles for `grok`, `windsurf`, and `cline`.
+- `doctor-link diagnose-now --tool` and aligned guided-workflow tool selection.
+- `doctor-link handoff list`, compatibility checks, and JSON generation output.
+- Read-only `doctor-link preflight` checks for configuration, commands, catalogs, tools, and Python readiness.
+- Safe shell-free configured-command sequence runner with portable Python resolution.
+- Wheel and source-distribution content validation, Twine validation, and isolated installed-wheel checks.
+- Bandit, dependency audit, Dependabot, immutable release-tag checks, and an 85% branch-coverage gate.
+- GitHub Actions jobs for Python 3.10–3.12 and Ubuntu, macOS, and Windows smoke validation.
+- Security policy, GitHub repository guide, pull-request template, improved diagnostic issue form, and detailed validation evidence.
+
+### Changed
+
+- Default guided handoff tool is `cursor`.
+- Config-relative evidence paths are resolved from the configured project root.
+- Adapter and plugin command execution uses the shared audited command runner.
+- Release, manual-validation, self-validation, and CI workflows enforce aligned package, security, and validation gates.
+- README, installation, contribution, security, validation, and release documents reflect the real `v0.1.2` scope and publication boundary.
+
+### Fixed
+
+- Reconciled CLI and runtime interface drift affecting collect, verify, strategy validation, comparison, Vly proof, workbench JSON, AI result/history, assertion compliance, and risk review.
+- Repaired AI handoff manifest/file reconciliation and task generation interfaces.
+- Restored all local E2E, self-validation, P7 runtime, project validation, and installed-wheel paths.
+- Handled invalid YAML and missing optional catalogs without uncontrolled tracebacks.
+- Made configured `python` commands work on systems without a global `python` alias.
+- Removed generated reports and cache content from source distributions.
 
 ### Security
 
-- Replaced shell-based reproduction and test-matrix execution with a shell-free command-sequence runner.
-- Routed adapter and plugin commands through the same shell-free, timeout-aware command runner.
-- Added Bandit, dependency audit, Dependabot, immutable release tags, and an 85% coverage gate.
+- Replaced shell-based reproduction and test-matrix execution with argument-vector execution that rejects unsafe operators.
+- Kept adapter and plugin execution dry-run by default and gated real execution behind explicit `--allow-run` approval.
+- Added medium/high-confidence source scanning and dependency-vulnerability auditing to CI.
+- Preserved local-first evidence, redaction, integrity, privacy scan, and export-gate boundaries.
+
+### Validation
+
+- 273 automated tests passed.
+- Branch-aware coverage reached 85.09% with an enforced 85% floor.
+- Python 3.10, 3.11, and 3.12 passed.
+- Ubuntu, macOS, and Windows smoke jobs passed.
+- Security, package build/install, E2E, self-validation, project validation, and P7 runtime checks passed.
+- GitHub Actions certification run: `29221918410`.
+
+## [0.1.1] - 2026-06-29
+
+Post-release documentation alignment and wizard handoff polish.
+
+### Added
+
+- `doctor-link wizard --tool` to select an AI handoff profile without interactive prompts.
+- `doctor-link wizard --handoff/--no-handoff` and `--collect-evidence/--no-collect-evidence` for non-interactive runs.
+- Wizard interactive prompt for AI tool profile when `--tool` is omitted.
+
+### Changed
+
+- Project status, validation certificates, and README files reflect the published GitHub Release (`v0.1.0-rc.1`).
+- P8 no-code UX roadmap marked largely complete.
 
 ## [0.1.0-rc.1] - 2026-06-29
 
@@ -53,43 +100,7 @@ Release candidate for the local-first diagnostic CLI and AI collaboration workfl
 
 ### Fixed
 
-- Diagnostic packages no longer hard-code project name `"Doctor link"` when `diagnosis.yml` defines `project`.
-
-## [0.1.1] - 2026-06-29
-
-Post-release documentation alignment and wizard handoff polish.
-
-### Added
-
-- `doctor-link wizard --tool` to select an AI handoff profile without interactive prompts.
-- `doctor-link wizard --handoff/--no-handoff` and `--collect-evidence/--no-collect-evidence` for non-interactive runs.
-- Wizard interactive prompt for AI tool profile when `--tool` is omitted.
-
-### Changed
-
-- Project status, validation certificates, and README files reflect the published GitHub Release (`v0.1.0-rc.1`, Latest).
-- P8 no-code UX roadmap marked largely complete.
-
-## [0.1.2] - Release candidate, not yet published
-
-AI handoff expansion and guided-workflow CLI polish.
-
-### Added
-
-- AI handoff profiles for `grok` (Grok Build), `windsurf` (Windsurf), and `cline` (Cline).
-- `doctor-link diagnose-now --tool` to select an AI handoff profile (aligned with `wizard --tool`).
-- `doctor-link handoff list` to list supported handoff profiles.
-- `doctor-link handoff check` to pre-check compatibility without generating a package.
-- `doctor-link handoff generate --json` (and shorthand `doctor-link handoff <package> --json`) for scripted output.
-
-### Changed
-
-- Default handoff tool for guided workflows (`wizard`, `diagnose-now`, `handoff generate`) is now `cursor`.
-- CLI reference, diagnose-now guide, and project status docs reflect `v0.1.2` as Latest.
-
-### Fixed
-
-- Restored `doctor_link/core/ai_handoff.py` after a corrupted remote placeholder blocked handoff generation.
+- Diagnostic packages no longer hard-code project name `Doctor link` when `diagnosis.yml` defines `project`.
 
 ## Historical development backlog
 
