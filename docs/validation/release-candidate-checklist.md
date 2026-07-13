@@ -1,6 +1,6 @@
 # Doctor link Release Candidate Checklist
 
-Status: `v0.1.2 locally and cloud validated release candidate; merge and publication pending`
+Status: `v0.1.2 locally and cloud validated, merged, tagged, and published on GitHub`
 
 ## Repository and CI
 
@@ -44,7 +44,7 @@ Status: `v0.1.2 locally and cloud validated release candidate; merge and publica
 ## Release Boundaries
 
 - [x] Historical GitHub Release tag `v0.1.1` exists.
-- [ ] GitHub Release `v0.1.2` published.
+- [x] GitHub Release `v0.1.2` published (2026-07-13, workflow `29223309411`).
 - [x] Release tag published (`v0.1.0-rc.1`).
 - [ ] PyPI publication performed (optional; GitHub wheel is the primary install path).
 - [x] No hosted service introduced.
@@ -65,6 +65,6 @@ Status: `v0.1.2 locally and cloud validated release candidate; merge and publica
 
 ## Decision
 
-Doctor link source version `0.1.2` passed repaired local validation and the complete configured GitHub Actions matrix on 2026-07-13. It may be published only after the PR is reviewed and merged and explicit release authorization is given.
+Doctor link version `0.1.2` passed repaired local validation and the complete configured GitHub Actions matrix on 2026-07-13. PR `#134` was merged as commit `862281f`, explicit GitHub publication authorization was received, and [GitHub Release `v0.1.2`](https://github.com/linkyang01/doctor-link/releases/tag/v0.1.2) was published with wheel and source-distribution assets. PyPI publication remains optional and was not performed.
 
 Customer delivery or production-like environments that differ materially from the recorded Mac setup should still be validated on those targets before handoff.

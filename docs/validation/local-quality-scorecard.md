@@ -1,10 +1,10 @@
 # Doctor link Local Quality Scorecard
 
 Assessment date: 2026-07-13
-Assessed source: repaired `0.1.2` release candidate, implementation commit `4e46a88`
+Assessed source: repaired `0.1.2` implementation commit `4e46a88`, later published from merge commit `862281f`
 Result: **100/100 — repository release-readiness target completed**
 
-This score measures the defined repository-side release-readiness rubric. It does not mean the software has no possible future improvements, and it does not claim a GitHub Release, PyPI publication, customer-environment acceptance, or production deployment.
+This score measures the defined repository-side release-readiness rubric. It does not mean the software has no possible future improvements, and it does not claim PyPI publication, customer-environment acceptance, or production deployment. GitHub Release `v0.1.2` was published after the score was established.
 
 ## Scoring
 
@@ -35,4 +35,4 @@ This score measures the defined repository-side release-readiness rubric. It doe
 
 ## Certification boundary
 
-The repaired implementation commit passed the complete configured cloud matrix in PR `#134`. Merging the PR and publishing `v0.1.2` remain separate external actions. Publication still requires explicit authorization.
+The repaired implementation commit passed the complete configured cloud matrix in PR `#134`. The PR was later merged as commit `862281f`; after explicit authorization, [GitHub Release `v0.1.2`](https://github.com/linkyang01/doctor-link/releases/tag/v0.1.2) was published by workflow `29223309411`. PyPI publication was not authorized or performed.

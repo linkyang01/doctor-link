@@ -6,7 +6,7 @@ Status: Current repaired implementation cloud validation passed
 
 This certificate records GitHub Actions cloud validation for Doctor link.
 
-It does not claim target customer environment validation, production validation, PyPI publication, hosted service readiness, or enterprise deployment acceptance. GitHub Release `v0.1.2` is not currently published.
+It does not claim target customer environment validation, production validation, PyPI publication, hosted service readiness, or enterprise deployment acceptance. GitHub Release `v0.1.2` was published after this validation succeeded.
 
 ## Project
 
@@ -77,6 +77,6 @@ This certificate does not certify:
 
 ## Certification Conclusion
 
-Doctor link has passed repository-side GitHub Actions cloud validation. GitHub Release `v0.1.0-rc.1` is published with wheel and sdist assets (2026-06-29).
+Doctor link passed repository-side GitHub Actions cloud validation. PR `#134` was subsequently merged as commit `862281f`, and [GitHub Release `v0.1.2`](https://github.com/linkyang01/doctor-link/releases/tag/v0.1.2) was published with wheel and sdist assets by [release workflow 29223309411](https://github.com/linkyang01/doctor-link/actions/runs/29223309411). PyPI publication was not performed.
 
 Local Mac validation has been recorded (2026-06-29). PyPI publication, customer delivery, or production handoff on a different target environment should still be preceded by validation on that environment when it differs materially from the recorded Mac setup.

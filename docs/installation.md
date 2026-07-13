@@ -2,7 +2,7 @@
 
 Doctor link is a Python CLI project. This guide explains how to clone the repository, install it locally, run the CLI, and validate that the project works on a local machine.
 
-Install from source by default. Source version `0.1.2` is a locally and GitHub Actions validated release candidate, not a published GitHub Release or PyPI package. PR `#134` passed Python 3.10–3.12 and Ubuntu/macOS/Windows validation. Do not use a `v0.1.2` release-asset URL until an explicitly authorized release has actually been published.
+Version `0.1.2` is available from the authorized [GitHub Release](https://github.com/linkyang01/doctor-link/releases/tag/v0.1.2) and from source. PR `#134` passed Python 3.10–3.12 and Ubuntu/macOS/Windows validation before publication. Doctor link is not published on PyPI, so `pip install doctor-link==0.1.2` from PyPI is not supported.
 
 ## 1. Requirements
 
@@ -105,6 +105,15 @@ If the command prints help text, the CLI entrypoint is installed successfully.
 python -m pip install build
 python -m build
 python -m pip install dist/doctor_link-0.1.2-py3-none-any.whl
+doctor-link --version
+```
+
+### Install the published GitHub Release wheel
+
+Download `doctor_link-0.1.2-py3-none-any.whl` from the [v0.1.2 release page](https://github.com/linkyang01/doctor-link/releases/tag/v0.1.2), then run:
+
+```bash
+python -m pip install ./doctor_link-0.1.2-py3-none-any.whl
 doctor-link --version
 ```
 
@@ -324,11 +333,11 @@ Local validation is still recommended when you need to prove the project on a sp
 The following actions require separate explicit authorization:
 
 - Do not publish to PyPI without explicit authorization.
-- Do not create a GitHub Release without explicit authorization.
-- Do not tag a public release without explicit authorization.
+- Do not create a future GitHub Release without explicit authorization for its exact version and destination.
+- Do not tag a future public release without explicit authorization.
 - Do not change repository permissions without explicit authorization.
 - Do not introduce paid cloud services without explicit authorization.
 - Do not introduce external account systems without explicit authorization.
 - Do not start P6 implementation without explicit authorization.
 
-This guide only covers local source installation, local package build, and local validation.
+This guide covers source installation, installation from the published GitHub wheel, local package build, and local validation. It does not authorize PyPI publication or other hosted services.

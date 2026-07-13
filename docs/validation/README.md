@@ -9,8 +9,8 @@ Local repaired-source validation: passed (2026-07-13)
 GitHub Actions cloud validation: passed (PR #134)
 100-point certification matrix: 8/8 jobs passed (run 29221918410)
 Evidence-based repository readiness: 100/100
-PR merge: pending
-GitHub Release v0.1.2: not published
+PR merge: completed (commit 862281f)
+GitHub Release v0.1.2: published (2026-07-13)
 PyPI publication: not performed
 ```
 
@@ -19,8 +19,9 @@ PyPI publication: not performed
 - [Validation evidence index](validation-evidence-index.md) — exact commits, workflow runs, jobs, commands, results, historical evidence, and interpretation boundaries.
 - [Cloud validation certificate](cloud-validation-certificate.md) — scope certified by the current GitHub Actions run.
 - [100-point quality scorecard](local-quality-scorecard.md) — weighted repository-readiness rubric and receipts.
-- [Release candidate checklist](release-candidate-checklist.md) — completed engineering gates and remaining merge/publication decisions.
-- [v0.1.2 release notes](v0.1.2-release-notes.md) — candidate changes; not evidence that a release exists.
+- [Release checklist](release-candidate-checklist.md) — completed engineering, merge, and GitHub publication gates.
+- [v0.1.2 release notes](v0.1.2-release-notes.md) — published release contents and installation guidance.
+- [GitHub Release v0.1.2](https://github.com/linkyang01/doctor-link/releases/tag/v0.1.2) — authoritative publication page and assets.
 
 ## Supporting records
 
