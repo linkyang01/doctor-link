@@ -117,4 +117,4 @@ After publication, verify:
 
 ## Current boundary
 
-Version `0.1.2` was locally and cloud validated, merged through PR `#134` as commit `862281f`, and published as [GitHub Release `v0.1.2`](https://github.com/linkyang01/doctor-link/releases/tag/v0.1.2) on 2026-07-13. Release workflow [29223309411](https://github.com/linkyang01/doctor-link/actions/runs/29223309411) created the immutable tag and uploaded the wheel and source distribution. PyPI publication was not authorized and was not performed.
+Version `0.1.3` was locally and cloud validated, merged through PR `#140` as commit `fa779da`, and published as [GitHub Release `v0.1.3`](https://github.com/linkyang01/doctor-link/releases/tag/v0.1.3) on 2026-07-13. Release workflow [29246045227](https://github.com/linkyang01/doctor-link/actions/runs/29246045227) installed the final wheel, passed the full capability lab, created the immutable tag, and uploaded the wheel and source distribution. PyPI publication was disabled and was not performed.

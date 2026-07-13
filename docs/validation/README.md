@@ -6,11 +6,11 @@ This directory contains the evidence, checklists, certificates, and release-stat
 
 ```text
 Local repaired-source validation: passed (2026-07-13)
-GitHub Actions cloud validation: passed (PR #134)
-100-point certification matrix: 8/8 jobs passed (run 29221918410)
+GitHub Actions cloud validation: passed (PR #140)
+Current certification matrix: 8/8 jobs passed (run 29245883700)
 Evidence-based repository readiness: 100/100
-PR merge: completed (commit 862281f)
-GitHub Release v0.1.2: published (2026-07-13)
+PR merge: completed (commit fa779da)
+GitHub Release v0.1.3: published (2026-07-13)
 PyPI publication: not performed
 ```
 
@@ -22,7 +22,7 @@ PyPI publication: not performed
 - [Release checklist](release-candidate-checklist.md) — completed engineering, merge, and GitHub publication gates.
 - [v0.1.2 release notes](v0.1.2-release-notes.md) — published release contents and installation guidance.
 - [v0.1.3 release notes](v0.1.3-release-notes.md) — current reliability and privacy-safe export release contents.
-- [GitHub Release v0.1.2](https://github.com/linkyang01/doctor-link/releases/tag/v0.1.2) — authoritative publication page and assets.
+- [GitHub Release v0.1.3](https://github.com/linkyang01/doctor-link/releases/tag/v0.1.3) — authoritative current publication page and assets.
 
 ## Supporting records
 

@@ -6,7 +6,7 @@ Status: Current repaired implementation cloud validation passed
 
 This certificate records GitHub Actions cloud validation for Doctor link.
 
-It does not claim target customer environment validation, production validation, PyPI publication, hosted service readiness, or enterprise deployment acceptance. GitHub Release `v0.1.2` was published after this validation succeeded.
+It does not claim target customer environment validation, production validation, PyPI publication, hosted service readiness, or enterprise deployment acceptance. GitHub Release `v0.1.3` was published after this validation succeeded.
 
 ## Project
 
@@ -14,16 +14,16 @@ It does not claim target customer environment validation, production validation,
 - Repository: `linkyang01/doctor-link`
 - Validation type: GitHub Actions Cloud Validation
 - Validation scope: repository-side CI and package validation
-- Current source candidate: `0.1.2` (implementation commit `4e46a88`, PR `#134`)
+- Current source candidate: `0.1.3` (release candidate commit `4119f0e`, PR `#140`)
 - Local Mac validation: recorded (2026-06-29); additional target environments optional
 
 ## Cloud Validation Evidence
 
 Current repaired implementation validation:
 
-- PR: `#134 Harden Doctor link release readiness`
-- Implementation commit: `4e46a88d363250915ce625dbd58dceadc8ab7c4c`
-- CI run: [`29221790817`](https://github.com/linkyang01/doctor-link/actions/runs/29221790817)
+- PR: `#140 Release v0.1.3 reliability and export hardening`
+- Release candidate commit: `4119f0ec414c40d95770903cdc7137981b87ed36`
+- CI run: [`29245883700`](https://github.com/linkyang01/doctor-link/actions/runs/29245883700)
 - CI result: `success`
 
 Validated jobs and checks:
@@ -38,6 +38,7 @@ Validated jobs and checks:
 - P7 runtime validation: passed
 - Wheel build: passed
 - Installed wheel smoke test: passed
+- Installed wheel full-capability lab: 62/62 routes, 70 invocations, 8 complex scenarios
 - Package validation job: passed
 - Security checks: passed
 - Ubuntu smoke: passed
@@ -77,6 +78,6 @@ This certificate does not certify:
 
 ## Certification Conclusion
 
-Doctor link passed repository-side GitHub Actions cloud validation. PR `#134` was subsequently merged as commit `862281f`, and [GitHub Release `v0.1.2`](https://github.com/linkyang01/doctor-link/releases/tag/v0.1.2) was published with wheel and sdist assets by [release workflow 29223309411](https://github.com/linkyang01/doctor-link/actions/runs/29223309411). PyPI publication was not performed.
+Doctor link passed repository-side GitHub Actions cloud validation. PR `#140` was subsequently merged as commit `fa779da`, and [GitHub Release `v0.1.3`](https://github.com/linkyang01/doctor-link/releases/tag/v0.1.3) was published with wheel and sdist assets by [release workflow 29246045227](https://github.com/linkyang01/doctor-link/actions/runs/29246045227). The release workflow installed the final wheel and reran the full capability lab before tagging. PyPI publication was disabled and not performed.
 
 Local Mac validation has been recorded (2026-06-29). PyPI publication, customer delivery, or production handoff on a different target environment should still be preceded by validation on that environment when it differs materially from the recorded Mac setup.
