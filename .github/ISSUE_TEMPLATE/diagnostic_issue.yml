@@ -40,6 +40,33 @@ body:
     validations:
       required: true
 
+  - type: input
+    id: doctor_link_version
+    attributes:
+      label: Doctor link version or commit
+      description: Run `doctor-link --version` and include the commit SHA when testing source code.
+      placeholder: 0.1.2 / 8798b9a
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Include operating system and Python version.
+      placeholder: macOS 26 / Python 3.12
+    validations:
+      required: true
+
+  - type: textarea
+    id: preflight
+    attributes:
+      label: Preflight result
+      description: Run `doctor-link preflight . --json` and provide a redacted summary of warnings or blockers.
+      render: json
+    validations:
+      required: false
+
   - type: textarea
     id: user_assertion
     attributes:
@@ -63,3 +90,13 @@ body:
       description: How should we prove the issue is fixed?
     validations:
       required: false
+
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy confirmation
+      options:
+        - label: I removed secrets, credentials, customer data, and private diagnostic evidence from this public issue.
+          required: true
+        - label: This report is not a security vulnerability requiring private disclosure.
+          required: true

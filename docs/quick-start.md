@@ -15,7 +15,11 @@ Verify:
 
 ```bash
 doctor-link --help
+doctor-link --version
+doctor-link preflight . --json
 ```
+
+`preflight` is read-only. It inspects configuration, configured commands, runtime catalogs, Python version, and local tools without executing repository commands. Resolve blockers before collecting or running project evidence.
 
 ## 2. Create a diagnostic package
 
@@ -84,4 +88,4 @@ doctor-link health DoctorReports --json
 
 ## Boundary
 
-Quick start commands are local. They do not publish releases, upload packages, or require paid cloud services.
+Quick start commands are local. They do not publish releases, upload packages, or require paid cloud services. Diagnostic packages can contain sensitive project evidence; inspect redaction and privacy results before sharing them or attaching them to a GitHub issue.

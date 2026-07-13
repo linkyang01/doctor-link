@@ -2,7 +2,7 @@
 
 Doctor link is a Python CLI project. This guide explains how to clone the repository, install it locally, run the CLI, and validate that the project works on a local machine.
 
-Install from source by default. Source version `0.1.2` is a locally validated release candidate, not a published GitHub Release or PyPI package. Do not use a `v0.1.2` release-asset URL until an explicitly authorized release has actually been published.
+Install from source by default. Source version `0.1.2` is a locally and GitHub Actions validated release candidate, not a published GitHub Release or PyPI package. PR `#134` passed Python 3.10–3.12 and Ubuntu/macOS/Windows validation. Do not use a `v0.1.2` release-asset URL until an explicitly authorized release has actually been published.
 
 ## 1. Requirements
 
@@ -133,19 +133,22 @@ The quick smoke test passes if all three commands exit successfully.
 Install validation tools:
 
 ```bash
-python -m pip install pytest pytest-cov build ruff
+python -m pip install -e '.[dev]'
 ```
 
 Run the complete validation sequence:
 
 ```bash
 ruff check doctor_link tests scripts
-pytest -q --cov=doctor_link --cov-report=term-missing --cov-report=xml
+pytest -q --cov=doctor_link --cov-branch --cov-fail-under=85 --cov-report=term-missing --cov-report=xml
+bandit -r doctor_link -ll
+pip-audit
 python -m build
 python scripts/validate_distribution_contents.py dist
 python -m twine check dist/*
 bash scripts/validate_doctor_link.sh
 bash scripts/e2e_validate.sh "$(pwd)"
+bash scripts/p7_runtime_validate.sh "$(pwd)"
 ```
 
 The validation passes when every command exits successfully.
