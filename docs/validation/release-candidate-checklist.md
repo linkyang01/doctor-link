@@ -1,6 +1,6 @@
 # Doctor link Release Candidate Checklist
 
-Status: `v0.1.2 locally validated release candidate; cloud revalidation and publication pending`
+Status: `v0.1.2 locally and cloud validated release candidate; merge and publication pending`
 
 ## Repository and CI
 
@@ -9,10 +9,10 @@ Status: `v0.1.2 locally validated release candidate; cloud revalidation and publ
 - [x] Completed TODO trackers archived under `docs/archive/completed-todos/`.
 - [x] English and Chinese README files moved under `docs/readme/`.
 - [x] Root `README.md` is a lightweight entrypoint.
-- [ ] Repaired commit pushed and GitHub Actions CI passed.
-- [ ] Current repaired commit passed on Python 3.10 in cloud CI.
-- [ ] Current repaired commit passed on Python 3.11 in cloud CI.
-- [x] Current repaired commit passed locally on Python 3.12.
+- [x] Repaired implementation commit pushed and GitHub Actions CI passed (PR #134, run 29221790817).
+- [x] Current repaired implementation passed on Python 3.10 in cloud CI.
+- [x] Current repaired implementation passed on Python 3.11 in cloud CI.
+- [x] Current repaired implementation passed on Python 3.12 locally and in cloud CI.
 - [x] Ruff passed.
 - [x] Pytest passed.
 - [x] CLI smoke tests passed.
@@ -24,8 +24,8 @@ Status: `v0.1.2 locally validated release candidate; cloud revalidation and publ
 - [x] Twine metadata validation passed.
 - [x] Dependency consistency and vulnerability checks passed.
 - [x] Installed wheel smoke test passed.
-- [ ] Current repaired commit package job passed in cloud CI.
-- [x] Linux, macOS, and Windows smoke jobs configured; cloud execution pending.
+- [x] Current repaired implementation package job passed in cloud CI.
+- [x] Linux, macOS, and Windows smoke jobs passed in cloud CI.
 
 ## Runtime Capability Coverage
 
@@ -60,11 +60,11 @@ Status: `v0.1.2 locally validated release candidate; cloud revalidation and publ
 - [x] Local Mac validation record (2026-06-29).
 - [x] Final release notes for `v0.1.0-rc.1`.
 - [x] GitHub Release and tag published (`v0.1.0-rc.1`).
-- [ ] Additional target-environment validation (optional, e.g. Windows).
+- [x] GitHub-hosted Linux, macOS, and Windows validation.
 - [ ] PyPI publication (optional).
 
 ## Decision
 
-Doctor link source version `0.1.2` passed repaired local validation on 2026-07-13. It may be published only after the repaired commit is pushed, cloud CI passes, and explicit release authorization is given.
+Doctor link source version `0.1.2` passed repaired local validation and the complete configured GitHub Actions matrix on 2026-07-13. It may be published only after the PR is reviewed and merged and explicit release authorization is given.
 
 Customer delivery or production-like environments that differ materially from the recorded Mac setup should still be validated on those targets before handoff.

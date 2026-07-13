@@ -14,8 +14,8 @@ Certification status for the current repaired source:
 
 ```text
 Historical Cloud CI Certificate Retained
-Current Cloud Revalidation Pending
+Current Cloud Revalidation Passed (PR #134, run 29221790817)
 Local Repair Validation Passed (2026-07-13)
-Local Evidence-Based Readiness Score: 92/100
+Evidence-Based Repository Readiness Score: 100/100
 Additional Target-Environment Validation Optional
 ```
