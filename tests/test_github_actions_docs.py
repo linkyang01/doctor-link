@@ -8,6 +8,7 @@ import yaml
 
 ACTION_MAJORS = {
     "actions/checkout": "v7",
+    "actions/download-artifact": "v8",
     "actions/setup-python": "v6",
     "actions/upload-artifact": "v7",
     "softprops/action-gh-release": "v3",
@@ -43,3 +44,18 @@ def test_workflows_use_node24_action_majors_and_pinned_macos() -> None:
     ci_workflow = Path(".github/workflows/ci.yml").read_text(encoding="utf-8")
     assert "macos-latest" not in ci_workflow
     assert "macos-15" in ci_workflow
+
+
+def test_pypi_workflow_uses_isolated_trusted_publishing() -> None:
+    text = Path(".github/workflows/pypi-publish.yml").read_text(encoding="utf-8")
+    payload = yaml.safe_load(text)
+    publish = payload["jobs"]["publish"]
+
+    assert payload["permissions"] == {"contents": "read"}
+    assert publish["needs"] == "validate"
+    assert publish["environment"]["name"] == "pypi"
+    assert publish["permissions"] == {"id-token": "write"}
+    assert "pypa/gh-action-pypi-publish@release/v1" in text
+    assert "PYPI_API_TOKEN" not in text
+    assert "gh release download" in text
+    assert "python -m build" not in text

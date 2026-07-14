@@ -212,6 +212,7 @@ GitHub Actions runs the full Python matrix, security checks, package installatio
 
 - [Quick Start](docs/quick-start.md)
 - [Installation](docs/installation.md)
+- [PyPI trusted publishing](docs/pypi-publishing.md)
 - [CLI reference](docs/cli-reference.md)
 - [Automated diagnosis reliability](docs/automated-diagnosis-reliability.md)
 - [Automatic Solve with Codex](docs/automatic-solve.md)
