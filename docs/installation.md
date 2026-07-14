@@ -140,6 +140,22 @@ pip install doctor-link==<published-version>
 doctor-link --version
 ```
 
+For an isolated application install after publication, prefer `pipx`:
+
+```bash
+pipx install doctor-link==0.5.0
+doctor-link --version
+```
+
+Before PyPI publication, the same `pipx` experience can be tested directly from the GitHub Release:
+
+```bash
+pipx install https://github.com/linkyang01/doctor-link/releases/download/v0.5.0/doctor_link-0.5.0-py3-none-any.whl
+doctor-link --version
+```
+
+The recorded isolated-install result is available in [pipx installation validation](validation/pipx-install-validation.md). Registry publication is governed by [PyPI Trusted Publishing](pypi-publishing.md).
+
 ## 5. Quick smoke test
 
 Run:

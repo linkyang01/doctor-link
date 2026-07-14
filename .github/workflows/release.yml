@@ -19,10 +19,6 @@ on:
         description: Mark GitHub release as pre-release
         required: true
         default: "false"
-      publish_pypi:
-        description: Upload wheel to PyPI when PYPI_API_TOKEN is configured
-        required: true
-        default: "false"
 
 permissions:
   contents: write
@@ -110,15 +106,3 @@ jobs:
           body_path: ${{ inputs.body_path }}
           files: |
             dist/*
-
-      - name: Publish to PyPI
-        if: inputs.publish_pypi == 'true'
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        run: |
-          if [ -z "${TWINE_PASSWORD}" ]; then
-            echo "PYPI_API_TOKEN secret is not configured; skipping PyPI upload."
-            exit 0
-          fi
-          python -m twine upload dist/*

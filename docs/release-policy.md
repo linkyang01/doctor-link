@@ -89,10 +89,11 @@ Before requesting a release:
 - `ref`: branch or commit to release;
 - `tag`: expected `v<package-version>` tag;
 - `body_path`: release-note Markdown file;
-- `prerelease`: GitHub prerelease flag;
-- `publish_pypi`: optional registry upload switch.
+- `prerelease`: GitHub prerelease flag.
 
-The workflow reruns quality/security gates, confirms the requested tag matches `pyproject.toml`, rejects an existing tag, builds and validates distributions, creates an annotated immutable tag, and publishes GitHub assets. PyPI upload occurs only when requested and when `PYPI_API_TOKEN` exists.
+The workflow reruns quality/security gates, confirms the requested tag matches `pyproject.toml`, rejects an existing tag, builds and validates distributions, creates an annotated immutable tag, and publishes GitHub assets.
+
+Registry publication is a separate operation. `.github/workflows/pypi-publish.yml` downloads an existing immutable GitHub Release, validates the exact distributions, and transfers them to an isolated publish job. The publish job uses the protected `pypi` GitHub environment and short-lived PyPI Trusted Publishing credentials; it does not use a stored `PYPI_API_TOKEN`, rebuild distributions, or move tags. See `docs/pypi-publishing.md`.
 
 ## Immutable tags
 
