@@ -39,6 +39,7 @@ CAPABILITIES = {
     "diagnose verify",
     "diagnose-now",
     "diagnosis-history",
+    "diff",
     "distribution check",
     "doctor-package",
     "env",
@@ -455,8 +456,16 @@ def run_validation(executable: str, output: Path, dist_dir: Path | None = None) 
         "--json",
         contains='"schema": "doctor-link-explain-session-v1"',
     )
+    runner.run(
+        "diff",
+        "diff",
+        automatic_solve,
+        "--json",
+        contains='"schema": "doctor-link-change-receipt-v1"',
+    )
     runner.scenario_checks.append("problem description becomes a validated reproduction and guided repair preview")
     runner.scenario_checks.append("explain clusters failing evidence into advisory root-cause hints")
+    runner.scenario_checks.append("diff builds a structured change receipt")
     benchmark_manifest = output / "solve-benchmark.json"
     benchmark_manifest.write_text(
         json.dumps(

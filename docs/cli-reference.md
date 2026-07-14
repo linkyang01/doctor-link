@@ -110,6 +110,11 @@ doctor-link explain /path/to/project \
   --problem "Checkout duplicates a charge" \
   --test-command "python -m pytest tests/test_checkout.py -q" \
   --json
+doctor-link solve /path/to/project \
+  --problem "Checkout duplicates a charge" \
+  --test-command "python -m pytest tests/test_checkout.py -q" \
+  --suggest-only
+doctor-link diff /path/to/solve-session --json
 doctor-link reproduce suggest /path/to/project --problem "Checkout duplicates a charge" --json
 ```
 
@@ -225,8 +230,9 @@ Commands print JSON before returning their final exit status, so CI can parse th
 | `test run` | all required jobs passed | at least one required job failed; optional job failures remain visible but do not fail the command |
 | `verify` | `candidate_verified`, `ready`, or `verified` | `missing_evidence`, `not_verified`, or another incomplete status |
 | `diagnose verify` | diagnosis pipeline reports success | pipeline remains incomplete or blocked |
-| `solve` | `verified` | `approval_required` (2), `not_reproduced` (3), `blocked` (4), `failed` (5), or `review_required` (6) |
+| `solve` | `verified` | `approval_required` (2), `not_reproduced` (3), `blocked` (4), `failed` (5), `review_required` (6), or `suggestion_ready` (7) |
 | `explain` | `explained` / `partial` | `no_failures` (3) or `insufficient_evidence` (4) |
+| `diff` | structured receipt | non-zero only on usage/Git errors |
 
 See [Automated diagnosis reliability](automated-diagnosis-reliability.md) for assertion, evidence, concurrency, and handoff rules.
 

@@ -16,6 +16,7 @@ from doctor_link.core.models import utc_now_iso
 from doctor_link.core.package_transaction import atomic_write_json, atomic_write_text
 from doctor_link.core.preflight import run_preflight
 from doctor_link.core.reproduction import load_reproduction_catalog
+from doctor_link.core.change_receipt import build_change_receipt, receipt_to_markdown
 from doctor_link.core.root_cause import analyze_root_cause
 from doctor_link.core.safe_command_runner import (
     parse_safe_command_sequence,
@@ -33,6 +34,7 @@ FINAL_STATUSES = {
     "failed",
     "not_reproduced",
     "review_required",
+    "suggestion_ready",
     "verified",
 }
 VERIFICATION_CONFIG_PATHS = {
@@ -180,6 +182,8 @@ class SolveResult:
     warnings: list[str] = field(default_factory=list)
     next_steps: list[str] = field(default_factory=list)
     root_cause: dict[str, Any] = field(default_factory=dict)
+    change_receipt: dict[str, Any] = field(default_factory=dict)
+    suggest_only: bool = False
 
     @property
     def success(self) -> bool:
@@ -246,6 +250,7 @@ def solve_project(
     tool: str = "codex",
     allow_repair: bool = False,
     allow_verification_changes: bool = False,
+    suggest_only: bool = False,
     max_rounds: int = 3,
     command_timeout_seconds: int = 120,
     repair_timeout_seconds: int = 900,
@@ -267,8 +272,9 @@ def solve_project(
         problem=clean_problem,
         project_type=project_type,
         tool=tool,
-        explicit_user_approval=allow_repair,
+        explicit_user_approval=allow_repair or suggest_only,
         allow_verification_changes=allow_verification_changes,
+        suggest_only=suggest_only,
     )
 
     if target_error:
@@ -287,11 +293,18 @@ def solve_project(
         )
     if tool != "codex":
         return _finish(result, "blocked", f"Unsupported repair tool: {tool}", blocker="unsupported_repair_tool")
-    if allow_verification_changes and not allow_repair:
+    if allow_repair and suggest_only:
         return _finish(
             result,
             "blocked",
-            "--allow-verification-changes is valid only together with --allow-repair.",
+            "--suggest-only cannot be combined with --allow-repair.",
+            blocker="conflicting_repair_modes",
+        )
+    if allow_verification_changes and not allow_repair and not suggest_only:
+        return _finish(
+            result,
+            "blocked",
+            "--allow-verification-changes is valid only together with --allow-repair or --suggest-only.",
             blocker="verification_change_approval_requires_repair",
         )
 
@@ -299,9 +312,8 @@ def solve_project(
     result.original_branch = git_state.get("branch")
     if git_state.get("error"):
         return _finish(result, "blocked", str(git_state["error"]), blocker="git_repository_required")
-    # Dirty trees only block actual repair. Preview, assist, and guided diagnosis may
-    # run read-only reproduction checks on an already-dirty working tree.
-    if allow_repair and git_state.get("dirty"):
+    # Dirty trees only block modes that create branches or apply edits.
+    if (allow_repair or suggest_only) and git_state.get("dirty"):
         return _finish(
             result,
             "blocked",
@@ -427,15 +439,18 @@ def solve_project(
         )
 
     prompt = build_repair_prompt(result, baseline, round_number=1)
-    if not allow_repair:
+    if not allow_repair and not suggest_only:
         result.next_steps.append(
             f'doctor-link solve "{root}" --problem "{clean_problem}" --allow-repair'
+        )
+        result.next_steps.append(
+            f'doctor-link solve "{root}" --problem "{clean_problem}" --suggest-only'
         )
         return _persist_and_finish(
             result,
             output_root,
             "approval_required",
-            "The problem was reproduced. Review the solve plan, then rerun with --allow-repair to create a repair branch and invoke Codex.",
+            "The problem was reproduced. Review the solve plan, then rerun with --suggest-only for a branch + diff proposal or --allow-repair for verified repair.",
             preview_prompt=prompt,
         )
 
@@ -468,6 +483,7 @@ def solve_project(
     result.status = "repairing"
     result.completed_at = None
     _write_session_files(session_dir, result)
+    round_limit = 1 if suggest_only else min(3, max(1, max_rounds))
     return _run_repair_rounds(
         result,
         root,
@@ -477,10 +493,11 @@ def solve_project(
         output_root=output_root,
         session_dir=session_dir,
         start_round=1,
-        round_limit=min(3, max(1, max_rounds)),
+        round_limit=round_limit,
         command_timeout_seconds=command_timeout_seconds,
         repair_timeout_seconds=repair_timeout_seconds,
         previous_verification=baseline,
+        suggest_only=suggest_only,
     )
 
 
@@ -499,7 +516,10 @@ def _run_repair_rounds(
     repair_timeout_seconds: int,
     previous_verification: list[SolveCommandResult],
     previous_message: str = "",
+    suggest_only: bool = False,
 ) -> SolveResult:
+    original_commit = run_command(["git", "rev-parse", "HEAD"], cwd=root, timeout_seconds=15)
+    base_commit = original_commit.stdout.strip() if original_commit.returncode == 0 else None
     for round_number in range(start_round, round_limit + 1):
         round_dir = session_dir / f"round-{round_number}"
         round_dir.mkdir(parents=True, exist_ok=True)
@@ -534,7 +554,7 @@ def _run_repair_rounds(
         )
         verification = (
             _run_solve_commands(root, commands, command_timeout_seconds)
-            if not pre_verification_changes or result.allow_verification_changes
+            if not pre_verification_changes or result.allow_verification_changes or suggest_only
             else []
         )
         post_verification_changes = compare_verification_inputs(
@@ -564,7 +584,36 @@ def _run_repair_rounds(
             verification_input_changes=input_changes,
         )
         result.rounds.append(solve_round.to_dict())
+        if base_commit:
+            receipt = build_change_receipt(
+                root,
+                base_ref=base_commit,
+                head_ref="HEAD",  # includes uncommitted repair edits in the working tree
+                protected_paths=result.protected_verification_inputs,
+                verification_input_changes=result.verification_input_changes,
+            )
+            result.change_receipt = receipt.to_dict()
+            atomic_write_json(round_dir / "change-receipt.json", receipt.to_dict())
+            atomic_write_text(round_dir / "change-receipt.md", receipt_to_markdown(receipt))
+            atomic_write_json(session_dir / "change-receipt.json", receipt.to_dict())
+            atomic_write_text(session_dir / "change-receipt.md", receipt_to_markdown(receipt))
         _write_session_files(session_dir, result)
+
+        if suggest_only:
+            result.next_steps.extend(
+                [
+                    f"Review the proposed changes on branch `{result.repair_branch}`.",
+                    f'doctor-link diff "{session_dir}"',
+                    "This is not verified. Use --allow-repair only after accepting the proposal.",
+                ]
+            )
+            return _persist_and_finish(
+                result,
+                output_root,
+                "suggestion_ready",
+                "Doctor link reproduced the problem and produced a repair proposal with a structured change receipt. Independent verification was recorded for information only; the result is not verified.",
+                session_dir=session_dir,
+            )
 
         if input_changes and not result.allow_verification_changes:
             result.blockers.append("verification_inputs_modified")
@@ -587,6 +636,7 @@ def _run_repair_rounds(
             result.next_steps.extend(
                 [
                     f"Review the changes on branch `{result.repair_branch}`.",
+                    f'doctor-link diff "{session_dir}"',
                     "Commit and push the repair only after reviewing the diff.",
                 ]
             )
