@@ -28,30 +28,15 @@ Doctor link does not replace Codex, Cursor, Aider, OpenHands, Continue, Cline, W
 
 ## Verified status
 
-Latest published version: [`v0.5.1`](https://github.com/linkyang01/doctor-link/releases/tag/v0.5.1), published on 2026-07-14.
+Latest published version: [`v0.5.1`](https://github.com/linkyang01/doctor-link/releases/tag/v0.5.1), published on 2026-07-14. Available on [PyPI](https://pypi.org/project/doctor-link/).
 
-Version `v0.5.1` is the distribution-consistency patch for the v0.5 feature set: natural-language reproduction discovery, the guided `doctor-link assist` entrypoint, and the 24-project Python/Node.js benchmark corpus. The v0.5 line passed 365 tests, all 66 installed CLI routes through 75 invocations and twelve complex scenarios, and Python 3.10–3.14 plus Ubuntu, macOS, Windows, packaging, security, Trusted Publishing, and clean pipx installation gates.
-
-The verified automatic problem-solving release in [PR #145](https://github.com/linkyang01/doctor-link/pull/145) passed the complete repository validation matrix on 2026-07-13:
-
-- 319 automated tests;
-- 85.39% branch-aware coverage with an enforced 85% floor;
-- Python 3.10, 3.11, and 3.12;
-- Ubuntu, macOS, and Windows smoke validation;
-- Ruff, Bandit, and dependency vulnerability checks;
-- wheel and source-distribution build, content inspection, Twine validation, and isolated installation;
-- E2E, self-validation, project validation, and P7 runtime validation;
-- all 63 public CLI routes through 71 real installed-package invocations and nine complex scenarios.
+The v0.5 line passed 365 tests, all 66 installed CLI routes through 75 invocations and twelve complex scenarios, and Python 3.10–3.14 plus Ubuntu, macOS, Windows, packaging, security, Trusted Publishing, and clean pipx installation gates.
 
 Evidence:
 
-- [100/100 repository-readiness scorecard](docs/validation/local-quality-scorecard.md)
 - [cloud validation certificate](docs/validation/cloud-validation-certificate.md)
 - [validation evidence index](docs/validation/validation-evidence-index.md)
-- [v0.2.0 final PR CI](https://github.com/linkyang01/doctor-link/actions/runs/29256743976)
-- [v0.2.0 Release workflow](https://github.com/linkyang01/doctor-link/actions/runs/29256955705)
-
-PR #145 was merged as commit `40a547c`, and the authorized [GitHub Release `v0.2.0`](https://github.com/linkyang01/doctor-link/releases/tag/v0.2.0) was published by [release workflow 29256955705](https://github.com/linkyang01/doctor-link/actions/runs/29256955705). The workflow installed the final wheel, reran the full capability lab, and created an immutable tag before uploading both distributions. PyPI publication was disabled and was not performed.
+- [v0.5.1 release notes](https://github.com/linkyang01/doctor-link/releases/tag/v0.5.1)
 
 ## Main capabilities
 
