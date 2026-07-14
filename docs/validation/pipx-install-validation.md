@@ -15,5 +15,10 @@ Observed result:
 - `doctor-link --version` returned `doctor-link, version 0.5.0`;
 - `doctor-link preflight . --json` returned `passed` with zero blockers and zero warnings.
 
-This proves the isolated application installation path before registry publication. A final `pipx install doctor-link==0.5.0` check remains required after PyPI Trusted Publishing succeeds.
+After Trusted Publishing workflow `29324916796` succeeded, a second clean pipx home installed from the registry name:
 
+```bash
+pipx install doctor-link==0.5.0
+```
+
+The registry install also reported `doctor-link 0.5.0`, created the application entrypoint, returned the expected version, and passed preflight with zero blockers and zero warnings. PyPI file hashes exactly match the immutable GitHub Release assets.

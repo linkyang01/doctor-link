@@ -6,7 +6,7 @@ Status date: 2026-07-14
 
 Published version `v0.5.0` closes the command-knowledge gap. `doctor-link reproduce suggest` derives ranked checks from an ordinary-language problem using configured catalogs, existing test paths, project metadata, and bounded domain aliases. `doctor-link assist` validates those checks, generates a local browser result, and enters the existing solve approval gate without requiring the user to supply a test command. Candidate checks that alter Git state are rejected.
 
-The retained benchmark corpus materializes 24 clean Git projects across Python and Node.js and twelve fault domains. The release run reproduced 24/24 failures with 100% expectation matching. Local validation passed 363 tests at 85.06% branch-aware coverage, Ruff, Bandit with zero medium/high findings, dependency auditing with no known vulnerabilities, build/content/Twine gates, and the installed-wheel lab across 66 routes, 75 invocations, and twelve linked scenarios. GitHub Actions run `29305470580` passed all ten Python 3.10–3.14, package, security, Ubuntu, macOS, and Windows jobs. PR `#150` merged as `ac5c2f5`; release workflow `29305612221` published the immutable [`v0.5.0` GitHub Release](https://github.com/linkyang01/doctor-link/releases/tag/v0.5.0) with PyPI disabled.
+The retained benchmark corpus materializes 24 clean Git projects across Python and Node.js and twelve fault domains. The release run reproduced 24/24 failures with 100% expectation matching. Local validation passed 363 tests at 85.06% branch-aware coverage, Ruff, Bandit with zero medium/high findings, dependency auditing with no known vulnerabilities, build/content/Twine gates, and the installed-wheel lab across 66 routes, 75 invocations, and twelve linked scenarios. GitHub Actions run `29305470580` passed all ten Python 3.10–3.14, package, security, Ubuntu, macOS, and Windows jobs. PR `#150` merged as `ac5c2f5`; release workflow `29305612221` published the immutable [`v0.5.0` GitHub Release](https://github.com/linkyang01/doctor-link/releases/tag/v0.5.0). Trusted Publishing workflow `29324916796` published the identical wheel and source archive to [PyPI](https://pypi.org/project/doctor-link/) with attestations. A clean `pipx install doctor-link==0.5.0` validation passed.
 
 Version `v0.3.0` extends automatic solve to Node.js JavaScript and TypeScript projects while preserving the same approval, branch isolation, protected-input, bounded-round, and independent-verification contract. It detects `package.json` or JavaScript/TypeScript source roots, selects npm, pnpm, Yarn, or Bun from package metadata and lockfiles, and falls back to `node --test` for compatible test files.
 
@@ -76,7 +76,7 @@ P6 and P7 are complete as repository-side local-first implementation work. Versi
 - [x] GitHub-hosted Linux, macOS, and Windows validation
 - [x] Cross-platform CI jobs configured for Linux, macOS, and Windows
 - [x] Release tag published (`v0.1.0-rc.1`)
-- [ ] PyPI publication performed (optional; GitHub wheel is the primary install path)
+- [x] PyPI `doctor-link==0.5.0` published (2026-07-14, workflow 29324916796)
 
 Certification documents:
 

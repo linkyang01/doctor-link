@@ -1,6 +1,7 @@
 # Doctor link
 
 [![Doctor link CI](https://github.com/linkyang01/doctor-link/actions/workflows/ci.yml/badge.svg)](https://github.com/linkyang01/doctor-link/actions/workflows/ci.yml)
+[![PyPI version](https://img.shields.io/pypi/v/doctor-link.svg)](https://pypi.org/project/doctor-link/)
 [![Python 3.10–3.14](https://img.shields.io/badge/python-3.10%E2%80%933.14-blue)](https://github.com/linkyang01/doctor-link/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
@@ -29,7 +30,7 @@ Doctor link does not replace Codex, Cursor, Aider, OpenHands, Continue, Cline, W
 
 Latest published version: [`v0.5.0`](https://github.com/linkyang01/doctor-link/releases/tag/v0.5.0), published on 2026-07-14.
 
-Version `v0.5.0` adds natural-language reproduction discovery, a guided `doctor-link assist` entrypoint with a local browser result, and a 24-project Python/Node.js benchmark corpus. It passed 363 tests at 85.06% branch-aware coverage, all 66 installed CLI routes through 75 invocations and twelve complex scenarios, and Python 3.10–3.14 plus Ubuntu, macOS, Windows, packaging, and security gates. PR [#150](https://github.com/linkyang01/doctor-link/pull/150) merged as `ac5c2f5`; [release workflow 29305612221](https://github.com/linkyang01/doctor-link/actions/runs/29305612221) published the immutable tag and assets with PyPI disabled.
+Version `v0.5.0` adds natural-language reproduction discovery, a guided `doctor-link assist` entrypoint with a local browser result, and a 24-project Python/Node.js benchmark corpus. It passed 363 tests at 85.06% branch-aware coverage, all 66 installed CLI routes through 75 invocations and twelve complex scenarios, and Python 3.10–3.14 plus Ubuntu, macOS, Windows, packaging, and security gates. PR [#150](https://github.com/linkyang01/doctor-link/pull/150) merged as `ac5c2f5`; [release workflow 29305612221](https://github.com/linkyang01/doctor-link/actions/runs/29305612221) published the immutable GitHub assets, and [Trusted Publishing workflow 29324916796](https://github.com/linkyang01/doctor-link/actions/runs/29324916796) published the same distributions to PyPI with attestations.
 
 The verified automatic problem-solving release in [PR #145](https://github.com/linkyang01/doctor-link/pull/145) passed the complete repository validation matrix on 2026-07-13:
 
@@ -80,13 +81,13 @@ Current support scope:
 - verified automatic repair for clean Git repositories containing Python or Node.js JavaScript/TypeScript projects;
 - Node.js repair requires the project's package manager and runtime;
 - automatic edits require an installed, authenticated Codex CLI and explicit `--allow-repair` approval;
-- other language ecosystems and PyPI installation are not yet supported.
+- other language ecosystems are not yet supported.
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install https://github.com/linkyang01/doctor-link/releases/download/v0.5.0/doctor_link-0.5.0-py3-none-any.whl
+python -m pip install doctor-link==0.5.0
 doctor-link --version
 doctor-link preflight . --json
 ```
