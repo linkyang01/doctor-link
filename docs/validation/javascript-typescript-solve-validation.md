@@ -2,7 +2,7 @@
 
 - Validation date: 2026-07-13
 - Candidate version: `0.3.0`
-- Status: expanded local candidate validation passed; Python 3.10–3.14 head validation, merge, and publication pending
+- Status: expanded local and Python 3.10–3.14 cloud validation passed; merge and publication pending
 
 ## Scope
 
@@ -96,9 +96,9 @@ The protected hashes were identical before and after repair:
 
 ## Cloud validation
 
-[GitHub Actions run `29261286975`](https://github.com/linkyang01/doctor-link/actions/runs/29261286975) validated code commit `9cec5d1` on PR `#147`. All eight jobs passed:
+[GitHub Actions run `29263187097`](https://github.com/linkyang01/doctor-link/actions/runs/29263187097) validated code commit `c9426e7` on PR `#147`. All ten jobs passed:
 
-- Python 3.10, 3.11, and 3.12;
+- Python 3.10, 3.11, 3.12, 3.13, and 3.14;
 - security checks;
 - wheel build and installed-package capability validation;
 - Ubuntu JavaScript solve smoke validation;

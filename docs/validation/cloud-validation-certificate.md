@@ -14,7 +14,7 @@ It does not claim target customer environment validation, production validation,
 - Repository: `linkyang01/doctor-link`
 - Validation type: GitHub Actions Cloud Validation
 - Validation scope: repository-side CI and package validation
-- Current source candidate: `0.3.0` (validated code commit `9cec5d1`, PR `#147`)
+- Current source candidate: `0.3.0` (validated code commit `c9426e7`, PR `#147`)
 - Local Mac validation: passed (2026-07-13); additional target environments optional
 
 ## Cloud Validation Evidence
@@ -22,8 +22,8 @@ It does not claim target customer environment validation, production validation,
 Current `v0.3.0` candidate validation:
 
 - PR: `#147 Prepare v0.3.0 JavaScript and TypeScript solve`
-- Validated code commit: `9cec5d1062597c9f05465384f43dfda47418c60e`
-- CI run: [`29261286975`](https://github.com/linkyang01/doctor-link/actions/runs/29261286975)
+- Validated code commit: `c9426e7bdb5cd1fdf4f7223e14c1635005f1453f`
+- CI run: [`29263187097`](https://github.com/linkyang01/doctor-link/actions/runs/29263187097)
 - CI result: `success`
 
 Validated jobs and checks:
@@ -31,6 +31,8 @@ Validated jobs and checks:
 - Python 3.10: passed
 - Python 3.11: passed
 - Python 3.12: passed
+- Python 3.13: passed
+- Python 3.14: passed
 - Ruff static checks: passed
 - Pytest: passed
 - CLI smoke tests: passed
@@ -78,7 +80,7 @@ This certificate does not certify:
 
 ## Certification Conclusion
 
-Doctor link `v0.3.0` candidate code commit `9cec5d1` passed repository-side GitHub Actions cloud validation, including JavaScript solve regressions on Ubuntu, macOS, and Windows. PR `#147` remains a draft; it has not been merged, tagged, or published.
+Doctor link `v0.3.0` candidate code commit `c9426e7` passed all ten repository-side GitHub Actions jobs, including Python 3.10 through 3.14 and JavaScript solve regressions on Ubuntu, macOS, and Windows. PR `#147` is open and ready for review; it has not been merged, tagged, or published.
 
 The previous [GitHub Release `v0.2.0`](https://github.com/linkyang01/doctor-link/releases/tag/v0.2.0) was published from merged commit `40a547c` by [release workflow 29256955705](https://github.com/linkyang01/doctor-link/actions/runs/29256955705). PyPI publication was disabled and not performed.
 

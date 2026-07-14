@@ -6,8 +6,8 @@ This directory contains the evidence, checklists, certificates, and release-stat
 
 ```text
 Local v0.3.0 candidate validation: passed (2026-07-13)
-v0.3.0 cloud validation: 8/8 jobs passed (run 29261286975, code commit 9cec5d1)
-Expanded Python 3.10-3.14 candidate-head validation: pending
+v0.3.0 cloud validation: 10/10 jobs passed (run 29263187097, code commit c9426e7)
+Expanded Python 3.10-3.14 candidate-head validation: passed
 v0.3.0 merge / tag / release: pending
 Local repaired-source validation: passed (2026-07-13)
 GitHub Actions cloud validation: passed (PR #145)
