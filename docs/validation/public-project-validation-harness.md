@@ -35,6 +35,11 @@ The runner clones into a temporary workspace, verifies HEAD equals the pinned co
 - Live run on 2026-07-14: **6/6 PASS** (commit-pinned clone + read-only preflight, warnings allowed, zero blockers). Results: [`docs/validation/evidence/public-project-validation-2026-07-14/`](evidence/public-project-validation-2026-07-14/).
 - External real-project exercise on `pallets/click` (Issue #156 comments) already validated assist/solve verification contracts; usability fixes from that feedback are included in the same change set.
 
+## Related harnesses
+
+- Offline solve/assist failure modes (multi-file, wrong fix, review_required, off-by-one): [failure-mode-validation-harness.md](failure-mode-validation-harness.md)
+- 24-scenario real-project corpus: `examples/real-project-benchmark/`
+
 ## Non-goals
 
 This harness does **not** authorize automatic repair against public repositories, invoke Codex, or claim product support for third-party project internals. It only revalidates Doctor link preflight readiness on known public trees.

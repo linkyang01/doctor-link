@@ -1,0 +1,102 @@
+{
+  "schema": "doctor-link-failure-mode-validation-v1",
+  "generated_at": "2026-07-14T15:45:33.703351+00:00",
+  "scenario_count": 6,
+  "passed_count": 6,
+  "results": [
+    {
+      "scenario_id": "multi_file_verified_repair",
+      "title": "Multi-file production repair preserves tests and verifies",
+      "expected_status": "verified",
+      "actual_status": "verified",
+      "passed": true,
+      "details": {
+        "changed_production_files": [
+          "src/billing.py",
+          "src/inventory.py"
+        ],
+        "protected_inputs_include_tests": true,
+        "rounds": 1
+      }
+    },
+    {
+      "scenario_id": "wrong_ai_fix_returns_failed",
+      "title": "Partial/wrong AI repair exhausts rounds and returns failed",
+      "expected_status": "failed",
+      "actual_status": "failed",
+      "passed": true,
+      "details": {
+        "rounds": 2,
+        "executor_style": "partial_multi_file_fix"
+      }
+    },
+    {
+      "scenario_id": "multi_file_hash_protection",
+      "title": "Test-contract tampering across multi-file project is blocked",
+      "expected_status": "blocked",
+      "actual_status": "blocked",
+      "passed": true,
+      "details": {
+        "blockers": [
+          "verification_inputs_modified"
+        ],
+        "verification_input_changes": [
+          {
+            "round_number": 1,
+            "detected_at": "before_verification",
+            "path": "tests/test_services.py",
+            "change_type": "modified",
+            "before_sha256": "5b15f0b6de604ecf8d786d98214120eb1caa6b0554085d3a097f9a82f85323ea",
+            "after_sha256": "1240df27703c7b4bb8df8a9471429d472134cbdd63cc7776edbae3f1c433a3b2"
+          }
+        ]
+      }
+    },
+    {
+      "scenario_id": "allow_verification_changes_review_required",
+      "title": "Explicit verification-input changes require human review",
+      "expected_status": "review_required",
+      "actual_status": "review_required",
+      "passed": true,
+      "details": {
+        "success": false,
+        "changes": [
+          {
+            "round_number": 1,
+            "detected_at": "before_verification",
+            "path": "tests/test_services.py",
+            "change_type": "modified",
+            "before_sha256": "5b15f0b6de604ecf8d786d98214120eb1caa6b0554085d3a097f9a82f85323ea",
+            "after_sha256": "1240df27703c7b4bb8df8a9471429d472134cbdd63cc7776edbae3f1c433a3b2"
+          }
+        ]
+      }
+    },
+    {
+      "scenario_id": "off_by_one_assist_reproduction",
+      "title": "Assist/suggest reproduces a non-trivial off-by-one logic bug",
+      "expected_status": "reproduced",
+      "actual_status": "reproduced",
+      "passed": true,
+      "details": {
+        "selected_command": "PYTHONDONTWRITEBYTECODE=1 python -m pytest -p no:cacheprovider tests/test_pager.py -q",
+        "suggestion_count": 2
+      }
+    },
+    {
+      "scenario_id": "public_nodejs_corpus_pins",
+      "title": "Public validation set includes pinned Node.js projects for external demos",
+      "expected_status": "present",
+      "actual_status": "present",
+      "passed": true,
+      "details": {
+        "javascript_projects": [
+          "p-limit",
+          "chalk",
+          "axios"
+        ],
+        "project_count": 6
+      }
+    }
+  ]
+}
