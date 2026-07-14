@@ -16,6 +16,7 @@ from doctor_link.core.models import utc_now_iso
 from doctor_link.core.package_transaction import atomic_write_json, atomic_write_text
 from doctor_link.core.preflight import run_preflight
 from doctor_link.core.reproduction import load_reproduction_catalog
+from doctor_link.core.root_cause import analyze_root_cause
 from doctor_link.core.safe_command_runner import (
     parse_safe_command_sequence,
     run_safe_command_sequence,
@@ -178,6 +179,7 @@ class SolveResult:
     blockers: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     next_steps: list[str] = field(default_factory=list)
+    root_cause: dict[str, Any] = field(default_factory=dict)
 
     @property
     def success(self) -> bool:
@@ -409,6 +411,20 @@ def solve_project(
     verification_snapshot = snapshot_verification_inputs(root, commands)
     result.protected_verification_inputs = sorted(verification_snapshot)
     result.verification_input_hashes = dict(sorted(verification_snapshot.items()))
+
+    root_cause = analyze_root_cause(
+        root,
+        problem=clean_problem,
+        checks=[item.to_dict() for item in baseline],
+    )
+    result.root_cause = root_cause.to_dict()
+    if root_cause.status in {"explained", "partial"} and root_cause.hints:
+        top = root_cause.hints[0]
+        paths = ", ".join(top.get("candidate_paths") or []) or "unmapped"
+        result.warnings.append(
+            f"Advisory root-cause hint: {top.get('symbol')} → {paths} "
+            f"(confidence {top.get('confidence')}; not verified)."
+        )
 
     prompt = build_repair_prompt(result, baseline, round_number=1)
     if not allow_repair:
@@ -944,23 +960,28 @@ def build_repair_prompt(
         protected_summary.append(
             "- The user explicitly allowed verification-input changes, but any passing result will still require human review."
         )
-    return "\n".join(
+    root_cause_section = _format_root_cause_prompt_section(result.root_cause)
+    sections = [
+        "# Doctor link bounded automatic repair",
+        "",
+        f"Repair round: {round_number}",
+        f"Project root: {result.project_root}",
+        f"Project type: {result.project_type}",
+        f"Problem: {result.problem}",
+        previous,
+        "## Independent failing evidence",
+        "",
+        *evidence,
+        "",
+    ]
+    if root_cause_section:
+        sections.extend([root_cause_section.rstrip(), ""])
+    sections.extend(
         [
-            "# Doctor link bounded automatic repair",
-            "",
-            f"Repair round: {round_number}",
-            f"Project root: {result.project_root}",
-            f"Project type: {result.project_type}",
-            f"Problem: {result.problem}",
-            previous,
-            "## Independent failing evidence",
-            "",
-            *evidence,
-            "",
             "## Required behavior",
             "",
             *protected_summary,
-            "- Inspect the repository and identify the grounded root cause.",
+            "- Inspect the repository and identify the grounded root cause. Use any advisory hints above only as starting points.",
             "- Make the smallest production-quality change that fixes the stated problem without weakening its acceptance contract.",
             "- Stay inside this workspace. Do not switch branches, commit, push, publish, or change Git configuration.",
             "- Preserve unrelated behavior and existing user changes.",
@@ -970,6 +991,38 @@ def build_repair_prompt(
             "",
         ]
     )
+    return "\n".join(sections)
+
+
+def _format_root_cause_prompt_section(root_cause: dict[str, Any] | None) -> str:
+    if not root_cause:
+        return ""
+    status = str(root_cause.get("status") or "")
+    hints = list(root_cause.get("hints") or [])
+    if status not in {"explained", "partial"} or not hints:
+        return ""
+    lines = [
+        "## Suspected root cause (advisory only)",
+        "",
+        str(root_cause.get("summary") or "Heuristic source hints are available."),
+        "",
+        "These hints are heuristic. Verify against the failing evidence before editing.",
+        "",
+    ]
+    for index, hint in enumerate(hints[:5], start=1):
+        if not isinstance(hint, dict):
+            continue
+        paths = ", ".join(f"`{path}`" for path in (hint.get("candidate_paths") or [])[:4]) or "no local path mapped"
+        lines.append(
+            f"{index}. **{hint.get('symbol', 'unknown')}** "
+            f"(confidence {hint.get('confidence', 0):.2f}, evidence {hint.get('evidence_count', 0)}): "
+            f"{hint.get('rationale', '')} Inspect: {paths}."
+        )
+    patterns = list(root_cause.get("failure_patterns") or [])
+    if patterns:
+        lines.extend(["", "Observed failure patterns:", *[f"- {item}" for item in patterns[:5]]])
+    lines.append("")
+    return "\n".join(lines)
 
 
 def _run_solve_commands(root: Path, commands: list[SolveCommand], timeout_seconds: int) -> list[SolveCommandResult]:

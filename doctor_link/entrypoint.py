@@ -7,6 +7,7 @@ from doctor_link.p4_cli import main
 from doctor_link import assist_cli as _assist_cli  # noqa: F401
 from doctor_link import diagnose_now_cli as _diagnose_now_cli  # noqa: F401
 from doctor_link import benchmark_cli as _benchmark_cli  # noqa: F401
+from doctor_link import explain_cli as _explain_cli  # noqa: F401
 from doctor_link import handoff_cli as _handoff_cli  # noqa: F401
 from doctor_link import home_cli as _home_cli  # noqa: F401
 from doctor_link import knowledge_archive_cli as _knowledge_archive_cli  # noqa: F401

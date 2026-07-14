@@ -9,6 +9,7 @@ from typing import Any
 from doctor_link.core.models import utc_now_iso
 from doctor_link.core.package_transaction import atomic_write_json, atomic_write_text
 from doctor_link.core.reproduction_suggester import ReproductionSuggestionResult, suggest_reproductions
+from doctor_link.core.root_cause import analyze_root_cause
 from doctor_link.core.solve import SolveResult, resolve_solve_target, solve_project
 
 
@@ -30,6 +31,7 @@ class GuidedSessionResult:
     output_dir: str
     result_page: str
     next_steps: list[str] = field(default_factory=list)
+    root_cause: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -75,6 +77,7 @@ def run_guided_session(
 
     solve: SolveResult | None = None
     next_steps: list[str] = []
+    root_cause: dict[str, Any] = {}
     if reproduction.status == "reproduced" and reproduction.selected_command:
         solve = solve_project(
             workspace,
@@ -88,12 +91,43 @@ def run_guided_session(
         )
         status = solve.status
         next_steps.extend(solve.next_steps)
+        root_cause = dict(solve.root_cause or {})
+        if not root_cause:
+            failed_suggestions = [
+                item
+                for item in reproduction.suggestions
+                if item.get("status") in {"reproduced", "setup_failed", "failed"}
+            ]
+            root_cause = analyze_root_cause(
+                target,
+                problem=clean_problem,
+                checks=failed_suggestions or reproduction.suggestions,
+            ).to_dict()
+        if root_cause.get("status") in {"explained", "partial"} and root_cause.get("hints"):
+            top = root_cause["hints"][0]
+            paths = ", ".join(top.get("candidate_paths") or []) or "unmapped"
+            next_steps.insert(
+                0,
+                f"Advisory root-cause hint: inspect {top.get('symbol')} in {paths} "
+                f"(confidence {top.get('confidence')}; not verified).",
+            )
     else:
         status = reproduction.status
         if status == "not_reproduced":
             next_steps.append("Add observable steps or a failing example, then run the guided assistant again.")
         else:
             next_steps.append("Review the environment and candidate warnings before retrying.")
+            failed_suggestions = [
+                item
+                for item in reproduction.suggestions
+                if item.get("status") in {"setup_failed", "failed", "reproduced"}
+            ]
+            if failed_suggestions:
+                root_cause = analyze_root_cause(
+                    target,
+                    problem=clean_problem,
+                    checks=failed_suggestions,
+                ).to_dict()
 
     result_page = session_dir / "index.html"
     result = GuidedSessionResult(
@@ -110,6 +144,7 @@ def run_guided_session(
         output_dir=str(session_dir),
         result_page=str(result_page),
         next_steps=next_steps,
+        root_cause=root_cause,
     )
     atomic_write_json(session_dir / "guided-session.json", result.to_dict())
     atomic_write_text(result_page, render_guided_result(result))
@@ -134,6 +169,18 @@ def render_guided_result(result: GuidedSessionResult) -> str:
     repair_branch = solve.get("repair_branch") or "Not created"
     selected = reproduction.get("selected_command") or "None"
     summary = solve.get("summary") or _plain_summary(result.status)
+    root_cause = result.root_cause or solve.get("root_cause") or {}
+    hint_rows = "".join(
+        "<tr>"
+        f"<td>{html.escape(str(item.get('symbol', '')))}</td>"
+        f"<td>{html.escape(str(item.get('confidence', '')))}</td>"
+        f"<td>{html.escape(str(item.get('evidence_count', '')))}</td>"
+        f"<td><code>{html.escape(', '.join(item.get('candidate_paths') or []) or '(unmapped)')}</code></td>"
+        f"<td>{html.escape(str(item.get('rationale', '')))}</td>"
+        "</tr>"
+        for item in (root_cause.get("hints") or [])
+    ) or '<tr><td colspan="5">No advisory root-cause hint was generated.</td></tr>'
+    root_summary = html.escape(str(root_cause.get("summary") or "Not available."))
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Doctor link guided result</title>
@@ -147,6 +194,10 @@ main{{max-width:1080px;margin:0 auto;padding:32px 20px 64px}}section{{background
 <p><strong>Selected reproduction:</strong> <code>{html.escape(str(selected))}</code></p>
 <p><strong>Repair branch:</strong> {html.escape(str(repair_branch))}</p></section>
 <section><h2>What Doctor link tried</h2><table><thead><tr><th>Outcome</th><th>Exit</th><th>Check</th><th>Why</th><th>Evidence snippet</th></tr></thead><tbody>{suggestion_rows}</tbody></table></section>
+<section><h2>Suspected root cause <span class="muted">(advisory)</span></h2>
+<p>{root_summary}</p>
+<table><thead><tr><th>Symbol</th><th>Confidence</th><th>Evidence</th><th>Paths</th><th>Why</th></tr></thead><tbody>{hint_rows}</tbody></table>
+<p class="muted">Hints narrow inspection only. Doctor link still verifies repairs independently.</p></section>
 <section><h2>Warnings</h2><ul>{warning_items}</ul></section>
 <section><h2>Next steps</h2><ol>{step_items}</ol></section>
 <section><h2>Local receipt</h2><p><code>{html.escape(result.output_dir)}</code></p>
