@@ -27,9 +27,11 @@ Doctor link does not replace Codex, Cursor, Aider, OpenHands, Continue, Cline, W
 
 ## Verified status
 
-Latest published version: [`v0.3.0`](https://github.com/linkyang01/doctor-link/releases/tag/v0.3.0), published on 2026-07-14.
+Latest published version: [`v0.4.0`](https://github.com/linkyang01/doctor-link/releases/tag/v0.4.0), published on 2026-07-14.
 
-Version `v0.3.0` adds JavaScript/TypeScript automatic solve and runtime resilience. It passed 339 local tests, 85.48% branch-aware coverage, an installed-wheel lab covering 63 routes through 72 invocations and ten complex scenarios, and a live protected-contract Node.js repair. [GitHub Actions run 29299016223](https://github.com/linkyang01/doctor-link/actions/runs/29299016223) passed the final ten-job PR matrix covering Python 3.10–3.14, security, packaging, Ubuntu, macOS, and Windows. PR [#147](https://github.com/linkyang01/doctor-link/pull/147) merged as commit `e0224cc`, and [release workflow 29299367180](https://github.com/linkyang01/doctor-link/actions/runs/29299367180) published the immutable `v0.3.0` tag and both distribution assets. PyPI publication remained disabled. See the [JavaScript/TypeScript validation report](docs/validation/javascript-typescript-solve-validation.md).
+Version `v0.4.0` adds workspace package targeting, interrupted-session recovery, and multi-project solve benchmarks. It passed 349 tests at 85.15% branch-aware coverage, a 64-route installed-wheel lab, and a live protected-contract monorepo repair. PR [#149](https://github.com/linkyang01/doctor-link/pull/149) merged as `9e83e96`; [release workflow 29303850286](https://github.com/linkyang01/doctor-link/actions/runs/29303850286) published the immutable tag and assets with PyPI disabled.
+
+The current `v0.5.0` source adds natural-language reproduction discovery, a guided `doctor-link assist` entrypoint with a local browser result, and a 24-project Python/Node.js benchmark corpus.
 
 The verified automatic problem-solving release in [PR #145](https://github.com/linkyang01/doctor-link/pull/145) passed the complete repository validation matrix on 2026-07-13:
 
@@ -61,6 +63,7 @@ PR #145 was merged as commit `40a547c`, and the authorized [GitHub Release `v0.2
 | Evidence collection | Logs, attachments, environment metadata, command results, redaction records, and integrity indexes. |
 | Human assertions | Explicit records of user-confirmed problems that AI output must not silently dismiss. |
 | Reproduction and tests | Shell-free configured command execution, test matrices, evidence write-back, and timeout metadata. |
+| Guided problem solving | Ordinary-language problem matching, ranked safe reproduction checks, local browser results, and repair preview without requiring test-command knowledge. |
 | Automatic solve | Python and Node.js JavaScript/TypeScript failure reproduction, explicit repair approval, isolated Git branch, bounded Codex rounds, protected verification inputs, and independent regression acceptance. |
 | Verification | Missing-evidence reporting, linked assertion coverage, failed-test blockers, before/after comparison, and conservative closure status. |
 | AI handoff | Tool-specific packages with explicit repair, evidence, and verification-review readiness states. |
@@ -82,6 +85,12 @@ python -m pip install --upgrade pip
 python -m pip install -e .
 doctor-link --version
 doctor-link preflight . --json
+```
+
+For the simplest path, describe the problem and let Doctor link find and validate a reproduction:
+
+```bash
+doctor-link assist /path/to/project --problem "Checkout duplicates a charge"
 ```
 
 On Windows PowerShell, activate the environment with:

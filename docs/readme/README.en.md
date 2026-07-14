@@ -16,7 +16,7 @@ P5: Productization and Release Readiness is complete. P6 implementation requires
 
 P7.10 added the final validation and closure layer, including a P7 runtime validation script and CI coverage for the P7 command surface.
 
-Version [`v0.3.0`](https://github.com/linkyang01/doctor-link/releases/tag/v0.3.0) is published. Its JavaScript/TypeScript automatic-solve and runtime-resilience work passed 339 local tests, 85.48% branch-aware coverage, 72 installed-wheel capability invocations across ten scenarios, and a live Node.js repair with unchanged protected acceptance inputs. [GitHub Actions run 29299016223](https://github.com/linkyang01/doctor-link/actions/runs/29299016223) passed all ten final-head jobs across Python 3.10–3.14, security, packaging, Ubuntu, macOS, and Windows. PR `#147` merged as `e0224cc`, and [release workflow 29299367180](https://github.com/linkyang01/doctor-link/actions/runs/29299367180) published the tag and assets with PyPI disabled. See [JavaScript/TypeScript Automatic Solve Validation](../validation/javascript-typescript-solve-validation.md).
+Version [`v0.4.0`](https://github.com/linkyang01/doctor-link/releases/tag/v0.4.0) is published with monorepo package targeting, interrupted-session recovery, and multi-project benchmarks. The current `v0.5.0` source adds natural-language reproduction, the guided `doctor-link assist` entrypoint, and a 24-project Python/Node.js corpus, so users no longer need to know a test command.
 
 Doctor link remains local-first. Version `0.2.0` passed the repaired local suite and the complete GitHub Actions matrix on 2026-07-13: 319 tests, 85.39% branch coverage, Python 3.10–3.12, Ubuntu/macOS/Windows, security, package build, and isolated installation. [Final PR CI 29256743976](https://github.com/linkyang01/doctor-link/actions/runs/29256743976) passed all eight jobs. The defined repository release-readiness score remains 100/100. [GitHub Release `v0.2.0`](https://github.com/linkyang01/doctor-link/releases/tag/v0.2.0) was published from merge commit `40a547c` by [Release workflow 29256955705](https://github.com/linkyang01/doctor-link/actions/runs/29256955705); PyPI publication was disabled and not performed. The project does not create a hosted platform, external account system, telemetry service, or marketplace.
 
@@ -28,6 +28,8 @@ The published `v0.2.0` full-capability lab executes all 63 public CLI routes thr
 
 ```bash
 doctor-link wizard --folder . --tool cursor
+doctor-link assist /path/to/project --problem "Checkout duplicates charges"
+doctor-link reproduce suggest /path/to/project --problem "Checkout duplicates charges" --json
 doctor-link preflight . --json
 doctor-link solve /path/to/python-project --problem "Checkout duplicates charges" --test-command "python -m pytest tests/test_checkout.py -q"
 doctor-link solve /path/to/python-project --problem "Checkout duplicates charges" --test-command "python -m pytest tests/test_checkout.py -q" --allow-repair

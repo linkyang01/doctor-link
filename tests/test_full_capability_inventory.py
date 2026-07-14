@@ -49,7 +49,7 @@ def test_full_capability_inventory_matches_every_cli_route() -> None:
     actual = _cli_routes(main) | {"--version"}
 
     assert declared == actual
-    assert len(declared) == 64
+    assert len(declared) == 66
 
 
 def test_full_capability_output_can_be_reused_only_with_its_marker(tmp_path: Path) -> None:

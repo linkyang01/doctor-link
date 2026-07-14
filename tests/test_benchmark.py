@@ -60,6 +60,7 @@ def test_benchmark_reports_reproduction_repair_and_expectation_metrics(tmp_path:
     assert result.reproduction_rate == 1.0
     assert result.repair_success_rate == 1.0
     assert result.expectation_matches == 2
+    assert result.scenarios[0]["reproduction_command"] is None
     assert json.loads((tmp_path / "out" / "benchmark-result.json").read_text())["total"] == 2
     assert (tmp_path / "out" / "benchmark-result.md").is_file()
 

@@ -2,6 +2,14 @@
 
 `doctor-link solve` turns a concrete Python or Node.js JavaScript/TypeScript project problem into a bounded repair and verification session. It is the shortest path from “this behavior is wrong” to a reviewable fix.
 
+If the user does not know a test command, start with the guided path:
+
+```bash
+doctor-link assist /path/to/project --problem "Checkout duplicates a charge"
+```
+
+Doctor link ranks existing project-owned tests and configured checks against the problem, executes safe candidates, writes a local browser result, and prepares the same solve preview when a failure is observed. It does not edit code without `--allow-repair`.
+
 ## What it does
 
 The command performs six distinct jobs:
@@ -91,6 +99,12 @@ When command flags are omitted, Doctor link reads:
 Configured commands use the existing shell-free Doctor link runner. Quoted arguments, leading environment assignments, and `&&` sequences are supported. Pipes, redirection, semicolons, background execution, and other shell control operators are rejected.
 
 For JavaScript/TypeScript discovery, the resulting outer command remains shell-free. A package manager may execute the repository-owned `scripts.test` value internally, so review `package.json` as project code before authorizing a repair. Doctor link sets `CI=1` and `NO_COLOR=1` for reproducible, non-interactive checks.
+
+## Problem-description reproduction
+
+`doctor-link reproduce suggest PROJECT_ROOT --problem "..."` provides the lower-level discovery receipt. Candidate commands come only from configured reproduction/test catalogs, existing test files, or a project-declared test entrypoint. Domain aliases improve matching for payments, authorization, cache, concurrency, storage, and Unicode problems. A focused candidate requires a real filename or catalog match; unrelated tests are not presented as focused evidence.
+
+Validation disables Python bytecode and pytest cache writes. Doctor link compares Git status before and after every candidate and blocks the discovery if a check changes the working tree. A nonzero exit is considered a reproduction only when the tool started normally; missing tools and timeouts remain distinct blockers.
 
 ## Session evidence
 

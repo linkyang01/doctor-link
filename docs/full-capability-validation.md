@@ -8,7 +8,7 @@ Doctor link maintains an installed-package validation lab at [`examples/full-cap
 | --- | --- |
 | Unit and regression tests | Function-level behavior, edge cases, and previously fixed defects. |
 | Full capability inventory | The declared matrix exactly matches the live Click command tree. |
-| Complex scenario runner | All 64 routes execute through 73 real subprocess invocations with isolated output. |
+| Complex scenario runner | All 66 routes execute through 75 real subprocess invocations with isolated output. |
 | Installed-wheel run | The built distribution, entrypoint, dependencies, examples, and runtime files work outside the source import path. |
 | Cross-platform smoke | Core source installation and commands work on Ubuntu, macOS, and Windows. |
 
@@ -18,7 +18,7 @@ The matrix covers:
 
 - workspace and discovery: `init`, `scan`, `plan`, `preflight`, `env`, `probe`;
 - reporting and evidence: `report`, `legacy-report`, `ai-task`, `collect`, `assert`, `record`, `vly-proof`;
-- automated diagnosis and repair: `strategy validate`, `reproduce list/run`, `test list/run`, `diagnose before/after/compare/verify`, `compare`, `verify`, `solve`;
+- automated diagnosis and repair: `strategy validate`, `reproduce list/run/suggest`, `test list/run`, `diagnose before/after/compare/verify`, `compare`, `verify`, `solve`, `assist`;
 - AI collaboration: `handoff list/check/generate`, `ai-result`, `diagnosis-history`, `assertion-check`, `risk-review`;
 - local user experience: `view`, `workbench-note`, `home`, `wizard`, `diagnose-now`, `doctor-package`;
 - standards and operations: `schema validate/migrate`, `conformance run`, `ci report`, `distribution check`, `health`;
@@ -43,7 +43,7 @@ Package export is exercised in both directions: raw secrets must be blocked by d
 
 The package job builds the wheel and source distribution, installs the wheel into a clean virtual environment, and runs the complete lab using that installed console entrypoint. CI uploads the full report and command logs for inspection.
 
-`tests/test_full_capability_inventory.py` compares the live CLI command tree to the lab's `CAPABILITIES` set. Adding a command without a scenario therefore fails the normal test suite. The current source covers 64 routes, 73 invocations, and 11 linked scenario checks, including the multi-project solve benchmark.
+`tests/test_full_capability_inventory.py` compares the live CLI command tree to the lab's `CAPABILITIES` set. Adding a command without a scenario therefore fails the normal test suite. The current source covers 66 routes, 75 invocations, and 12 linked scenario checks, including natural-language reproduction, the guided assistant, and the multi-project solve benchmark.
 
 ## Local command
 

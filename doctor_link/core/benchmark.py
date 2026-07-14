@@ -11,6 +11,7 @@ import yaml
 
 from doctor_link.core.models import utc_now_iso
 from doctor_link.core.package_transaction import atomic_write_json, atomic_write_text
+from doctor_link.core.reproduction_suggester import suggest_reproductions
 from doctor_link.core.solve import SolveResult, solve_project
 
 
@@ -26,6 +27,7 @@ class BenchmarkScenarioResult:
     matched_expectation: bool
     project_root: str
     package: str | None
+    reproduction_command: str | None
     duration_seconds: float
     solve_session: str | None
     rounds: int
@@ -92,10 +94,22 @@ def run_benchmark(
             raise ValueError(f"Benchmark scenario {scenario_id!r} has an invalid max_rounds value.") from exc
         if not 1 <= max_rounds <= 3:
             raise ValueError(f"Benchmark scenario {scenario_id!r} max_rounds must be between 1 and 3.")
+        reproduce_command = _optional_text(scenario.get("reproduce_command"))
+        if scenario.get("auto_reproduce") is True and reproduce_command is None:
+            suggestion_root = project_root
+            package = _optional_text(scenario.get("package"))
+            if package:
+                suggestion_root = (project_root / package).resolve()
+            discovery = suggest_reproductions(
+                suggestion_root,
+                problem,
+                validate=True,
+            )
+            reproduce_command = discovery.selected_command
         result = solve_runner(
             project_root,
             problem=problem,
-            reproduce_command=_optional_text(scenario.get("reproduce_command")),
+            reproduce_command=reproduce_command,
             test_command=_optional_text(scenario.get("test_command")),
             package=_optional_text(scenario.get("package")),
             output_root=scenario_output,
@@ -111,6 +125,7 @@ def run_benchmark(
                 matched_expectation=expected is None or result.status == expected,
                 project_root=str(project_root),
                 package=_optional_text(scenario.get("package")),
+                reproduction_command=reproduce_command,
                 duration_seconds=round(time.monotonic() - started, 6),
                 solve_session=result.output_dir,
                 rounds=len(result.rounds),

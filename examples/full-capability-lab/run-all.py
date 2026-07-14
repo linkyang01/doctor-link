@@ -27,6 +27,7 @@ CAPABILITIES = {
     "archive policy-check",
     "assert",
     "assertion-check",
+    "assist",
     "benchmark",
     "ci report",
     "collect",
@@ -66,6 +67,7 @@ CAPABILITIES = {
     "report",
     "reproduce list",
     "reproduce run",
+    "reproduce suggest",
     "risk-review",
     "scan",
     "schema validate",
@@ -418,6 +420,30 @@ def run_validation(executable: str, output: Path, dist_dir: Path | None = None) 
     if not {"package.json", "tests/calculator.test.js"}.issubset(javascript_protected):
         raise RuntimeError("Automatic solve did not protect the JavaScript acceptance contract")
     runner.scenario_checks.append("javascript-solve-discovers-npm-and-gates-repair")
+    runner.run(
+        "reproduce suggest",
+        "reproduce",
+        "suggest",
+        automatic_solve,
+        "--problem",
+        "Checkout duplicates charges",
+        "--json",
+        contains='"status": "reproduced"',
+    )
+    runner.run(
+        "assist",
+        "assist",
+        automatic_solve,
+        "--problem",
+        "Checkout duplicates charges",
+        "--out",
+        output / "guided-assistant",
+        "--no-open",
+        "--json",
+        expected_codes=(2,),
+        contains='"status": "approval_required"',
+    )
+    runner.scenario_checks.append("problem description becomes a validated reproduction and guided repair preview")
     benchmark_manifest = output / "solve-benchmark.json"
     benchmark_manifest.write_text(
         json.dumps(
