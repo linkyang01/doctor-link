@@ -4,6 +4,7 @@ from doctor_link.core.friendly_errors import check_python_version
 from doctor_link.p4_cli import main
 
 # Import CLI extensions explicitly for the packaged console entrypoint.
+from doctor_link import assist_cli as _assist_cli  # noqa: F401
 from doctor_link import diagnose_now_cli as _diagnose_now_cli  # noqa: F401
 from doctor_link import benchmark_cli as _benchmark_cli  # noqa: F401
 from doctor_link import handoff_cli as _handoff_cli  # noqa: F401

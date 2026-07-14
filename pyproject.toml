@@ -1,6 +1,6 @@
 [project]
 name = "doctor-link"
-version = "0.4.0"
+version = "0.5.0"
 description = "Universal diagnostic and AI collaboration tool for software debugging."
 readme = "README.md"
 requires-python = ">=3.10"

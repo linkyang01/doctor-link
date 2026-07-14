@@ -102,6 +102,15 @@ When `--package-dir` is supplied, each reproduction or test job writes its JSON 
 
 ## Automatic solve
 
+For a guided path that does not require knowing a test command:
+
+```bash
+doctor-link assist /path/to/project --problem "Checkout duplicates a charge"
+doctor-link reproduce suggest /path/to/project --problem "Checkout duplicates a charge" --json
+```
+
+`assist` validates ranked, project-owned reproduction candidates, writes a JSON receipt and local HTML result, and prepares a normal solve preview. Add `--allow-repair` only after reviewing the reproduction. Use `--package packages/name` for a workspace package and `--no-open` in CI or headless environments.
+
 Preview a bounded Python or Node.js JavaScript/TypeScript repair without modifying code:
 
 ```bash

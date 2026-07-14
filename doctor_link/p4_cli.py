@@ -26,6 +26,7 @@ from doctor_link.core.plugin_runtime import discover_plugins, run_plugin, valida
 from doctor_link.core.project_health import write_project_health
 from doctor_link.core.package_exporter import migrate_legacy_export_manifest
 from doctor_link.core.reproduction import load_reproduction_catalog, run_reproduction
+from doctor_link.core.reproduction_suggester import suggest_reproductions
 from doctor_link.core.schema_validator import validate_diagnostic_package, write_schema_validation_result
 from doctor_link.core.test_matrix_runner import load_test_matrix, run_test_matrix
 
@@ -49,6 +50,45 @@ def reproduce_list(project_root: Path, json_output: bool) -> None:
         click.echo(f"- {entry.reproduction_id}: {entry.title} ({entry.kind})")
     for warning in catalog.warnings:
         click.echo(f"Warning: {warning}")
+
+
+@reproduce_group.command("suggest")
+@click.argument("project_root", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--problem", required=True, help="Describe the observable problem in ordinary language.")
+@click.option("--validate/--no-validate", default=True, help="Run safe candidate checks and identify a real failing reproduction.")
+@click.option("--timeout", default=120, show_default=True, type=click.IntRange(1), help="Timeout for each candidate in seconds.")
+@click.option("--max-candidates", default=5, show_default=True, type=click.IntRange(1, 10))
+@click.option("--json", "json_output", is_flag=True, help="Print JSON output.")
+def reproduce_suggest(
+    project_root: Path,
+    problem: str,
+    validate: bool,
+    timeout: int,
+    max_candidates: int,
+    json_output: bool,
+) -> None:
+    """Turn a problem description into ranked, optionally validated reproduction candidates."""
+    result = suggest_reproductions(
+        project_root,
+        problem,
+        validate=validate,
+        timeout_seconds=timeout,
+        max_candidates=max_candidates,
+    )
+    if json_output:
+        click.echo(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+    else:
+        click.echo(f"Reproduction discovery: {result.status}")
+        for item in result.suggestions:
+            click.echo(f"- {item['status']}: {item['command']} ({item['rationale']})")
+        if result.selected_command:
+            click.echo(f"Selected failing command: {result.selected_command}")
+        for warning in result.warnings:
+            click.echo(f"Warning: {warning}")
+    if result.status == "blocked":
+        raise click.exceptions.Exit(4)
+    if result.status == "not_reproduced":
+        raise click.exceptions.Exit(3)
 
 
 @reproduce_group.command("run")
