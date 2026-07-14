@@ -9,4 +9,4 @@
 - [x] Run the installed-wheel full-capability lab and capture updated counts (64 routes, 73 invocations, 11 scenarios).
 - [x] Run a disposable live TypeScript monorepo repair with unchanged protected inputs (one production-file edit, 2/2 checks passed in one round).
 - [x] Run controlled interrupted-session recovery, including fresh approval, branch mismatch, and protected-input drift cases.
-- [ ] Complete security, packaging, cross-platform CI, and release evidence.
+- [x] Complete security, packaging, and cross-platform CI evidence (GitHub Actions run 29301238901 passed 10/10 jobs).
