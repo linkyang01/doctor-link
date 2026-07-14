@@ -2,13 +2,11 @@
 
 This guide takes Doctor link from a clean source checkout to a useful result on your own project. Choose the guided diagnosis path when you want evidence and a report, or the verified-repair path when you already have a failing test.
 
-## 1. Install the current source candidate
+## 1. Install the current release
 
 Requirements: Git and Python 3.10 through 3.14.
 
 ```bash
-git clone https://github.com/linkyang01/doctor-link.git
-cd doctor-link
 python -m venv .venv
 ```
 
@@ -28,7 +26,7 @@ Install and confirm the CLI:
 
 ```bash
 python -m pip install --upgrade pip
-python -m pip install -e .
+python -m pip install https://github.com/linkyang01/doctor-link/releases/download/v0.5.0/doctor_link-0.5.0-py3-none-any.whl
 doctor-link --version
 doctor-link preflight . --json
 ```

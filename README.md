@@ -27,11 +27,9 @@ Doctor link does not replace Codex, Cursor, Aider, OpenHands, Continue, Cline, W
 
 ## Verified status
 
-Latest published version: [`v0.4.0`](https://github.com/linkyang01/doctor-link/releases/tag/v0.4.0), published on 2026-07-14.
+Latest published version: [`v0.5.0`](https://github.com/linkyang01/doctor-link/releases/tag/v0.5.0), published on 2026-07-14.
 
-Version `v0.4.0` adds workspace package targeting, interrupted-session recovery, and multi-project solve benchmarks. It passed 349 tests at 85.15% branch-aware coverage, a 64-route installed-wheel lab, and a live protected-contract monorepo repair. PR [#149](https://github.com/linkyang01/doctor-link/pull/149) merged as `9e83e96`; [release workflow 29303850286](https://github.com/linkyang01/doctor-link/actions/runs/29303850286) published the immutable tag and assets with PyPI disabled.
-
-The current `v0.5.0` source adds natural-language reproduction discovery, a guided `doctor-link assist` entrypoint with a local browser result, and a 24-project Python/Node.js benchmark corpus.
+Version `v0.5.0` adds natural-language reproduction discovery, a guided `doctor-link assist` entrypoint with a local browser result, and a 24-project Python/Node.js benchmark corpus. It passed 363 tests at 85.06% branch-aware coverage, all 66 installed CLI routes through 75 invocations and twelve complex scenarios, and Python 3.10–3.14 plus Ubuntu, macOS, Windows, packaging, and security gates. PR [#150](https://github.com/linkyang01/doctor-link/pull/150) merged as `ac5c2f5`; [release workflow 29305612221](https://github.com/linkyang01/doctor-link/actions/runs/29305612221) published the immutable tag and assets with PyPI disabled.
 
 The verified automatic problem-solving release in [PR #145](https://github.com/linkyang01/doctor-link/pull/145) passed the complete repository validation matrix on 2026-07-13:
 
@@ -76,13 +74,19 @@ PR #145 was merged as commit `40a547c`, and the authorized [GitHub Release `v0.2
 
 Requirements: Git and Python 3.10 or later.
 
+Current support scope:
+
+- guided diagnosis and diagnostic packages for local software projects;
+- verified automatic repair for clean Git repositories containing Python or Node.js JavaScript/TypeScript projects;
+- Node.js repair requires the project's package manager and runtime;
+- automatic edits require an installed, authenticated Codex CLI and explicit `--allow-repair` approval;
+- other language ecosystems and PyPI installation are not yet supported.
+
 ```bash
-git clone https://github.com/linkyang01/doctor-link.git
-cd doctor-link
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install -e .
+python -m pip install https://github.com/linkyang01/doctor-link/releases/download/v0.5.0/doctor_link-0.5.0-py3-none-any.whl
 doctor-link --version
 doctor-link preflight . --json
 ```
