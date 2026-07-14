@@ -30,4 +30,11 @@ An issue should not be closed only because an AI tool claims it is fixed. Verifi
 
 ## Security issues
 
-For privacy or sensitive data concerns, avoid pasting secrets into public issues. Use sanitized evidence and reference the privacy model.
+For vulnerabilities or sensitive privacy failures, do not paste details into public Issues. Route the reporter to GitHub private vulnerability reporting and `SECURITY.md`. Ordinary privacy usability questions may use sanitized evidence and reference the privacy model.
+
+## Public intake
+
+- Incorrect behavior uses `.github/ISSUE_TEMPLATE/bug_report.yml`.
+- Product improvements use `.github/ISSUE_TEMPLATE/feature_request.yml`.
+- Diagnostic investigations may use `.github/ISSUE_TEMPLATE/diagnostic_issue.yml`.
+- Support expectations and preparation steps are defined in `SUPPORT.md`.

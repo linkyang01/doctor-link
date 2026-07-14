@@ -1,3 +1,5 @@
+> **Historical:** completed release checklist. Current planning lives in `docs/roadmap.md` and `docs/project-status.md`.
+
 # TODO v0.5.0
 
 - [x] Rank safe reproduction candidates from an ordinary-language problem.

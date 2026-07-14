@@ -1,3 +1,5 @@
+> **Historical plan.** Status text below may be outdated. The authoritative current roadmap is [`docs/roadmap.md`](../roadmap.md).
+
 # P2+ Roadmap
 
 P2+ is a mainline enhancement task group after P2.

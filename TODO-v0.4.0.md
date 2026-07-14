@@ -1,3 +1,5 @@
+> **Historical:** completed release checklist. Current planning lives in `docs/roadmap.md` and `docs/project-status.md`.
+
 # TODO v0.4.0
 
 - [x] Add explicit JavaScript/TypeScript workspace package targeting.

@@ -18,6 +18,17 @@ EXIT_CODES = {
     "review_required": 6,
 }
 
+SUPPORTED_REPAIR_TOOLS = ("codex",)
+
+
+def _validate_repair_tool(_ctx: click.Context, _param: click.Parameter, value: str) -> str:
+    """Validate --tool without click.Choice, which can break under pre-release click builds."""
+    cleaned = (value or "").strip().casefold()
+    if cleaned not in SUPPORTED_REPAIR_TOOLS:
+        supported = ", ".join(SUPPORTED_REPAIR_TOOLS)
+        raise click.BadParameter(f"Unsupported repair tool {value!r}. Supported tools: {supported}.")
+    return cleaned
+
 
 @main.command("solve")
 @click.argument("project_root", required=False, type=click.Path(exists=True, file_okay=False, path_type=Path))
@@ -26,7 +37,14 @@ EXIT_CODES = {
 @click.option("--resume", type=click.Path(exists=True, file_okay=False, path_type=Path), default=None, help="Resume an interrupted solve-session directory.")
 @click.option("--reproduce-command", default=None, help="Safe command that fails while the problem exists.")
 @click.option("--test-command", default=None, help="Safe regression command that must pass after repair.")
-@click.option("--tool", default="codex", show_default=True, type=click.Choice(["codex"]), help="Repair executor.")
+@click.option(
+    "--tool",
+    default="codex",
+    show_default=True,
+    type=str,
+    callback=_validate_repair_tool,
+    help="Repair executor.",
+)
 @click.option("--allow-repair", is_flag=True, help="Explicitly allow branch creation, Codex execution, and code edits.")
 @click.option(
     "--allow-verification-changes",

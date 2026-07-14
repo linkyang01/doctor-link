@@ -6,7 +6,21 @@ Doctor link follows semantic versioning. Public release publishing requires expl
 
 ## Unreleased
 
-No unreleased changes are currently recorded.
+### Fixed
+
+- `assist` / reproduction suggestion no longer treats pytest collection and environment setup failures (non-test exit codes) as successful reproduction.
+- Common English stop words such as `not` and `set` are excluded from problem-term matching so unrelated test files are less likely to be selected.
+- `solve` preview and `assist` no longer require a clean Git working tree; dirty trees still block only `--allow-repair`.
+- `solve --tool` validation no longer uses `click.Choice`, avoiding breakage on some pre-release click builds in polluted environments.
+
+### Changed
+
+- Click is constrained to `>=8.1.7,<9`.
+- Guided HTML results include exit codes, selected reproduction command, and short evidence snippets.
+
+### Added
+
+- Authoritative post-v0.5.1 maintenance roadmap, support and security routes, compatibility/deprecation policy, issue templates, scheduled PyPI smoke workflow, and a pinned public-project preflight validation harness (Issue #156).
 
 ## [0.5.1] - 2026-07-14
 

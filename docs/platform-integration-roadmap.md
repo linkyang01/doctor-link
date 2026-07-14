@@ -1,6 +1,6 @@
 # Platform Integration Roadmap
 
-This roadmap plans the product layer beyond Doctor link's completed local-first diagnostic runtime. GitHub/AI connections, team collaboration, and cloud governance are separate delivery stages. They do not change the local package format into a cloud-only dependency and do not block the current local release.
+This roadmap is a candidate product design beyond Doctor link's completed local-first diagnostic runtime, not a committed version or schedule. `docs/roadmap.md` and `docs/project-status.md` are authoritative for current status. GitHub/AI connections, team collaboration, and cloud governance are separate delivery stages. They do not change the local package format into a cloud-only dependency and do not block the current local release.
 
 ## Product principles
 
@@ -102,13 +102,14 @@ This roadmap plans the product layer beyond Doctor link's completed local-first 
 - backup restoration and regional recovery meet declared RPO/RTO targets;
 - hosted deployment has operational runbooks, incident response, status reporting, and rollback procedures.
 
-## Recommended releases
+## Recommended delivery sequence
 
-1. `v0.1.3`: current local reliability, privacy-safe atomic export, migration, and resilience validation.
-2. `v0.2.0`: P0 contracts plus read-only GitHub/AI connection previews.
-3. `v0.3.0`: explicitly approved GitHub/AI writes with receipts and idempotent retry.
-4. `v0.4.0`: self-hosted team collaboration beta.
-5. `v1.0.0`: cloud governance only after security, isolation, recovery, and operational acceptance gates pass.
+1. Integration foundation: contracts, authorization, audit, idempotency, and read-only previews.
+2. Controlled writes: individually approved GitHub/AI writes with receipts and recovery.
+3. Team collaboration beta: self-hosted delivery first.
+4. Cloud governance: choose a release only after security, isolation, recovery, and operational gates pass.
+
+A semantic version is selected only after that stage has explicit authorization, a tracked implementation plan, and acceptance gates. Already published v0.2.0-v0.5.1 numbers must not be reused for this future work.
 
 ## Explicit non-goals for the current release
 

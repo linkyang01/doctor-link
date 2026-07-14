@@ -1,0 +1,11 @@
+{
+  "schema": "doctor-link-public-project-validation-v1",
+  "projects": [
+    {"name": "click", "language": "python", "url": "https://github.com/pallets/click.git", "ref": "8.3.0", "commit": "00fadb8904387158ce6e9aa1573be770446895c1"},
+    {"name": "requests", "language": "python", "url": "https://github.com/psf/requests.git", "ref": "v2.32.5", "commit": "b25c87d7cb8d6a18a37fa12442b5f883f9e41741"},
+    {"name": "pydantic", "language": "python", "url": "https://github.com/pydantic/pydantic.git", "ref": "v2.12.5", "commit": "bd2d0dd0137dfa1a8fdff2529b9dfb1547980150"},
+    {"name": "p-limit", "language": "javascript", "url": "https://github.com/sindresorhus/p-limit.git", "ref": "v7.2.0", "commit": "7bdd25c703337360236722ed7d4da5ffadcb7a08"},
+    {"name": "chalk", "language": "javascript", "url": "https://github.com/chalk/chalk.git", "ref": "v5.6.2", "commit": "51557784b829c87ff8d138206598764f2eb957b1"},
+    {"name": "axios", "language": "javascript", "url": "https://github.com/axios/axios.git", "ref": "v1.13.2", "commit": "08b84b52d5835d0c7b81049c365c3d271ade8bff"}
+  ]
+}

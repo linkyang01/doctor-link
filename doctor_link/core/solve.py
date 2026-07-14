@@ -297,7 +297,9 @@ def solve_project(
     result.original_branch = git_state.get("branch")
     if git_state.get("error"):
         return _finish(result, "blocked", str(git_state["error"]), blocker="git_repository_required")
-    if git_state.get("dirty"):
+    # Dirty trees only block actual repair. Preview, assist, and guided diagnosis may
+    # run read-only reproduction checks on an already-dirty working tree.
+    if allow_repair and git_state.get("dirty"):
         return _finish(
             result,
             "blocked",
@@ -350,10 +352,19 @@ def solve_project(
         result.blockers.extend(command_errors)
         return _finish(result, "blocked", "One or more commands use unsupported shell syntax.")
 
+    baseline_porcelain = str(git_state.get("porcelain") or "")
     baseline = _run_solve_commands(root, commands, command_timeout_seconds)
     result.baseline = [item.to_dict() for item in baseline]
     post_baseline_git = _inspect_git(root, expected_root=workspace_root)
-    if post_baseline_git.get("dirty"):
+    if post_baseline_git.get("error"):
+        return _persist_and_finish(
+            result,
+            output_root,
+            "blocked",
+            str(post_baseline_git["error"]),
+            blocker="git_repository_required",
+        )
+    if str(post_baseline_git.get("porcelain") or "") != baseline_porcelain:
         return _persist_and_finish(
             result,
             output_root,
@@ -1136,7 +1147,12 @@ def _inspect_git(root: Path, *, expected_root: Path | None = None) -> dict[str, 
     status = run_command(["git", "status", "--porcelain"], cwd=root, timeout_seconds=15)
     if branch.returncode != 0 or status.returncode != 0:
         return {"error": "Doctor link could not inspect the Git working tree."}
-    return {"branch": branch.stdout.strip() or "DETACHED", "dirty": bool(status.stdout.strip())}
+    porcelain = status.stdout
+    return {
+        "branch": branch.stdout.strip() or "DETACHED",
+        "dirty": bool(porcelain.strip()),
+        "porcelain": porcelain,
+    }
 
 
 def _parse_codex_jsonl(text: str) -> dict[str, Any]:

@@ -135,3 +135,36 @@ def test_configured_reproduction_is_used_without_test_files(tmp_path: Path) -> N
     assert result.selected_command is not None
     assert result.selected_command.startswith("PYTHONDONTWRITEBYTECODE=1 ")
     assert result.suggestions[0]["suggestion_id"] == "catalog-checkout"
+
+
+def test_collection_error_exit_code_is_not_reproduced(tmp_path: Path) -> None:
+    root = _python_fixture(tmp_path)
+    (root / "tests" / "test_checkout.py").write_text(
+        "import missing_plugin_that_does_not_exist\n\ndef test_checkout():\n    assert False\n",
+        encoding="utf-8",
+    )
+
+    result = suggest_reproductions(root, "Checkout duplicates a payment charge", validate=True)
+
+    assert result.status == "blocked"
+    assert result.selected_command is None
+    assert any(item["status"] == "setup_failed" for item in result.suggestions)
+    assert any("collection" in warning.casefold() or "environment" in warning.casefold() for warning in result.warnings)
+
+
+def test_common_english_stop_words_are_not_used_as_file_matches(tmp_path: Path) -> None:
+    root = _python_fixture(tmp_path)
+    (root / "tests" / "test_annotations.py").write_text("def test_annotations():\n    assert True\n", encoding="utf-8")
+    (root / "tests" / "test_setattr.py").write_text("def test_setattr():\n    assert True\n", encoding="utf-8")
+
+    result = suggest_reproductions(
+        root,
+        "The option is not set correctly",
+        validate=False,
+    )
+
+    scopes = {item["scope"] for item in result.suggestions}
+    # "not" and "set" must not drag in unrelated test_*.py files.
+    assert "tests/test_annotations.py" not in scopes
+    assert "tests/test_setattr.py" not in scopes
+    assert any(item["suggestion_id"] == "project-test-suite" for item in result.suggestions)

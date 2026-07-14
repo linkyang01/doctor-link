@@ -1,0 +1,40 @@
+name: Bug report
+description: Report reproducible incorrect Doctor link behavior with sanitized evidence.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: checkboxes
+    attributes:
+      label: Safety check
+      options:
+        - label: I removed secrets, private source code, personal data, and confidential logs.
+          required: true
+        - label: This is not a vulnerability requiring private reporting.
+          required: true
+  - type: input
+    attributes:
+      label: Doctor link version
+      placeholder: Output of doctor-link --version
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Environment
+      placeholder: Operating system, Python version, installation method
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Reproduction
+      description: Give the smallest ordered steps and sanitized project shape.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Sanitized evidence
+      description: Paste only the minimal non-sensitive output needed to reproduce the problem.

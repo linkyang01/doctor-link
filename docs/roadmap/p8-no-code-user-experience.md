@@ -1,6 +1,8 @@
 # P8 No-code User Experience and Guided Workflow
 
-Status: largely complete (v0.1.0-rc.1 + v0.1.1 + v0.1.2 polish)
+Status: completed historical roadmap. Current status is maintained in `docs/roadmap.md` and `docs/project-status.md`.
+
+The version targets and out-of-scope statements below record the decisions made when P8 was planned. Later explicitly authorized releases, including PyPI publication, supersede those historical release constraints.
 
 ## Purpose
 

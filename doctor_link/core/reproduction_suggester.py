@@ -23,8 +23,97 @@ TOKEN_ALIASES = {
     "unicode": {"encoding", "i18n", "text", "unicode", "utf"},
 }
 STOP_WORDS = {
-    "a", "an", "and", "are", "does", "for", "from", "in", "is", "it", "of", "on", "or", "the", "this", "to", "when", "with",
+    "a",
+    "about",
+    "after",
+    "all",
+    "also",
+    "an",
+    "and",
+    "any",
+    "are",
+    "as",
+    "at",
+    "be",
+    "been",
+    "before",
+    "both",
+    "but",
+    "by",
+    "can",
+    "could",
+    "did",
+    "do",
+    "does",
+    "each",
+    "for",
+    "from",
+    "get",
+    "got",
+    "had",
+    "has",
+    "have",
+    "how",
+    "if",
+    "in",
+    "into",
+    "is",
+    "it",
+    "its",
+    "just",
+    "like",
+    "may",
+    "more",
+    "most",
+    "not",
+    "of",
+    "on",
+    "only",
+    "or",
+    "our",
+    "out",
+    "over",
+    "set",
+    "should",
+    "so",
+    "some",
+    "such",
+    "than",
+    "that",
+    "the",
+    "their",
+    "then",
+    "there",
+    "these",
+    "they",
+    "this",
+    "those",
+    "to",
+    "too",
+    "under",
+    "up",
+    "use",
+    "using",
+    "was",
+    "were",
+    "what",
+    "when",
+    "where",
+    "which",
+    "while",
+    "who",
+    "why",
+    "will",
+    "with",
+    "would",
+    "you",
+    "your",
 }
+
+# Exit codes that mean "tests ran and failed" for common runners.
+# Other non-zero codes (pytest collection/usage/internal errors, missing plugins)
+# are treated as setup failures, not successful reproduction.
+TEST_FAILURE_EXIT_CODES = {1}
 
 
 @dataclass
@@ -81,6 +170,7 @@ def suggest_reproductions(
     suggestions = _candidate_commands(root, project_type, terms)[: max(1, min(max_candidates, 10))]
     if not suggestions:
         return _result(root, clean_problem, project_type, "blocked", [], ["No safe test entrypoint was discovered."])
+    warnings: list[str] = []
     if validate:
         original_git_status = _git_status(root)
         for item in suggestions:
@@ -90,17 +180,20 @@ def suggest_reproductions(
             item.stderr = completed.stderr
             if completed.timed_out:
                 item.status = "timed_out"
-            elif completed.returncode == 0:
-                item.status = "passed"
-            elif completed.returncode == 127:
-                item.status = "unavailable"
             else:
-                item.status = "reproduced"
+                item.status = _classify_check_status(completed.returncode, completed.stdout, completed.stderr)
             current_git_status = _git_status(root)
             if original_git_status is not None and current_git_status != original_git_status:
                 item.status = "modified_worktree"
                 item.stderr = (item.stderr + "\nCandidate check changed the Git working tree.").strip()
                 break
+        if any(item.status == "setup_failed" for item in suggestions) and not any(
+            item.status == "reproduced" for item in suggestions
+        ):
+            warnings.append(
+                "One or more candidates failed during collection, environment setup, or tool usage "
+                "rather than as a reproduced test failure (for example pytest exit code 2)."
+            )
     selected = next((item.command for item in suggestions if item.status == "reproduced"), None)
     if not validate:
         status = "proposed"
@@ -110,7 +203,47 @@ def suggest_reproductions(
         status = "not_reproduced"
     else:
         status = "blocked"
-    return _result(root, clean_problem, project_type, status, suggestions, [], selected)
+    return _result(root, clean_problem, project_type, status, suggestions, warnings, selected)
+
+
+def _classify_check_status(returncode: int, stdout: str, stderr: str) -> str:
+    """Map a candidate command outcome to a suggestion status.
+
+    Only conventional test-failure exit codes count as reproduction. Collection
+    errors, usage errors, and missing tooling are setup failures so they cannot
+    be selected as the problem reproduction.
+    """
+    if returncode == 0:
+        return "passed"
+    if returncode == 127:
+        return "unavailable"
+    if returncode in TEST_FAILURE_EXIT_CODES:
+        combined = f"{stdout}\n{stderr}".casefold()
+        # Pytest may still return 1 for some collection-adjacent cases; prefer
+        # explicit collection markers over claiming reproduction.
+        if _looks_like_setup_failure(combined):
+            return "setup_failed"
+        return "reproduced"
+    return "setup_failed"
+
+
+def _looks_like_setup_failure(combined_output: str) -> bool:
+    markers = (
+        "error collecting",
+        "errors during collection",
+        "collection interrupted",
+        "importerror",
+        "modulenotfounderror",
+        "no module named",
+        "no tests collected",
+        "usage error",
+        "internal error",
+        "plugin validation",
+        "could not load",
+        "fixture '",
+        "unknown pytest.mark",
+    )
+    return any(marker in combined_output for marker in markers)
 
 
 def _candidate_commands(root: Path, project_type: str, terms: set[str]) -> list[ReproductionSuggestion]:
@@ -205,7 +338,13 @@ def _rank_test_files(root: Path, terms: set[str]) -> list[tuple[int, Path, list[
 
 
 def _problem_terms(problem: str) -> set[str]:
-    raw = {token for token in re.findall(r"[a-z0-9]+", problem.casefold()) if len(token) >= 3 and token not in STOP_WORDS}
+    # Prefer tokens of length >= 4 for matching; keep 3-char domain tokens only
+    # when they appear in the domain alias tables (auth, etc.).
+    raw = {
+        token
+        for token in re.findall(r"[a-z0-9]+", problem.casefold())
+        if token not in STOP_WORDS and (len(token) >= 4 or any(token in aliases for aliases in TOKEN_ALIASES.values()))
+    }
     expanded = set(raw)
     for aliases in TOKEN_ALIASES.values():
         if raw & aliases:

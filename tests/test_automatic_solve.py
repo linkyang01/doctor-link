@@ -615,6 +615,24 @@ def test_dirty_worktree_blocks_before_commands_or_repair(tmp_path: Path) -> None
     assert result.baseline == []
 
 
+def test_dirty_worktree_allows_preview_without_repair_authorization(tmp_path: Path) -> None:
+    root = _python_project(tmp_path)
+    (root / "notes.txt").write_text("local scratch\n", encoding="utf-8")
+
+    result = solve_project(
+        root,
+        problem="addition is wrong",
+        test_command=_check_command(),
+        output_root=tmp_path / "out",
+        allow_repair=False,
+    )
+
+    assert result.status == "approval_required"
+    assert "dirty_worktree" not in result.blockers
+    assert result.baseline
+    assert result.output_dir is not None
+
+
 def test_verification_change_approval_requires_repair_approval(tmp_path: Path) -> None:
     root = _python_project(tmp_path)
 
@@ -933,3 +951,23 @@ def test_solve_cli_json_uses_distinct_approval_exit_code(tmp_path: Path) -> None
     payload = json.loads(result.output)
     assert payload["status"] == "approval_required"
     assert payload["success"] is False
+
+
+def test_solve_cli_rejects_unknown_tool_with_string_validation(tmp_path: Path) -> None:
+    root = _python_project(tmp_path)
+    result = CliRunner().invoke(
+        main,
+        [
+            "solve",
+            str(root),
+            "--problem",
+            "addition is wrong",
+            "--test-command",
+            _check_command(),
+            "--tool",
+            "not-a-tool",
+            "--json",
+        ],
+    )
+    assert result.exit_code != 0
+    assert "Unsupported repair tool" in result.output

@@ -2,6 +2,10 @@
 
 This index separates current repaired-source evidence, historical evidence, and actions that have not occurred. A green workflow run certifies only the commit and scope named below.
 
+## Post-v0.5.1 public-project preflight harness
+
+Issue [#156](https://github.com/linkyang01/doctor-link/issues/156) adds a pinned public-project validation harness. On 2026-07-14 the six-project set (Python: click, requests, pydantic; JavaScript: p-limit, chalk, axios) completed commit-pinned clones and read-only preflight with **6/6 PASS** (warnings allowed, zero blockers). Receipts: [public-project validation harness](public-project-validation-harness.md) and [evidence](evidence/public-project-validation-2026-07-14/).
+
 ## Published v0.3.0 evidence
 
 Version `v0.3.0` extends automatic solve to Node.js JavaScript/TypeScript projects and hardens command evidence against invalid bytes and operating-system launch failures. Local validation on 2026-07-13 passed 339 tests at 85.48% branch-aware coverage, Ruff, Bandit, dependency audit, build/content/Twine gates, isolated wheel installation, four repository validation flows, and the installed-wheel full-capability lab with 63/63 routes, 72 invocations, and ten complex scenarios.
