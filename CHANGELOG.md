@@ -6,7 +6,11 @@ Doctor link follows semantic versioning. Public release publishing requires expl
 
 ## Unreleased
 
-Candidate scope for `v0.3.0`: verified automatic repair for Node.js JavaScript and TypeScript projects.
+No unreleased changes are currently recorded.
+
+## [0.3.0] - 2026-07-14
+
+Verified automatic repair for Node.js JavaScript and TypeScript projects.
 
 ### Added
 
@@ -35,6 +39,7 @@ Candidate scope for `v0.3.0`: verified automatic repair for Node.js JavaScript a
 - The installed-wheel full-capability lab covers all 63 CLI routes through 72 real invocations and ten complex scenario invariants, including a JavaScript/npm approval-gate scenario.
 - A disposable Node.js inventory project completed a live Codex repair: two failing acceptance cases became three passing tests in one round while the package manifest and original test hashes remained unchanged.
 - GitHub Actions run `29263187097` passed all ten Python 3.10-3.14, security, package, Ubuntu, macOS, and Windows jobs for code commit `c9426e7`.
+- Release workflow `29299367180` rebuilt, installed, and validated the distributions before publishing GitHub Release `v0.3.0` from merge commit `e0224cc`; PyPI publication was disabled.
 
 ## [0.2.0] - 2026-07-13
 
