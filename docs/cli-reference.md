@@ -113,7 +113,7 @@ doctor-link explain /path/to/project \
 doctor-link reproduce suggest /path/to/project --problem "Checkout duplicates a charge" --json
 ```
 
-`assist` validates ranked, project-owned reproduction candidates, writes a JSON receipt and local HTML result, prepares a normal solve preview, and attaches advisory root-cause hints when failing evidence can be clustered. Add `--allow-repair` only after reviewing the reproduction. Use `--package packages/name` for a workspace package and `--no-open` in CI or headless environments.
+`assist` validates ranked, project-owned reproduction candidates, writes a JSON receipt and local HTML diagnostic report, prepares a normal solve preview, and attaches advisory root-cause hints when failing evidence can be clustered. Add `--allow-repair` only after reviewing the reproduction. Use `--package packages/name` for a workspace package and `--no-open` in CI or headless environments. Use `--interactive` to run, skip, or quit each candidate without rewriting the problem description.
 
 `explain` runs the same safe checks as solve preview, then clusters traceback symbols and failure patterns into advisory source-file hints without editing code. Hints are not verified root causes; Doctor link still accepts repairs only after independent re-verification.
 

@@ -941,7 +941,6 @@ def build_repair_prompt(
     previous = ""
     if previous_message:
         previous = f"\nPrevious repair summary:\n{previous_message[-3000:]}\n"
-    protected_examples = result.protected_verification_inputs[:20]
     protected_summary = [
         f"- Doctor link snapshotted {len(result.protected_verification_inputs)} protected verification input(s).",
     ]
@@ -954,8 +953,9 @@ def build_repair_prompt(
             "- Do not modify tests, package manifests or lockfiles, test configuration, reproduction/test catalogs, "
             "or scripts referenced by verification commands."
         )
-    if protected_examples:
-        protected_summary.append("- Protected examples: " + ", ".join(f"`{item}`" for item in protected_examples))
+    compact_protected = _compact_protected_paths(result.protected_verification_inputs)
+    if compact_protected:
+        protected_summary.append("- Protected inputs (patterns): " + ", ".join(f"`{item}`" for item in compact_protected))
     if result.allow_verification_changes:
         protected_summary.append(
             "- The user explicitly allowed verification-input changes, but any passing result will still require human review."
@@ -992,6 +992,38 @@ def build_repair_prompt(
         ]
     )
     return "\n".join(sections)
+
+
+def _compact_protected_paths(paths: list[str], *, max_items: int = 12) -> list[str]:
+    """Collapse long protected-path lists into readable globs for repair prompts."""
+    if not paths:
+        return []
+    buckets: dict[str, list[str]] = {}
+    singles: list[str] = []
+    for path in sorted(paths):
+        normalized = path.replace("\\", "/")
+        parts = normalized.split("/")
+        if len(parts) >= 2 and parts[0] in {"tests", "test", "__tests__", "spec"}:
+            buckets.setdefault(f"{parts[0]}/**", []).append(normalized)
+        elif len(parts) >= 2 and parts[0] in {"src", "lib", "app", "packages"}:
+            # Keep package-level roots compact when many files share a prefix.
+            prefix = "/".join(parts[:2]) + "/**"
+            buckets.setdefault(prefix, []).append(normalized)
+        else:
+            singles.append(normalized)
+    compact: list[str] = []
+    for pattern, members in sorted(buckets.items()):
+        if len(members) >= 3:
+            compact.append(pattern)
+        else:
+            compact.extend(members)
+    compact.extend(singles)
+    # Prefer globs first, then keep the list bounded.
+    compact = sorted(set(compact), key=lambda item: (0 if "*" in item else 1, item))
+    if len(compact) > max_items:
+        remaining = len(compact) - (max_items - 1)
+        compact = compact[: max_items - 1] + [f"... and {remaining} more protected paths"]
+    return compact
 
 
 def _format_root_cause_prompt_section(root_cause: dict[str, Any] | None) -> str:

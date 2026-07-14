@@ -94,6 +94,49 @@ def test_guided_result_includes_exit_code_and_evidence_snippet(tmp_path: Path) -
 
     rendered = render_guided_result(result)
 
-    assert "Evidence snippet" in rendered
+    assert "Evidence excerpt" in rendered
     assert "Selected reproduction" in rendered
     assert "Exit" in rendered
+    assert "Expected vs actual" in rendered
+    assert "Detailed failure evidence" in rendered
+    assert result.diagnostics.get("assertion_diffs") or result.diagnostics.get("evidence_blocks")
+
+
+def test_interactive_callback_can_skip_candidates(tmp_path: Path) -> None:
+    root = _fixture(tmp_path)
+    (root / "tests" / "test_profile.py").write_text("def test_profile():\n    assert True\n", encoding="utf-8")
+    decisions = ["skip", "run"]
+
+    def on_candidate(item, index, total):  # noqa: ANN001
+        return decisions.pop(0) if decisions else "run"
+
+    result = run_guided_session(
+        root,
+        problem="Checkout duplicates charge",
+        output_root=tmp_path / "out",
+        on_candidate=on_candidate,
+    )
+
+    statuses = [item["status"] for item in result.reproduction["suggestions"]]
+    assert "skipped" in statuses
+    assert result.reproduction["status"] in {"reproduced", "not_reproduced", "blocked"}
+    assert any("Skipped candidate" in warning for warning in result.reproduction.get("warnings", []))
+
+
+def test_interactive_stop_skips_remaining_candidates(tmp_path: Path) -> None:
+    root = _fixture(tmp_path)
+    (root / "tests" / "test_other.py").write_text("def test_other():\n    assert True\n", encoding="utf-8")
+
+    def on_candidate(item, index, total):  # noqa: ANN001
+        return "stop" if index == 1 else "run"
+
+    result = run_guided_session(
+        root,
+        problem="Checkout duplicates charge",
+        output_root=tmp_path / "out",
+        on_candidate=on_candidate,
+    )
+
+    statuses = [item["status"] for item in result.reproduction["suggestions"]]
+    assert statuses.count("skipped") >= 1
+    assert result.reproduction["status"] == "blocked"

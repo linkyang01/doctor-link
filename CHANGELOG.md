@@ -18,11 +18,14 @@ Doctor link follows semantic versioning. Public release publishing requires expl
 - Click is constrained to `>=8.1.7,<9`.
 - Guided HTML results include exit codes, selected reproduction command, short evidence snippets, and advisory root-cause hints.
 - Automatic solve repair prompts include an advisory "Suspected root cause" section when failing evidence can be clustered.
+- Repair prompts compress long protected-input lists into path globs (for example `tests/**`) to reduce noise (Issue #160).
 
 ### Added
 
 - Authoritative post-v0.5.1 maintenance roadmap, support and security routes, compatibility/deprecation policy, issue templates, scheduled PyPI smoke workflow, and a pinned public-project preflight validation harness (Issue #156).
 - `doctor-link explain` clusters failing check output into advisory source-file root-cause hints without editing code (Issue #159).
+- `assist --interactive` prompts before each reproduction candidate (run / skip / quit remaining) without rewriting the problem (Issue #160).
+- Guided diagnostic reports now include expected-vs-actual assertion diffs, longer failure evidence, failure patterns, and candidate outcome counts (Issue #160).
 
 ## [0.5.1] - 2026-07-14
 

@@ -4,12 +4,15 @@ import json
 import re
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from doctor_link.core.command_runner import run_command
 from doctor_link.core.reproduction import load_reproduction_catalog
 from doctor_link.core.safe_command_runner import run_safe_command_sequence
 from doctor_link.core.test_matrix_runner import load_test_matrix
+
+# Callback returns: "run" | "skip" | "stop" (stop skips remaining candidates).
+CandidateDecision = Callable[["ReproductionSuggestion", int, int], str]
 
 
 SUGGESTION_SCHEMA = "doctor-link-reproduction-suggestions-v1"
@@ -155,6 +158,7 @@ def suggest_reproductions(
     validate: bool = False,
     timeout_seconds: int = 120,
     max_candidates: int = 5,
+    on_candidate: CandidateDecision | None = None,
 ) -> ReproductionSuggestionResult:
     root = project_root.expanduser().resolve()
     clean_problem = problem.strip()
@@ -173,7 +177,23 @@ def suggest_reproductions(
     warnings: list[str] = []
     if validate:
         original_git_status = _git_status(root)
-        for item in suggestions:
+        stop_remaining = False
+        total = len(suggestions)
+        for index, item in enumerate(suggestions, start=1):
+            if stop_remaining:
+                item.status = "skipped"
+                continue
+            if on_candidate is not None:
+                decision = (on_candidate(item, index, total) or "run").strip().casefold()
+                if decision in {"skip", "s", "n", "no"}:
+                    item.status = "skipped"
+                    warnings.append(f"Skipped candidate {index}/{total}: {item.command}")
+                    continue
+                if decision in {"stop", "abort", "q", "quit"}:
+                    item.status = "skipped"
+                    stop_remaining = True
+                    warnings.append(f"Stopped before candidate {index}/{total}; remaining candidates were skipped.")
+                    continue
             completed = run_safe_command_sequence(item.command, cwd=root, timeout_seconds=timeout_seconds)
             item.return_code = completed.returncode
             item.stdout = completed.stdout
@@ -194,6 +214,8 @@ def suggest_reproductions(
                 "One or more candidates failed during collection, environment setup, or tool usage "
                 "rather than as a reproduced test failure (for example pytest exit code 2)."
             )
+        if any(item.status == "skipped" for item in suggestions):
+            warnings.append("Some candidates were skipped interactively; re-run without --interactive to execute all.")
     selected = next((item.command for item in suggestions if item.status == "reproduced"), None)
     if not validate:
         status = "proposed"
