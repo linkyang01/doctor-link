@@ -106,10 +106,16 @@ For a guided path that does not require knowing a test command:
 
 ```bash
 doctor-link assist /path/to/project --problem "Checkout duplicates a charge"
+doctor-link explain /path/to/project \
+  --problem "Checkout duplicates a charge" \
+  --test-command "python -m pytest tests/test_checkout.py -q" \
+  --json
 doctor-link reproduce suggest /path/to/project --problem "Checkout duplicates a charge" --json
 ```
 
-`assist` validates ranked, project-owned reproduction candidates, writes a JSON receipt and local HTML result, and prepares a normal solve preview. Add `--allow-repair` only after reviewing the reproduction. Use `--package packages/name` for a workspace package and `--no-open` in CI or headless environments.
+`assist` validates ranked, project-owned reproduction candidates, writes a JSON receipt and local HTML result, prepares a normal solve preview, and attaches advisory root-cause hints when failing evidence can be clustered. Add `--allow-repair` only after reviewing the reproduction. Use `--package packages/name` for a workspace package and `--no-open` in CI or headless environments.
+
+`explain` runs the same safe checks as solve preview, then clusters traceback symbols and failure patterns into advisory source-file hints without editing code. Hints are not verified root causes; Doctor link still accepts repairs only after independent re-verification.
 
 Preview a bounded Python or Node.js JavaScript/TypeScript repair without modifying code:
 
@@ -220,6 +226,7 @@ Commands print JSON before returning their final exit status, so CI can parse th
 | `verify` | `candidate_verified`, `ready`, or `verified` | `missing_evidence`, `not_verified`, or another incomplete status |
 | `diagnose verify` | diagnosis pipeline reports success | pipeline remains incomplete or blocked |
 | `solve` | `verified` | `approval_required` (2), `not_reproduced` (3), `blocked` (4), `failed` (5), or `review_required` (6) |
+| `explain` | `explained` / `partial` | `no_failures` (3) or `insufficient_evidence` (4) |
 
 See [Automated diagnosis reliability](automated-diagnosis-reliability.md) for assertion, evidence, concurrency, and handoff rules.
 

@@ -42,6 +42,7 @@ CAPABILITIES = {
     "distribution check",
     "doctor-package",
     "env",
+    "explain",
     "handoff check",
     "handoff generate",
     "handoff list",
@@ -443,7 +444,19 @@ def run_validation(executable: str, output: Path, dist_dir: Path | None = None) 
         expected_codes=(2,),
         contains='"status": "approval_required"',
     )
+    runner.run(
+        "explain",
+        "explain",
+        automatic_solve,
+        "--problem",
+        "Checkout duplicates charges",
+        "--out",
+        output / "root-cause-explain",
+        "--json",
+        contains='"schema": "doctor-link-explain-session-v1"',
+    )
     runner.scenario_checks.append("problem description becomes a validated reproduction and guided repair preview")
+    runner.scenario_checks.append("explain clusters failing evidence into advisory root-cause hints")
     benchmark_manifest = output / "solve-benchmark.json"
     benchmark_manifest.write_text(
         json.dumps(

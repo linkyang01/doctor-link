@@ -4,7 +4,7 @@ This lab runs every Doctor link CLI capability through realistic local scenarios
 
 ## Coverage contract
 
-- 66/66 capability routes, including the version entrypoint;
+- 67/67 capability routes, including the version entrypoint;
 - at least one real process execution for every route;
 - successful and expected-blocked outcomes checked separately;
 - machine-readable per-command logs and a final coverage report;
@@ -73,4 +73,4 @@ The output directory contains:
 - `command-logs/`: stdout and stderr for every command invocation;
 - diagnostic packages, handoff, workbench, archive, knowledge, integrity, privacy, conformance, CI, and distribution artifacts.
 
-A successful run means all 66 declared routes execute through 75 real command invocations and all 12 scenario-level invariants pass. The automatic-solve, guided-assistant, and benchmark scenarios deliberately stop at the approval gate, so the lab does not call Codex, upload data, publish a release, or call a hosted service. Node.js and npm are required for the JavaScript scenario.
+A successful run means all 67 declared routes execute through 76 real command invocations and all 13 scenario-level invariants pass. The automatic-solve, guided-assistant, and benchmark scenarios deliberately stop at the approval gate, so the lab does not call Codex, upload data, publish a release, or call a hosted service. Node.js and npm are required for the JavaScript scenario.
