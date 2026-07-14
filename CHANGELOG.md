@@ -27,6 +27,8 @@ Doctor link follows semantic versioning. Public release publishing requires expl
 - `assist --interactive` prompts before each reproduction candidate (run / skip / quit remaining) without rewriting the problem (Issue #160).
 - Guided diagnostic reports now include expected-vs-actual assertion diffs, longer failure evidence, failure patterns, and candidate outcome counts (Issue #160).
 - Offline failure-mode validation harness covering multi-file repair, wrong AI fix → `failed`, `review_required`, off-by-one assist reproduction, and public Node.js pin checks (Issue #161).
+- `solve --suggest-only` creates a repair-branch proposal with structured change receipt without claiming `verified` (Issue #162).
+- `doctor-link diff` builds structured change receipts (production/test/config classification, protected-input impact) from a project or solve session (Issue #162).
 
 ## [0.5.1] - 2026-07-14
 

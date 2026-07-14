@@ -981,3 +981,38 @@ def test_compact_protected_paths_use_globs_for_test_trees() -> None:
     assert "tests/**" in compact
     assert "pyproject.toml" in compact
     assert len(compact) < len(paths)
+
+
+def test_suggest_only_produces_change_receipt_without_verified(tmp_path: Path) -> None:
+    root = _python_project(tmp_path)
+    result = solve_project(
+        root,
+        problem="addition is wrong",
+        test_command=_check_command(),
+        output_root=tmp_path / "out",
+        suggest_only=True,
+        repair_executor=ScriptedRepairExecutor([_fix]),
+    )
+    assert result.status == "suggestion_ready"
+    assert result.success is False
+    assert result.repair_branch is not None
+    assert result.change_receipt
+    assert result.change_receipt.get("schema") == "doctor-link-change-receipt-v1"
+    session = Path(result.output_dir or "")
+    assert (session / "change-receipt.json").is_file()
+    assert (session / "change-receipt.md").is_file()
+    assert any("calculator.py" in path for path in result.change_receipt.get("production_files", []) + [item.get("path") for item in result.change_receipt.get("files", [])])
+
+
+def test_suggest_only_conflicts_with_allow_repair(tmp_path: Path) -> None:
+    root = _python_project(tmp_path)
+    result = solve_project(
+        root,
+        problem="addition is wrong",
+        test_command=_check_command(),
+        allow_repair=True,
+        suggest_only=True,
+        repair_executor=ScriptedRepairExecutor([_fix]),
+    )
+    assert result.status == "blocked"
+    assert "conflicting_repair_modes" in result.blockers

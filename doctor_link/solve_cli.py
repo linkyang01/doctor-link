@@ -16,6 +16,7 @@ EXIT_CODES = {
     "blocked": 4,
     "failed": 5,
     "review_required": 6,
+    "suggestion_ready": 7,
 }
 
 SUPPORTED_REPAIR_TOOLS = ("codex",)
@@ -47,6 +48,11 @@ def _validate_repair_tool(_ctx: click.Context, _param: click.Parameter, value: s
 )
 @click.option("--allow-repair", is_flag=True, help="Explicitly allow branch creation, Codex execution, and code edits.")
 @click.option(
+    "--suggest-only",
+    is_flag=True,
+    help="Create a repair branch and produce a structured change proposal without claiming verified.",
+)
+@click.option(
     "--allow-verification-changes",
     is_flag=True,
     help="Allow protected test/config changes, but require human review instead of returning verified.",
@@ -65,6 +71,7 @@ def solve_command(
     test_command: str | None,
     tool: str,
     allow_repair: bool,
+    suggest_only: bool,
     allow_verification_changes: bool,
     max_rounds: int,
     command_timeout: int,
@@ -76,6 +83,8 @@ def solve_command(
     if resume is not None:
         if project_root is not None or problem is not None or package is not None or reproduce_command or test_command or output:
             raise click.UsageError("--resume cannot be combined with a project, problem, package, commands, or --out.")
+        if suggest_only:
+            raise click.UsageError("--suggest-only cannot be combined with --resume.")
         result = resume_solve_session(
             resume,
             allow_repair=allow_repair,
@@ -95,6 +104,7 @@ def solve_command(
             tool=tool,
             allow_repair=allow_repair,
             allow_verification_changes=allow_verification_changes,
+            suggest_only=suggest_only,
             max_rounds=max_rounds,
             command_timeout_seconds=command_timeout,
             repair_timeout_seconds=repair_timeout,
