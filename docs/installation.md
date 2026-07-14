@@ -2,7 +2,7 @@
 
 Doctor link is a Python CLI project. This guide explains how to clone the repository, install it locally, run the CLI, and validate that the project works on a local machine.
 
-Version `0.5.0` is available from the authorized [GitHub Release](https://github.com/linkyang01/doctor-link/releases/tag/v0.5.0). Download its wheel or source archive from that page; Doctor link is not published on PyPI, so `pip install doctor-link==0.5.0` from PyPI is not supported.
+Version `0.5.0` is available from [PyPI](https://pypi.org/project/doctor-link/) and the authorized [GitHub Release](https://github.com/linkyang01/doctor-link/releases/tag/v0.5.0). For an isolated command-line application install, `pipx` is recommended.
 
 ## 1. Requirements
 
@@ -133,28 +133,28 @@ python -m pip install https://github.com/linkyang01/doctor-link/releases/downloa
 doctor-link --version
 ```
 
-### Install from PyPI after a future authorized publication
+### Install from PyPI
 
 ```bash
-pip install doctor-link==<published-version>
+python -m pip install doctor-link==0.5.0
 doctor-link --version
 ```
 
-For an isolated application install after publication, prefer `pipx`:
+For an isolated application install, prefer `pipx`:
 
 ```bash
 pipx install doctor-link==0.5.0
 doctor-link --version
 ```
 
-Before PyPI publication, the same `pipx` experience can be tested directly from the GitHub Release:
+The equivalent GitHub Release installation remains available as a fallback:
 
 ```bash
 pipx install https://github.com/linkyang01/doctor-link/releases/download/v0.5.0/doctor_link-0.5.0-py3-none-any.whl
 doctor-link --version
 ```
 
-The recorded isolated-install result is available in [pipx installation validation](validation/pipx-install-validation.md). Registry publication is governed by [PyPI Trusted Publishing](pypi-publishing.md).
+The recorded PyPI and GitHub Release isolated-install results are available in [pipx installation validation](validation/pipx-install-validation.md). Registry publication is governed by [PyPI Trusted Publishing](pypi-publishing.md).
 
 ## 5. Quick smoke test
 

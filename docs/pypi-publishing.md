@@ -1,10 +1,10 @@
 # PyPI Trusted Publishing
 
-Doctor link publishes to PyPI only after explicit authorization for an exact version. The repository uses PyPI Trusted Publishing instead of a stored API token.
+Doctor link publishes to PyPI only after explicit authorization for an exact version. The repository uses PyPI Trusted Publishing instead of a stored API token. Version `0.5.0` was first published by workflow `29324916796` on 2026-07-14.
 
 ## One-time PyPI account setup
 
-Because `doctor-link` does not yet exist on PyPI, configure a pending GitHub publisher from the PyPI account publishing page with these exact values:
+For the initial publication, a pending GitHub publisher was configured with these exact values:
 
 | Field | Value |
 | --- | --- |
@@ -14,7 +14,7 @@ Because `doctor-link` does not yet exist on PyPI, configure a pending GitHub pub
 | Workflow filename | `pypi-publish.yml` |
 | Environment name | `pypi` |
 
-The pending publisher does not reserve the project name. Dispatch the workflow immediately after registering it.
+PyPI converted the pending publisher into the project's active trusted publisher during the first successful upload.
 
 ## GitHub environment
 
@@ -44,4 +44,3 @@ doctor-link --version
 ```
 
 Verify that the PyPI file hashes match the workflow output and that the project page reports Trusted Publishing and attestations.
-
