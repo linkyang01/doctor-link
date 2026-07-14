@@ -971,3 +971,13 @@ def test_solve_cli_rejects_unknown_tool_with_string_validation(tmp_path: Path) -
     )
     assert result.exit_code != 0
     assert "Unsupported repair tool" in result.output
+
+
+def test_compact_protected_paths_use_globs_for_test_trees() -> None:
+    from doctor_link.core.solve import _compact_protected_paths
+
+    paths = [f"tests/test_{index}.py" for index in range(8)] + ["pyproject.toml", "package.json"]
+    compact = _compact_protected_paths(paths)
+    assert "tests/**" in compact
+    assert "pyproject.toml" in compact
+    assert len(compact) < len(paths)

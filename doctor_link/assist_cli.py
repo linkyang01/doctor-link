@@ -16,6 +16,11 @@ from doctor_link.p4_cli import main
 @click.option("--package", default=None, help="Optional workspace package relative to PROJECT_ROOT.")
 @click.option("--out", "output", default=None, type=click.Path(file_okay=False, path_type=Path))
 @click.option("--allow-repair", is_flag=True, help="After reproduction, allow an isolated Codex repair.")
+@click.option(
+    "--interactive",
+    is_flag=True,
+    help="Prompt before each reproduction candidate so you can run, skip, or stop without rewriting the problem.",
+)
 @click.option("--open/--no-open", "open_page", default=True, help="Open the local result page in a browser.")
 @click.option("--json", "json_output", is_flag=True, help="Print the complete guided-session JSON.")
 def assist_command(
@@ -24,6 +29,7 @@ def assist_command(
     package: str | None,
     output: Path | None,
     allow_repair: bool,
+    interactive: bool,
     open_page: bool,
     json_output: bool,
 ) -> None:
@@ -32,14 +38,20 @@ def assist_command(
     clean_problem = (problem or click.prompt("What is going wrong?", default="")).strip()
     if not clean_problem:
         raise click.UsageError("A problem description is required.")
+    if interactive and json_output and not allow_repair:
+        # JSON mode is still allowed with interactive prompts on stderr/stdin.
+        pass
     if not allow_repair and not json_output:
         click.echo("Doctor link will reproduce and prepare a repair preview. It will not edit code.")
+    if interactive and not json_output:
+        click.echo("Interactive mode: for each candidate choose run, skip, or quit remaining.")
     result = run_guided_session(
         root,
         problem=clean_problem,
         package=package,
         output_root=output,
         allow_repair=allow_repair,
+        interactive=interactive,
     )
     if open_page:
         webbrowser.open(Path(result.result_page).as_uri())

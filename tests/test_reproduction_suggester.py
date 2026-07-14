@@ -152,6 +152,29 @@ def test_collection_error_exit_code_is_not_reproduced(tmp_path: Path) -> None:
     assert any("collection" in warning.casefold() or "environment" in warning.casefold() for warning in result.warnings)
 
 
+def test_on_candidate_skip_and_stop_decisions(tmp_path: Path) -> None:
+    root = _python_fixture(tmp_path)
+    (root / "tests" / "test_other.py").write_text("def test_other():\n    assert False\n", encoding="utf-8")
+    seen: list[str] = []
+
+    def on_candidate(item, index, total):  # noqa: ANN001
+        seen.append(item.command)
+        if index == 1:
+            return "skip"
+        return "stop"
+
+    result = suggest_reproductions(
+        root,
+        "Checkout duplicates a payment charge",
+        validate=True,
+        on_candidate=on_candidate,
+    )
+
+    assert seen
+    assert any(item["status"] == "skipped" for item in result.suggestions)
+    assert result.selected_command is None or result.status in {"reproduced", "blocked", "not_reproduced"}
+
+
 def test_common_english_stop_words_are_not_used_as_file_matches(tmp_path: Path) -> None:
     root = _python_fixture(tmp_path)
     (root / "tests" / "test_annotations.py").write_text("def test_annotations():\n    assert True\n", encoding="utf-8")
