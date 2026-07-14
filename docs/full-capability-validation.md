@@ -8,7 +8,7 @@ Doctor link maintains an installed-package validation lab at [`examples/full-cap
 | --- | --- |
 | Unit and regression tests | Function-level behavior, edge cases, and previously fixed defects. |
 | Full capability inventory | The declared matrix exactly matches the live Click command tree. |
-| Complex scenario runner | All 63 routes execute through 72 real subprocess invocations with isolated output. |
+| Complex scenario runner | All 64 routes execute through 73 real subprocess invocations with isolated output. |
 | Installed-wheel run | The built distribution, entrypoint, dependencies, examples, and runtime files work outside the source import path. |
 | Cross-platform smoke | Core source installation and commands work on Ubuntu, macOS, and Windows. |
 
@@ -43,7 +43,7 @@ Package export is exercised in both directions: raw secrets must be blocked by d
 
 The package job builds the wheel and source distribution, installs the wheel into a clean virtual environment, and runs the complete lab using that installed console entrypoint. CI uploads the full report and command logs for inspection.
 
-`tests/test_full_capability_inventory.py` compares the live CLI command tree to the lab's `CAPABILITIES` set. Adding a command without a scenario therefore fails the normal test suite.
+`tests/test_full_capability_inventory.py` compares the live CLI command tree to the lab's `CAPABILITIES` set. Adding a command without a scenario therefore fails the normal test suite. The current source covers 64 routes, 73 invocations, and 11 linked scenario checks, including the multi-project solve benchmark.
 
 ## Local command
 

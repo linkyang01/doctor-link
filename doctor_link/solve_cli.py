@@ -6,7 +6,7 @@ from pathlib import Path
 import click
 
 from doctor_link.cli import main
-from doctor_link.core.solve import solve_project
+from doctor_link.core.solve import resume_solve_session, solve_project
 
 
 EXIT_CODES = {
@@ -20,8 +20,10 @@ EXIT_CODES = {
 
 
 @main.command("solve")
-@click.argument("project_root", type=click.Path(exists=True, file_okay=False, path_type=Path))
-@click.option("--problem", required=True, help="Concrete problem Doctor link must reproduce and repair.")
+@click.argument("project_root", required=False, type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--problem", required=False, help="Concrete problem Doctor link must reproduce and repair.")
+@click.option("--package", default=None, help="Workspace package path relative to PROJECT_ROOT.")
+@click.option("--resume", type=click.Path(exists=True, file_okay=False, path_type=Path), default=None, help="Resume an interrupted solve-session directory.")
 @click.option("--reproduce-command", default=None, help="Safe command that fails while the problem exists.")
 @click.option("--test-command", default=None, help="Safe regression command that must pass after repair.")
 @click.option("--tool", default="codex", show_default=True, type=click.Choice(["codex"]), help="Repair executor.")
@@ -37,8 +39,10 @@ EXIT_CODES = {
 @click.option("--out", "output", type=click.Path(file_okay=False, path_type=Path), default=None, help="Solve-session parent directory. Defaults outside the target Git repository.")
 @click.option("--json", "json_output", is_flag=True, help="Print the complete solve result as JSON.")
 def solve_command(
-    project_root: Path,
-    problem: str,
+    project_root: Path | None,
+    problem: str | None,
+    package: str | None,
+    resume: Path | None,
     reproduce_command: str | None,
     test_command: str | None,
     tool: str,
@@ -51,19 +55,33 @@ def solve_command(
     json_output: bool,
 ) -> None:
     """Reproduce, repair with Codex, and independently verify a Python or Node.js project problem."""
-    result = solve_project(
-        project_root,
-        problem=problem,
-        reproduce_command=reproduce_command,
-        test_command=test_command,
-        output_root=output,
-        tool=tool,
-        allow_repair=allow_repair,
-        allow_verification_changes=allow_verification_changes,
-        max_rounds=max_rounds,
-        command_timeout_seconds=command_timeout,
-        repair_timeout_seconds=repair_timeout,
-    )
+    if resume is not None:
+        if project_root is not None or problem is not None or package is not None or reproduce_command or test_command or output:
+            raise click.UsageError("--resume cannot be combined with a project, problem, package, commands, or --out.")
+        result = resume_solve_session(
+            resume,
+            allow_repair=allow_repair,
+            max_rounds=max_rounds,
+            command_timeout_seconds=command_timeout,
+            repair_timeout_seconds=repair_timeout,
+        )
+    else:
+        if project_root is None or not problem:
+            raise click.UsageError("PROJECT_ROOT and --problem are required unless --resume is used.")
+        result = solve_project(
+            project_root,
+            problem=problem,
+            reproduce_command=reproduce_command,
+            test_command=test_command,
+            output_root=output,
+            tool=tool,
+            allow_repair=allow_repair,
+            allow_verification_changes=allow_verification_changes,
+            max_rounds=max_rounds,
+            command_timeout_seconds=command_timeout,
+            repair_timeout_seconds=repair_timeout,
+            package=package,
+        )
     if json_output:
         click.echo(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
     else:

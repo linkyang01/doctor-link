@@ -84,7 +84,7 @@ Only after reviewing the generated solve session should you repeat the command w
 
 ## Full capability validation lab
 
-`examples/full-capability-lab/` is the executable acceptance example for the complete public CLI. It performs 71 real command invocations across all 63 routes and checks nine linked scenarios, including automatic-solve approval gating, concurrent evidence writes, multi-bug blocking, before/after repair, safe export and migration, secret redaction, integrity tampering, Adapter/Plugin execution, and governance/archive flows.
+`examples/full-capability-lab/` is the executable acceptance example for the complete public CLI. The current source performs 73 real command invocations across all 64 routes and checks 11 linked scenarios, including Python and JavaScript automatic-solve approval gating, multi-project solve benchmarking, concurrent evidence writes, multi-bug blocking, before/after repair, safe export and migration, secret redaction, integrity tampering, Adapter/Plugin execution, and governance/archive flows.
 
 After building a wheel and source distribution, run:
 

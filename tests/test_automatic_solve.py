@@ -14,7 +14,10 @@ from doctor_link.core.solve import (
     CodexRepairExecutor,
     RepairExecution,
     detect_project_type,
+    discover_workspace_packages,
     discover_solve_commands,
+    resolve_solve_target,
+    resume_solve_session,
     solve_project,
 )
 from doctor_link.entrypoint import main
@@ -47,6 +50,17 @@ class FailingRepairExecutor:
 
     def run(self, prompt: str, project_root: Path, timeout_seconds: int) -> RepairExecution:
         raise RuntimeError("provider crashed")
+
+
+class SimulatedInterruption(BaseException):
+    pass
+
+
+class InterruptingRepairExecutor:
+    name = "interrupting"
+
+    def run(self, prompt: str, project_root: Path, timeout_seconds: int) -> RepairExecution:
+        raise SimulatedInterruption("process stopped")
 
 
 def _run_git(root: Path, *args: str) -> str:
@@ -106,6 +120,35 @@ def _javascript_project(tmp_path: Path, *, broken: bool = True, scripts: bool = 
     _run_git(root, "add", ".")
     _run_git(root, "commit", "-m", "fixture")
     return root
+
+
+def _javascript_workspace(tmp_path: Path) -> tuple[Path, Path]:
+    root = tmp_path / "workspace"
+    package_root = root / "packages" / "calculator"
+    tests = package_root / "tests"
+    tests.mkdir(parents=True)
+    (root / "package.json").write_text(
+        json.dumps({"name": "workspace", "private": True, "workspaces": ["packages/*"]}),
+        encoding="utf-8",
+    )
+    (package_root / "package.json").write_text(
+        json.dumps({"name": "calculator", "private": True, "scripts": {"test": "node --test"}}),
+        encoding="utf-8",
+    )
+    (package_root / "calculator.js").write_text("exports.add = (a, b) => a - b;\n", encoding="utf-8")
+    (tests / "calculator.test.js").write_text(
+        "const test = require('node:test');\n"
+        "const assert = require('node:assert/strict');\n"
+        "const { add } = require('../calculator');\n"
+        "test('adds', () => assert.equal(add(2, 3), 5));\n",
+        encoding="utf-8",
+    )
+    _run_git(root, "init", "-b", "main")
+    _run_git(root, "config", "user.name", "Doctor link Test")
+    _run_git(root, "config", "user.email", "doctor-link@example.invalid")
+    _run_git(root, "add", ".")
+    _run_git(root, "commit", "-m", "fixture")
+    return root, package_root
 
 
 def _check_command() -> str:
@@ -217,6 +260,123 @@ def test_javascript_without_test_script_falls_back_to_node_test(tmp_path: Path) 
     root = _javascript_project(tmp_path, scripts=False)
 
     assert [item.command for item in discover_solve_commands(root)] == ["node --test"]
+
+
+def test_workspace_package_discovery_and_target_resolution(tmp_path: Path) -> None:
+    root, package_root = _javascript_workspace(tmp_path)
+
+    assert discover_workspace_packages(root) == ["packages/calculator"]
+    target, package_path, error = resolve_solve_target(root, "packages/calculator")
+    assert (target, package_path, error) == (package_root, "packages/calculator", None)
+
+    _, _, absolute_error = resolve_solve_target(root, package_root)
+    _, _, escape_error = resolve_solve_target(root, "../outside")
+    assert "relative" in str(absolute_error)
+    assert "inside" in str(escape_error)
+
+
+def test_workspace_root_requires_explicit_package_when_root_has_no_test(tmp_path: Path) -> None:
+    root, _ = _javascript_workspace(tmp_path)
+
+    result = solve_project(root, problem="calculator subtracts")
+
+    assert result.status == "blocked"
+    assert "workspace_package_required" in result.blockers
+    assert "packages/calculator" in result.warnings[0]
+
+
+def test_workspace_package_repair_runs_inside_selected_package(tmp_path: Path) -> None:
+    root, package_root = _javascript_workspace(tmp_path)
+
+    result = solve_project(
+        root,
+        package="packages/calculator",
+        problem="calculator subtracts",
+        output_root=tmp_path / "out",
+        allow_repair=True,
+        repair_executor=ScriptedRepairExecutor([_fix_javascript]),
+    )
+
+    assert result.status == "verified"
+    assert result.workspace_root == str(root)
+    assert result.project_root == str(package_root)
+    assert result.package_path == "packages/calculator"
+
+
+def test_interrupted_session_can_resume_with_fresh_approval(tmp_path: Path) -> None:
+    root = _python_project(tmp_path)
+    output = tmp_path / "out"
+
+    with pytest.raises(SimulatedInterruption):
+        solve_project(
+            root,
+            problem="add returns subtraction",
+            test_command=_check_command(),
+            output_root=output,
+            allow_repair=True,
+            repair_executor=InterruptingRepairExecutor(),
+        )
+
+    session_dir = next(output.iterdir())
+    stored = json.loads((session_dir / "solve-session.json").read_text(encoding="utf-8"))
+    assert stored["status"] == "repairing"
+    assert stored["rounds"] == []
+
+    approval = resume_solve_session(session_dir)
+    assert approval.status == "approval_required"
+
+    resumed = resume_solve_session(
+        session_dir,
+        allow_repair=True,
+        repair_executor=ScriptedRepairExecutor([_fix]),
+    )
+    assert resumed.status == "verified"
+    assert len(resumed.rounds) == 1
+
+
+def test_resume_blocks_when_original_repair_branch_is_not_checked_out(tmp_path: Path) -> None:
+    root = _python_project(tmp_path)
+    output = tmp_path / "out"
+    with pytest.raises(SimulatedInterruption):
+        solve_project(
+            root,
+            problem="add returns subtraction",
+            test_command=_check_command(),
+            output_root=output,
+            allow_repair=True,
+            repair_executor=InterruptingRepairExecutor(),
+        )
+    session_dir = next(output.iterdir())
+    _run_git(root, "switch", "main")
+
+    resumed = resume_solve_session(session_dir, allow_repair=True, repair_executor=ScriptedRepairExecutor([_fix]))
+
+    assert resumed.status == "blocked"
+    assert "resume_branch_mismatch" in resumed.blockers
+
+
+def test_resume_blocks_when_protected_input_changed_during_interruption(tmp_path: Path) -> None:
+    root = _javascript_project(tmp_path)
+    output = tmp_path / "out"
+    with pytest.raises(SimulatedInterruption):
+        solve_project(
+            root,
+            problem="addition subtracts",
+            output_root=output,
+            allow_repair=True,
+            repair_executor=InterruptingRepairExecutor(),
+        )
+    session_dir = next(output.iterdir())
+    _tamper_javascript_contract(root)
+
+    resumed = resume_solve_session(
+        session_dir,
+        allow_repair=True,
+        repair_executor=ScriptedRepairExecutor([_fix_javascript]),
+    )
+
+    assert resumed.status == "blocked"
+    assert "verification_inputs_modified" in resumed.blockers
 
 
 @pytest.mark.skipif(shutil.which("npm") is None, reason="npm is required for the Node.js solve integration")

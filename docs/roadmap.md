@@ -15,6 +15,7 @@ This Doctor link roadmap summarizes completed phases and planned future work.
 ## In progress
 
 - P5: Productization and Release Readiness
+- v0.4.0: [Real-project reliability](roadmap/v0.4.0-real-project-reliability.md), including monorepo targeting, interrupted-session recovery, and repeatable solve benchmarks
 
 ## Planned
 
