@@ -1,12 +1,12 @@
 # Doctor link Project Status
 
-Status date: 2026-07-13
+Status date: 2026-07-14
 
 ## Current source development
 
-The post-`v0.2.0` source extends automatic solve to Node.js JavaScript and TypeScript projects while preserving the same approval, branch isolation, protected-input, bounded-round, and independent-verification contract. It detects `package.json` or JavaScript/TypeScript source roots, selects npm, pnpm, Yarn, or Bun from package metadata and lockfiles, and falls back to `node --test` for compatible test files.
+Version `v0.3.0` extends automatic solve to Node.js JavaScript and TypeScript projects while preserving the same approval, branch isolation, protected-input, bounded-round, and independent-verification contract. It detects `package.json` or JavaScript/TypeScript source roots, selects npm, pnpm, Yarn, or Bun from package metadata and lockfiles, and falls back to `node --test` for compatible test files.
 
-New regressions cover real npm execution, one- and multi-round repair, test tampering, package-script and runner-configuration weakening, missing toolchains, baseline timeouts, Windows package-manager launcher resolution, invalid command-output bytes, empty commands, and operating-system launch failures. The `v0.3.0` local candidate passed 339 tests at 85.48% branch-aware coverage, all local build/security/repository validation gates, and the installed-wheel lab across 63 routes, 72 invocations, and ten scenarios. A live Node.js inventory repair changed one production file, converted two failures into three passing tests in one Codex round, and preserved the package and test hashes. GitHub Actions run `29263187097` passed all ten Python 3.10–3.14, security, package, Ubuntu, macOS, and Windows jobs for code commit `c9426e7`. Merge, tag, and publication remain pending; see [the detailed validation report](validation/javascript-typescript-solve-validation.md). The published `v0.2.0` evidence below remains historical and unchanged.
+New regressions cover real npm execution, one- and multi-round repair, test tampering, package-script and runner-configuration weakening, missing toolchains, baseline timeouts, Windows package-manager launcher resolution, invalid command-output bytes, empty commands, and operating-system launch failures. Version `v0.3.0` passed 339 tests at 85.48% branch-aware coverage, all local build/security/repository validation gates, and the installed-wheel lab across 63 routes, 72 invocations, and ten scenarios. A live Node.js inventory repair changed one production file, converted two failures into three passing tests in one Codex round, and preserved the package and test hashes. Final PR run `29299016223` passed all ten Python 3.10–3.14, security, package, Ubuntu, macOS, and Windows jobs. PR `#147` merged as `e0224cc`; release workflow `29299367180` created the immutable `v0.3.0` tag and published both assets with PyPI disabled. See [the detailed validation report](validation/javascript-typescript-solve-validation.md). The published `v0.2.0` evidence below remains historical and unchanged.
 
 ## Published automatic-solve release
 

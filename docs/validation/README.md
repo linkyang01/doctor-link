@@ -5,10 +5,12 @@ This directory contains the evidence, checklists, certificates, and release-stat
 ## Current status
 
 ```text
-Local v0.3.0 candidate validation: passed (2026-07-13)
+Local v0.3.0 validation: passed (2026-07-13)
 v0.3.0 cloud validation: 10/10 jobs passed (run 29263187097, code commit c9426e7)
 Expanded Python 3.10-3.14 candidate-head validation: passed
-v0.3.0 merge / tag / release: pending
+Final PR head validation: 10/10 jobs passed (run 29299016223, code commit 45f3d52)
+v0.3.0 merge: completed (commit e0224cc)
+GitHub Release v0.3.0: published by workflow 29299367180 (2026-07-14)
 Local repaired-source validation: passed (2026-07-13)
 GitHub Actions cloud validation: passed (PR #145)
 Current certification matrix: 8/8 jobs passed (run 29256743976)
@@ -22,7 +24,7 @@ PyPI publication: not performed
 
 - [Validation evidence index](validation-evidence-index.md) — exact commits, workflow runs, jobs, commands, results, historical evidence, and interpretation boundaries.
 - [JavaScript/TypeScript solve validation](javascript-typescript-solve-validation.md) — local `v0.3.0` candidate regressions, live repair evidence, hashes, and honest limits.
-- [v0.3.0 candidate release notes](v0.3.0-release-notes.md) — prepared release contents; not proof that the version has been published.
+- [v0.3.0 release notes](v0.3.0-release-notes.md) — published release contents and validation contract.
 - [Cloud validation certificate](cloud-validation-certificate.md) — scope certified by the current GitHub Actions run.
 - [100-point quality scorecard](local-quality-scorecard.md) — weighted repository-readiness rubric and receipts.
 - [Release checklist](release-candidate-checklist.md) — completed engineering, merge, and GitHub publication gates.

@@ -1,8 +1,8 @@
 # JavaScript/TypeScript Automatic Solve Validation
 
 - Validation date: 2026-07-13
-- Candidate version: `0.3.0`
-- Status: expanded local and Python 3.10–3.14 cloud validation passed; merge and publication pending
+- Released version: `0.3.0`
+- Status: expanded local, Python 3.10–3.14 cloud, final-head, and GitHub Release validation passed
 
 ## Scope
 
@@ -107,10 +107,12 @@ The protected hashes were identical before and after repair:
 
 The Windows job directly exercised the real npm repair and verification-input protection cases that exposed the original launcher-resolution defect.
 
+Final PR head `45f3d52` passed the same ten-job matrix in [run `29299016223`](https://github.com/linkyang01/doctor-link/actions/runs/29299016223). PR `#147` merged as `e0224cc`, and [release workflow `29299367180`](https://github.com/linkyang01/doctor-link/actions/runs/29299367180) rebuilt, installed, and validated the distributions before publishing [GitHub Release `v0.3.0`](https://github.com/linkyang01/doctor-link/releases/tag/v0.3.0). PyPI publication was disabled.
+
 ## Honest limits
 
 - The live repair used Node.js `26.0.0`, npm `11.12.1`, and the existing authenticated Codex CLI.
 - npm and `node --test` executed locally. pnpm, Yarn, and Bun selection is covered by automated discovery regressions but was not runtime-tested locally because those executables were not all installed.
 - TypeScript is detected and its project test command can be executed, but Doctor link does not transpile TypeScript or install a runner; the repository must provide its own working toolchain.
 - Mixed-language monorepos should run from the target package root and use explicit commands when root-level discovery is ambiguous.
-- The candidate is not merged, tagged, or published. A successful PR run certifies only the named commit and configured CI environments, not arbitrary customer or production environments.
+- The release evidence certifies only the named commits, artifacts, and configured CI environments, not arbitrary customer or production environments.

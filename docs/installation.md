@@ -2,7 +2,7 @@
 
 Doctor link is a Python CLI project. This guide explains how to clone the repository, install it locally, run the CLI, and validate that the project works on a local machine.
 
-Version `0.2.0` is available from the authorized [GitHub Release](https://github.com/linkyang01/doctor-link/releases/tag/v0.2.0). The current repository source identifies as the unreleased `0.3.0` candidate; build it locally only when you intentionally want to validate the candidate before publication. PR `#145` passed Python 3.10–3.12 and Ubuntu/macOS/Windows validation before the `v0.2.0` publication. Doctor link is not published on PyPI, so `pip install doctor-link==0.2.0` or `0.3.0` from PyPI is not supported.
+Version `0.3.0` is available from the authorized [GitHub Release](https://github.com/linkyang01/doctor-link/releases/tag/v0.3.0). Download its wheel or source archive from that page; Doctor link is not published on PyPI, so `pip install doctor-link==0.3.0` from PyPI is not supported.
 
 ## 1. Requirements
 
@@ -28,7 +28,7 @@ Recommended Python versions:
 - Python 3.13
 - Python 3.14
 
-The current candidate CI is configured to validate Python 3.10 through 3.14. Local validation should use one of these versions.
+The `v0.3.0` CI and release workflow validated Python 3.10 through 3.14. Local use should select one of these versions.
 
 ## 2. Clone the repository
 

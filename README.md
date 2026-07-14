@@ -27,9 +27,9 @@ Doctor link does not replace Codex, Cursor, Aider, OpenHands, Continue, Cline, W
 
 ## Verified status
 
-Latest published version: [`v0.2.0`](https://github.com/linkyang01/doctor-link/releases/tag/v0.2.0), published on 2026-07-13.
+Latest published version: [`v0.3.0`](https://github.com/linkyang01/doctor-link/releases/tag/v0.3.0), published on 2026-07-14.
 
-The current source is the unreleased `v0.3.0` candidate. Its JavaScript/TypeScript automatic-solve and runtime-resilience work has passed 339 local tests, 85.48% branch-aware coverage, an installed-wheel lab covering 63 routes through 72 invocations and ten complex scenarios, and a live protected-contract Node.js repair. [GitHub Actions run 29263187097](https://github.com/linkyang01/doctor-link/actions/runs/29263187097) passed all ten jobs for code commit `c9426e7`, covering Python 3.10–3.14, security, packaging, Ubuntu, macOS, and Windows. Merge, tag creation, and release publication are still pending. See the [JavaScript/TypeScript validation report](docs/validation/javascript-typescript-solve-validation.md).
+Version `v0.3.0` adds JavaScript/TypeScript automatic solve and runtime resilience. It passed 339 local tests, 85.48% branch-aware coverage, an installed-wheel lab covering 63 routes through 72 invocations and ten complex scenarios, and a live protected-contract Node.js repair. [GitHub Actions run 29299016223](https://github.com/linkyang01/doctor-link/actions/runs/29299016223) passed the final ten-job PR matrix covering Python 3.10–3.14, security, packaging, Ubuntu, macOS, and Windows. PR [#147](https://github.com/linkyang01/doctor-link/pull/147) merged as commit `e0224cc`, and [release workflow 29299367180](https://github.com/linkyang01/doctor-link/actions/runs/29299367180) published the immutable `v0.3.0` tag and both distribution assets. PyPI publication remained disabled. See the [JavaScript/TypeScript validation report](docs/validation/javascript-typescript-solve-validation.md).
 
 The verified automatic problem-solving release in [PR #145](https://github.com/linkyang01/doctor-link/pull/145) passed the complete repository validation matrix on 2026-07-13:
 
