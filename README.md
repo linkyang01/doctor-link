@@ -28,9 +28,9 @@ Doctor link does not replace Codex, Cursor, Aider, OpenHands, Continue, Cline, W
 
 ## Verified status
 
-Latest published version: [`v0.5.0`](https://github.com/linkyang01/doctor-link/releases/tag/v0.5.0), published on 2026-07-14.
+Latest published version: [`v0.5.1`](https://github.com/linkyang01/doctor-link/releases/tag/v0.5.1), published on 2026-07-14.
 
-Version `v0.5.0` adds natural-language reproduction discovery, a guided `doctor-link assist` entrypoint with a local browser result, and a 24-project Python/Node.js benchmark corpus. It passed 363 tests at 85.06% branch-aware coverage, all 66 installed CLI routes through 75 invocations and twelve complex scenarios, and Python 3.10–3.14 plus Ubuntu, macOS, Windows, packaging, and security gates. PR [#150](https://github.com/linkyang01/doctor-link/pull/150) merged as `ac5c2f5`; [release workflow 29305612221](https://github.com/linkyang01/doctor-link/actions/runs/29305612221) published the immutable GitHub assets, and [Trusted Publishing workflow 29324916796](https://github.com/linkyang01/doctor-link/actions/runs/29324916796) published the same distributions to PyPI with attestations.
+Version `v0.5.1` is the distribution-consistency patch for the v0.5 feature set: natural-language reproduction discovery, the guided `doctor-link assist` entrypoint, and the 24-project Python/Node.js benchmark corpus. The v0.5 line passed 365 tests, all 66 installed CLI routes through 75 invocations and twelve complex scenarios, and Python 3.10–3.14 plus Ubuntu, macOS, Windows, packaging, security, Trusted Publishing, and clean pipx installation gates.
 
 The verified automatic problem-solving release in [PR #145](https://github.com/linkyang01/doctor-link/pull/145) passed the complete repository validation matrix on 2026-07-13:
 
@@ -87,7 +87,7 @@ Current support scope:
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install doctor-link==0.5.0
+python -m pip install doctor-link==0.5.1
 doctor-link --version
 doctor-link preflight . --json
 ```

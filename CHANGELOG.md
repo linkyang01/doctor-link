@@ -8,6 +8,22 @@ Doctor link follows semantic versioning. Public release publishing requires expl
 
 No unreleased changes are currently recorded.
 
+## [0.5.1] - 2026-07-14
+
+Distribution and public-documentation consistency patch.
+
+### Changed
+
+- PyPI and `pipx` are now the primary public installation path, with the immutable GitHub Release retained as a fallback.
+- README, bilingual entrypoints, installation guidance, project status, and release evidence consistently describe the published v0.5 feature set and current support boundary.
+- PyPI publication uses a dedicated Trusted Publishing workflow with a protected GitHub environment, short-lived OIDC credentials, and digital attestations instead of a stored API token.
+
+### Validation
+
+- 365 automated tests pass locally before release preparation.
+- A clean `pipx install doctor-link==0.5.0` from PyPI returned the expected version and passed preflight with zero blockers and zero warnings.
+- The v0.5.1 release must repeat the Python 3.10-3.14, cross-platform, security, package, installed-wheel, GitHub Release, PyPI, and clean pipx gates.
+
 ## [0.3.0] - 2026-07-14
 
 Verified automatic repair for Node.js JavaScript and TypeScript projects.

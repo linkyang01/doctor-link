@@ -6,6 +6,8 @@ This guide takes Doctor link from a clean source checkout to a useful result on 
 
 Requirements: Git and Python 3.10 through 3.14.
 
+Current release: `v0.5.1`.
+
 ```bash
 python -m venv .venv
 ```
@@ -26,7 +28,7 @@ Install and confirm the CLI:
 
 ```bash
 python -m pip install --upgrade pip
-python -m pip install https://github.com/linkyang01/doctor-link/releases/download/v0.5.0/doctor_link-0.5.0-py3-none-any.whl
+python -m pip install doctor-link==0.5.1
 doctor-link --version
 doctor-link preflight . --json
 ```

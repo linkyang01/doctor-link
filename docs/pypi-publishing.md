@@ -1,6 +1,6 @@
 # PyPI Trusted Publishing
 
-Doctor link publishes to PyPI only after explicit authorization for an exact version. The repository uses PyPI Trusted Publishing instead of a stored API token. Version `0.5.0` was first published by workflow `29324916796` on 2026-07-14.
+Doctor link publishes to PyPI only after explicit authorization for an exact version. The repository uses PyPI Trusted Publishing instead of a stored API token. Version `0.5.0` was first published by workflow `29324916796` on 2026-07-14; `0.5.1` is the first documentation-consistent patch release.
 
 ## One-time PyPI account setup
 
@@ -25,7 +25,7 @@ Create the GitHub Actions environment `pypi`. Restrict deployment to the default
 Run the `Publish GitHub release to PyPI` workflow with:
 
 ```text
-tag: v0.5.0
+tag: v0.5.1
 confirmation: publish-doctor-link-to-pypi
 ```
 
@@ -39,7 +39,7 @@ After the workflow succeeds:
 
 ```bash
 python -m pip index versions doctor-link
-pipx install doctor-link==0.5.0
+pipx install doctor-link==0.5.1
 doctor-link --version
 ```
 
