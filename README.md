@@ -128,6 +128,8 @@ doctor-link solve /path/to/node-project \
 
 See [Automatic Solve with Codex](docs/automatic-solve.md) for command discovery, status codes, evidence files, and rollback.
 
+For an npm, Yarn, or pnpm workspace, keep the repository root and select a package with `--package packages/name`. Interrupted repair receipts can continue with `doctor-link solve --resume SESSION_DIR --allow-repair`. Repeatable multi-project suites use `doctor-link benchmark benchmark.yml --out DoctorReports/benchmark` and report reproduction and repair-success metrics.
+
 ## Typical diagnostic workflow
 
 ```text

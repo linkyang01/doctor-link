@@ -27,6 +27,7 @@ CAPABILITIES = {
     "archive policy-check",
     "assert",
     "assertion-check",
+    "benchmark",
     "ci report",
     "collect",
     "compare",
@@ -417,6 +418,41 @@ def run_validation(executable: str, output: Path, dist_dir: Path | None = None) 
     if not {"package.json", "tests/calculator.test.js"}.issubset(javascript_protected):
         raise RuntimeError("Automatic solve did not protect the JavaScript acceptance contract")
     runner.scenario_checks.append("javascript-solve-discovers-npm-and-gates-repair")
+    benchmark_manifest = output / "solve-benchmark.json"
+    benchmark_manifest.write_text(
+        json.dumps(
+            {
+                "schema": "doctor-link-benchmark-v1",
+                "scenarios": [
+                    {
+                        "id": "python-preview",
+                        "project_root": str(automatic_solve),
+                        "problem": "Checkout duplicates charges",
+                        "expected_status": "approval_required",
+                    },
+                    {
+                        "id": "javascript-preview",
+                        "project_root": str(javascript_solve),
+                        "problem": "JavaScript addition subtracts",
+                        "expected_status": "approval_required",
+                    },
+                ],
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    runner.run(
+        "benchmark",
+        "benchmark",
+        benchmark_manifest,
+        "--out",
+        output / "solve-benchmark",
+        "--json",
+        contains='"reproduction_rate": 1.0',
+    )
+    runner.scenario_checks.append("multi-project benchmark measures reproducible solve outcomes")
 
     before_run = runner.run(
         "diagnose before",

@@ -20,13 +20,21 @@ Changing a test until it passes is also not sufficient. Protected verification i
 ## Prerequisites
 
 - Python 3.10 or later;
-- a Python project or Node.js JavaScript/TypeScript project at the Git repository root;
+- a Python project or Node.js JavaScript/TypeScript project at the Git repository root, or a selected package inside a JavaScript/TypeScript workspace;
 - Node.js and the package manager selected by the project when using the JavaScript/TypeScript path;
 - a clean Git working tree;
 - at least one executable reproduction or test command;
 - Codex CLI installed and authenticated for live repair.
 
-The current source supports Python and Node.js JavaScript/TypeScript projects. Other project types return `blocked` instead of falling through to an unverified generic repair. In a mixed-language monorepo, run `solve` from the relevant package root and provide explicit commands when repository-wide discovery would be ambiguous.
+The current source supports Python and Node.js JavaScript/TypeScript projects. Other project types return `blocked` instead of falling through to an unverified generic repair. For npm, Yarn, or pnpm workspaces, keep the Git repository root as `PROJECT_ROOT` and select a package with `--package`. Package paths must be relative, must remain inside the workspace, and are recorded in the session receipt.
+
+```bash
+doctor-link solve /path/to/workspace \
+  --package packages/checkout \
+  --problem "Concurrent updates lose one write"
+```
+
+If the workspace root has no unambiguous root test but declares packages, Doctor link blocks with `workspace_package_required` and lists discovered package candidates instead of accidentally running every nested test.
 
 ## Step 1: reproduce and preview
 
@@ -102,6 +110,34 @@ By default, solve evidence is placed outside the target Git repository at:
 ```
 
 Later rounds use `round-2/` and `round-3/`. Pass `--out <directory>` to select a different parent directory.
+
+If the process stops after the repair branch and receipt have been created, resume the same bounded session:
+
+```bash
+doctor-link solve --resume /path/to/solve-session --allow-repair
+```
+
+Resume requires fresh repair approval, the original repair branch, unchanged protected verification inputs, and at least one remaining round. A preview without `--allow-repair` does not overwrite the resumable receipt.
+
+## Multi-project benchmarks
+
+`doctor-link benchmark` runs repeatable solve scenarios and aggregates reproduction rate, repair success rate, duration, rounds, blockers, and expected-status matches:
+
+```yaml
+schema: doctor-link-benchmark-v1
+scenarios:
+  - id: checkout-preview
+    project_root: ../checkout
+    package: packages/api
+    problem: Checkout duplicates a charge on retry
+    expected_status: approval_required
+```
+
+```bash
+doctor-link benchmark benchmark.yml --out DoctorReports/benchmark --json
+```
+
+Paths are resolved relative to the manifest. Scenario IDs are constrained to safe filename characters. Repairs remain disabled unless the benchmark itself is run with `--allow-repair`; use disposable clean repositories before enabling that option.
 
 ## Status and exit codes
 

@@ -24,7 +24,7 @@ from doctor_link.core.safe_command_runner import (
 from doctor_link.core.test_matrix_runner import load_test_matrix
 
 
-SOLVE_SCHEMA = "doctor-link-solve-session-v1"
+SOLVE_SCHEMA = "doctor-link-solve-session-v2"
 SUPPORTED_PROJECT_TYPES = {"javascript", "python"}
 FINAL_STATUSES = {
     "approval_required",
@@ -154,6 +154,8 @@ class SolveResult:
     schema: str
     session_id: str
     project_root: str
+    workspace_root: str
+    package_path: str | None
     problem: str
     project_type: str
     tool: str
@@ -246,9 +248,11 @@ def solve_project(
     command_timeout_seconds: int = 120,
     repair_timeout_seconds: int = 900,
     repair_executor: RepairExecutor | None = None,
+    package: str | Path | None = None,
 ) -> SolveResult:
     """Reproduce, repair, and independently verify one bounded project problem."""
-    root = project_root.expanduser().resolve()
+    workspace_root = project_root.expanduser().resolve()
+    root, package_path, target_error = resolve_solve_target(workspace_root, package)
     clean_problem = problem.strip()
     session_id = _session_id(root, clean_problem)
     project_type = detect_project_type(root)
@@ -256,12 +260,17 @@ def solve_project(
         schema=SOLVE_SCHEMA,
         session_id=session_id,
         project_root=str(root),
+        workspace_root=str(workspace_root),
+        package_path=package_path,
         problem=clean_problem,
         project_type=project_type,
         tool=tool,
         explicit_user_approval=allow_repair,
         allow_verification_changes=allow_verification_changes,
     )
+
+    if target_error:
+        return _finish(result, "blocked", target_error, blocker="workspace_package_invalid")
 
     if not root.is_dir():
         return _finish(result, "blocked", "Project root does not exist.", blocker="project_root_missing")
@@ -284,7 +293,7 @@ def solve_project(
             blocker="verification_change_approval_requires_repair",
         )
 
-    git_state = _inspect_git(root)
+    git_state = _inspect_git(root, expected_root=workspace_root)
     result.original_branch = git_state.get("branch")
     if git_state.get("error"):
         return _finish(result, "blocked", str(git_state["error"]), blocker="git_repository_required")
@@ -302,7 +311,30 @@ def solve_project(
 
     commands = discover_solve_commands(root, reproduce_command=reproduce_command, test_command=test_command)
     result.commands = [item.to_dict() for item in commands]
+    workspace_packages = discover_workspace_packages(root) if package is None else []
+    if (
+        project_type == "javascript"
+        and workspace_packages
+        and reproduce_command is None
+        and test_command is None
+        and [item.command for item in commands] == ["node --test"]
+    ):
+        result.warnings.append("Workspace packages: " + ", ".join(workspace_packages))
+        return _finish(
+            result,
+            "blocked",
+            "The workspace root has no unambiguous test command. Select a package with --package.",
+            blocker="workspace_package_required",
+        )
     if not commands:
+        if project_type == "javascript" and workspace_packages and package is None:
+            result.warnings.append("Workspace packages: " + ", ".join(workspace_packages))
+            return _finish(
+                result,
+                "blocked",
+                "The workspace root has no unambiguous test command. Select a package with --package.",
+                blocker="workspace_package_required",
+            )
         return _finish(
             result,
             "blocked",
@@ -320,7 +352,7 @@ def solve_project(
 
     baseline = _run_solve_commands(root, commands, command_timeout_seconds)
     result.baseline = [item.to_dict() for item in baseline]
-    post_baseline_git = _inspect_git(root)
+    post_baseline_git = _inspect_git(root, expected_root=workspace_root)
     if post_baseline_git.get("dirty"):
         return _persist_and_finish(
             result,
@@ -392,7 +424,7 @@ def solve_project(
         )
 
     repair_branch = _repair_branch_name(clean_problem, session_id)
-    branch_result = run_command(["git", "switch", "-c", repair_branch], cwd=root, timeout_seconds=30)
+    branch_result = run_command(["git", "switch", "-c", repair_branch], cwd=workspace_root, timeout_seconds=30)
     if branch_result.returncode != 0:
         result.warnings.append(branch_result.stderr.strip())
         return _persist_and_finish(
@@ -406,10 +438,42 @@ def solve_project(
     result.repair_branch = repair_branch
 
     session_dir = _prepare_session_dir(result, output_root)
-    previous_verification = baseline
-    previous_message = ""
-    round_limit = min(3, max(1, max_rounds))
-    for round_number in range(1, round_limit + 1):
+    result.status = "repairing"
+    result.completed_at = None
+    _write_session_files(session_dir, result)
+    return _run_repair_rounds(
+        result,
+        root,
+        commands,
+        verification_snapshot,
+        executor,
+        output_root=output_root,
+        session_dir=session_dir,
+        start_round=1,
+        round_limit=min(3, max(1, max_rounds)),
+        command_timeout_seconds=command_timeout_seconds,
+        repair_timeout_seconds=repair_timeout_seconds,
+        previous_verification=baseline,
+    )
+
+
+def _run_repair_rounds(
+    result: SolveResult,
+    root: Path,
+    commands: list[SolveCommand],
+    verification_snapshot: dict[str, str],
+    executor: RepairExecutor,
+    *,
+    output_root: Path | None,
+    session_dir: Path,
+    start_round: int,
+    round_limit: int,
+    command_timeout_seconds: int,
+    repair_timeout_seconds: int,
+    previous_verification: list[SolveCommandResult],
+    previous_message: str = "",
+) -> SolveResult:
+    for round_number in range(start_round, round_limit + 1):
         round_dir = session_dir / f"round-{round_number}"
         round_dir.mkdir(parents=True, exist_ok=True)
         round_prompt = build_repair_prompt(
@@ -443,7 +507,7 @@ def solve_project(
         )
         verification = (
             _run_solve_commands(root, commands, command_timeout_seconds)
-            if not pre_verification_changes or allow_verification_changes
+            if not pre_verification_changes or result.allow_verification_changes
             else []
         )
         post_verification_changes = compare_verification_inputs(
@@ -475,7 +539,7 @@ def solve_project(
         result.rounds.append(solve_round.to_dict())
         _write_session_files(session_dir, result)
 
-        if input_changes and not allow_verification_changes:
+        if input_changes and not result.allow_verification_changes:
             result.blockers.append("verification_inputs_modified")
             changed_paths = ", ".join(item["path"] for item in input_changes[:8])
             if len(input_changes) > 8:
@@ -495,7 +559,7 @@ def solve_project(
         if checks_passed:
             result.next_steps.extend(
                 [
-                    f"Review the changes on branch `{repair_branch}`.",
+                    f"Review the changes on branch `{result.repair_branch}`.",
                     "Commit and push the repair only after reviewing the diff.",
                 ]
             )
@@ -538,6 +602,189 @@ def solve_project(
         f"Codex used {round_limit} repair round(s), but independent verification still fails.",
         session_dir=session_dir,
     )
+
+
+def resume_solve_session(
+    session_dir: Path,
+    *,
+    allow_repair: bool = False,
+    max_rounds: int = 3,
+    command_timeout_seconds: int = 120,
+    repair_timeout_seconds: int = 900,
+    repair_executor: RepairExecutor | None = None,
+) -> SolveResult:
+    """Continue an interrupted repair session without weakening its original contract."""
+    directory = session_dir.expanduser().resolve()
+    payload_path = directory / "solve-session.json"
+    try:
+        payload = json.loads(payload_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return _resume_error(directory, f"Solve session could not be read: {exc}", "resume_session_invalid")
+    if payload.get("schema") != SOLVE_SCHEMA:
+        return _resume_error(directory, "Solve session schema is not resumable by this version.", "resume_schema_unsupported")
+    stored = {key: value for key, value in payload.items() if key in SolveResult.__dataclass_fields__}
+    result = SolveResult(**stored)
+    result.output_dir = str(directory)
+    if not allow_repair:
+        return _finish(result, "approval_required", "Resume requires fresh explicit approval with --allow-repair.")
+    if result.status not in {"repairing", "failed"}:
+        return _persist_and_finish(
+            result,
+            None,
+            "blocked",
+            f"Session status {result.status!r} cannot be resumed.",
+            blocker="resume_status_invalid",
+            session_dir=directory,
+        )
+    root = Path(result.project_root).resolve()
+    if not root.is_dir():
+        return _persist_and_finish(
+            result,
+            None,
+            "blocked",
+            "The original project root no longer exists.",
+            blocker="project_root_missing",
+            session_dir=directory,
+        )
+    git_state = _inspect_git(root, expected_root=Path(result.workspace_root).resolve())
+    if git_state.get("error") or git_state.get("branch") != result.repair_branch:
+        return _persist_and_finish(
+            result,
+            None,
+            "blocked",
+            "Resume requires the original repair branch to be checked out.",
+            blocker="resume_branch_mismatch",
+            session_dir=directory,
+        )
+    commands = [SolveCommand(**item) for item in result.commands]
+    snapshot = dict(result.verification_input_hashes)
+    input_changes = compare_verification_inputs(
+        snapshot,
+        snapshot_verification_inputs(root, commands),
+        round_number=len(result.rounds) + 1,
+        detected_at="before_resume",
+    )
+    if input_changes and not result.allow_verification_changes:
+        result.verification_input_changes.extend(input_changes)
+        return _persist_and_finish(
+            result,
+            None,
+            "blocked",
+            "Protected verification inputs changed before resume.",
+            blocker="verification_inputs_modified",
+            session_dir=directory,
+        )
+    start_round = len(result.rounds) + 1
+    round_limit = min(3, max(1, max_rounds))
+    if start_round > round_limit:
+        return _persist_and_finish(
+            result,
+            None,
+            "blocked",
+            "The session has no remaining repair rounds.",
+            blocker="resume_round_limit_exhausted",
+            session_dir=directory,
+        )
+    executor = repair_executor or CodexRepairExecutor()
+    if isinstance(executor, CodexRepairExecutor) and not executor.available():
+        return _persist_and_finish(
+            result,
+            None,
+            "blocked",
+            "Codex CLI was not found. Install or expose it before resuming.",
+            blocker="codex_cli_missing",
+            session_dir=directory,
+        )
+    previous_payload = result.rounds[-1]["verification"] if result.rounds else result.baseline
+    previous_verification = [SolveCommandResult(**item) for item in previous_payload]
+    previous_message = result.rounds[-1]["repair"].get("final_message", "") if result.rounds else ""
+    result.status = "repairing"
+    result.completed_at = None
+    result.explicit_user_approval = True
+    _write_session_files(directory, result)
+    return _run_repair_rounds(
+        result,
+        root,
+        commands,
+        snapshot,
+        executor,
+        output_root=None,
+        session_dir=directory,
+        start_round=start_round,
+        round_limit=round_limit,
+        command_timeout_seconds=command_timeout_seconds,
+        repair_timeout_seconds=repair_timeout_seconds,
+        previous_verification=previous_verification,
+        previous_message=previous_message,
+    )
+
+
+def _resume_error(directory: Path, summary: str, blocker: str) -> SolveResult:
+    result = SolveResult(
+        schema=SOLVE_SCHEMA,
+        session_id="invalid",
+        project_root="",
+        workspace_root="",
+        package_path=None,
+        problem="",
+        project_type="unsupported",
+        tool="codex",
+        output_dir=str(directory),
+    )
+    return _finish(result, "blocked", summary, blocker=blocker)
+
+
+def resolve_solve_target(workspace_root: Path, package: str | Path | None) -> tuple[Path, str | None, str | None]:
+    """Resolve an optional workspace package while preventing path escape."""
+    workspace = workspace_root.expanduser().resolve()
+    if package is None:
+        return workspace, None, None
+    raw = Path(package)
+    if raw.is_absolute():
+        return workspace, None, "--package must be a path relative to the workspace root."
+    target = (workspace / raw).resolve()
+    try:
+        relative = target.relative_to(workspace)
+    except ValueError:
+        return workspace, None, "--package must stay inside the workspace root."
+    if not target.is_dir():
+        return target, relative.as_posix(), f"Workspace package does not exist: {relative.as_posix()}"
+    return target, relative.as_posix(), None
+
+
+def discover_workspace_packages(project_root: Path) -> list[str]:
+    """Return package directories declared by npm/Yarn/pnpm-style workspaces."""
+    root = project_root.expanduser().resolve()
+    patterns: list[str] = []
+    package_path = root / "package.json"
+    if package_path.is_file():
+        try:
+            payload = json.loads(package_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            payload = {}
+        workspaces = payload.get("workspaces") if isinstance(payload, dict) else None
+        if isinstance(workspaces, list):
+            patterns.extend(str(item) for item in workspaces)
+        elif isinstance(workspaces, dict) and isinstance(workspaces.get("packages"), list):
+            patterns.extend(str(item) for item in workspaces["packages"])
+    pnpm_workspace = root / "pnpm-workspace.yaml"
+    if pnpm_workspace.is_file():
+        try:
+            import yaml
+
+            payload = yaml.safe_load(pnpm_workspace.read_text(encoding="utf-8")) or {}
+        except (OSError, yaml.YAMLError):
+            payload = {}
+        if isinstance(payload, dict) and isinstance(payload.get("packages"), list):
+            patterns.extend(str(item) for item in payload["packages"])
+    packages: set[str] = set()
+    for pattern in patterns:
+        if pattern.startswith("!") or Path(pattern).is_absolute() or ".." in Path(pattern).parts:
+            continue
+        for candidate in root.glob(pattern):
+            if candidate.is_dir() and (candidate / "package.json").is_file() and "node_modules" not in candidate.parts:
+                packages.add(candidate.relative_to(root).as_posix())
+    return sorted(packages)
 
 
 def detect_project_type(project_root: Path) -> str:
@@ -877,12 +1124,13 @@ def _checks_passed(commands: list[SolveCommand], results: list[SolveCommandResul
     )
 
 
-def _inspect_git(root: Path) -> dict[str, Any]:
+def _inspect_git(root: Path, *, expected_root: Path | None = None) -> dict[str, Any]:
     top = run_command(["git", "rev-parse", "--show-toplevel"], cwd=root, timeout_seconds=15)
     if top.returncode != 0:
         return {"error": "Automatic repair requires a Git repository."}
     top_level = Path(top.stdout.strip()).resolve()
-    if top_level != root:
+    expected = (expected_root or root).resolve()
+    if top_level != expected:
         return {"error": f"Use the Git repository root as PROJECT_ROOT: {top_level}"}
     branch = run_command(["git", "branch", "--show-current"], cwd=root, timeout_seconds=15)
     status = run_command(["git", "status", "--porcelain"], cwd=root, timeout_seconds=15)
@@ -977,6 +1225,8 @@ def _summary_markdown(result: SolveResult) -> str:
         f"- Session: `{result.session_id}`",
         f"- Status: `{result.status}`",
         f"- Project: `{result.project_root}`",
+        f"- Workspace: `{result.workspace_root}`",
+        f"- Package: `{result.package_path or 'workspace root'}`",
         f"- Project type: `{result.project_type}`",
         f"- Tool: `{result.tool}`",
         f"- Explicit repair approval: `{str(result.explicit_user_approval).lower()}`",

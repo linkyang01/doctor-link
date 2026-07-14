@@ -128,9 +128,17 @@ doctor-link solve /path/to/project \
 
 The current source supports Python and Node.js JavaScript/TypeScript projects. It requires a clean Git repository and either explicit commands, configured reproduction/test catalogs, a discoverable Python `tests/` directory, a usable JavaScript package test script, or JavaScript test files compatible with `node --test`. Without `--allow-repair`, the command may reproduce the problem and write a prompt preview, but it does not create a branch, invoke Codex, or edit code. See [Automatic Solve with Codex](automatic-solve.md).
 
-JavaScript/TypeScript test discovery respects `packageManager` and lockfiles. It selects `pnpm test`, `yarn test`, `bun run test`, or `npm test`; the default npm placeholder is ignored. Supply `--test-command` explicitly for custom runners or ambiguous monorepos.
+JavaScript/TypeScript test discovery respects `packageManager` and lockfiles. It selects `pnpm test`, `yarn test`, `bun run test`, or `npm test`; the default npm placeholder is ignored. In npm, Yarn, or pnpm workspaces, use `--package packages/name`; ambiguous roots are blocked and return discovered candidates. Resume an interrupted repair with `doctor-link solve --resume SESSION_DIR --allow-repair`.
 
 By default, `solve` hash-protects tests, package manifests and lockfiles, test configuration, configured reproduction/test catalogs, and directly referenced verification scripts. If Codex changes any protected input, Doctor link returns `blocked` with `verification_inputs_modified`, even when the changed checks pass. `--allow-verification-changes` is an explicit exception that is valid only with `--allow-repair`; passing checks then return `review_required` (exit 6), never `verified`.
+
+Run repeatable scenarios across projects with a versioned YAML or JSON manifest:
+
+```bash
+doctor-link benchmark benchmark.yml --out DoctorReports/benchmark --json
+```
+
+The benchmark reports actual failed-check reproduction, repair success, rounds, duration, blockers, and expected-status matches. Repairs are disabled unless the benchmark receives `--allow-repair`.
 
 ## CI and distribution readiness
 
