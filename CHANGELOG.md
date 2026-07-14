@@ -26,6 +26,7 @@ Doctor link follows semantic versioning. Public release publishing requires expl
 - `doctor-link explain` clusters failing check output into advisory source-file root-cause hints without editing code (Issue #159).
 - `assist --interactive` prompts before each reproduction candidate (run / skip / quit remaining) without rewriting the problem (Issue #160).
 - Guided diagnostic reports now include expected-vs-actual assertion diffs, longer failure evidence, failure patterns, and candidate outcome counts (Issue #160).
+- Offline failure-mode validation harness covering multi-file repair, wrong AI fix → `failed`, `review_required`, off-by-one assist reproduction, and public Node.js pin checks (Issue #161).
 
 ## [0.5.1] - 2026-07-14
 

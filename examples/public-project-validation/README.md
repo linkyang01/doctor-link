@@ -8,4 +8,4 @@ python scripts/validate_public_projects.py \
   --out /tmp/doctor-link-public-project-validation
 ```
 
-Passing means every repository was cloned at its declared immutable commit and Doctor link returned a successful preflight report with no blockers. This complements the 24-scenario fault corpus; it does not claim that every upstream project's full test suite was executed.
+Passing means every repository was cloned at its declared immutable commit and Doctor link returned a successful preflight report with no blockers. This complements the 24-scenario fault corpus and the offline [failure-mode harness](../failure-mode-validation/README.md). The pin set intentionally includes Node.js projects (`p-limit`, `chalk`, `axios`) as public demo targets for external users. It does not claim that every upstream project's full test suite was executed.
