@@ -1,0 +1,74 @@
+{
+  "schema": "doctor-link-public-project-validation-result-v1",
+  "generated_at": "2026-07-14T15:06:44.397670+00:00",
+  "project_count": 6,
+  "passed_count": 6,
+  "results": [
+    {
+      "name": "click",
+      "language": "python",
+      "ref": "8.3.0",
+      "commit": "00fadb8904387158ce6e9aa1573be770446895c1",
+      "passed": true,
+      "status": "warning",
+      "blocking_count": 0,
+      "warning_count": 3,
+      "checks": 7
+    },
+    {
+      "name": "requests",
+      "language": "python",
+      "ref": "v2.32.5",
+      "commit": "b25c87d7cb8d6a18a37fa12442b5f883f9e41741",
+      "passed": true,
+      "status": "warning",
+      "blocking_count": 0,
+      "warning_count": 3,
+      "checks": 7
+    },
+    {
+      "name": "pydantic",
+      "language": "python",
+      "ref": "v2.12.5",
+      "commit": "bd2d0dd0137dfa1a8fdff2529b9dfb1547980150",
+      "passed": true,
+      "status": "warning",
+      "blocking_count": 0,
+      "warning_count": 3,
+      "checks": 7
+    },
+    {
+      "name": "p-limit",
+      "language": "javascript",
+      "ref": "v7.2.0",
+      "commit": "7bdd25c703337360236722ed7d4da5ffadcb7a08",
+      "passed": true,
+      "status": "warning",
+      "blocking_count": 0,
+      "warning_count": 3,
+      "checks": 7
+    },
+    {
+      "name": "chalk",
+      "language": "javascript",
+      "ref": "v5.6.2",
+      "commit": "51557784b829c87ff8d138206598764f2eb957b1",
+      "passed": true,
+      "status": "warning",
+      "blocking_count": 0,
+      "warning_count": 3,
+      "checks": 7
+    },
+    {
+      "name": "axios",
+      "language": "javascript",
+      "ref": "v1.13.2",
+      "commit": "08b84b52d5835d0c7b81049c365c3d271ade8bff",
+      "passed": true,
+      "status": "warning",
+      "blocking_count": 0,
+      "warning_count": 3,
+      "checks": 7
+    }
+  ]
+}

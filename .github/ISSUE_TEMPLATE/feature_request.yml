@@ -1,0 +1,29 @@
+name: Feature request
+description: Propose a concrete improvement grounded in a user workflow.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    attributes:
+      label: User goal
+      description: What outcome is the user trying to achieve?
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Current obstacle
+      description: What happens today, and why is it insufficient?
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Proposed behavior
+      description: Describe the smallest useful product change and its acceptance criteria.
+    validations:
+      required: true
+  - type: checkboxes
+    attributes:
+      label: Product boundary
+      options:
+        - label: This request preserves local-first, explicit-approval, and privacy-gate behavior.
+          required: true

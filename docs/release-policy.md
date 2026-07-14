@@ -71,7 +71,7 @@ Before requesting a release:
 
 - the candidate commit is identified;
 - the PR is reviewed and merged unless a different ref is explicitly authorized;
-- Python 3.10, 3.11, and 3.12 jobs pass;
+- Python 3.10 through 3.14 jobs pass;
 - Ubuntu, macOS, and Windows smoke jobs pass;
 - Ruff and branch-aware coverage pass;
 - Bandit and dependency audit pass;
@@ -118,6 +118,6 @@ After publication, verify:
 
 ## Current boundary
 
-Version `0.3.0` is an unreleased source candidate. Local validation has passed, but its cloud validation, merge, immutable tag, GitHub Release, and registry publication states must be established separately.
+Version `0.5.1` is the current published release. It was locally and cloud validated, merged through PR `#154` as commit `ed7d2400036c862db198e9c269507d503ef606f6`, and published as [GitHub Release `v0.5.1`](https://github.com/linkyang01/doctor-link/releases/tag/v0.5.1) by workflow [29325885785](https://github.com/linkyang01/doctor-link/actions/runs/29325885785). Trusted Publishing workflow [29325997537](https://github.com/linkyang01/doctor-link/actions/runs/29325997537) published identical artifacts to [PyPI](https://pypi.org/project/doctor-link/0.5.1/). A clean public-index `pipx install doctor-link==0.5.1` and installed CLI preflight passed.
 
-Version `0.2.0` was locally and cloud validated, merged through PR `#145` as commit `40a547c`, and published as [GitHub Release `v0.2.0`](https://github.com/linkyang01/doctor-link/releases/tag/v0.2.0) on 2026-07-13. Release workflow [29256955705](https://github.com/linkyang01/doctor-link/actions/runs/29256955705) installed the final wheel, passed the full capability lab, created the immutable tag, and uploaded the wheel and source distribution. PyPI publication was disabled and was not performed.
+Future source changes, tags, GitHub Releases, and registry publications remain separate states and require the gates and explicit authorization above.

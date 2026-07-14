@@ -73,3 +73,27 @@ def test_guided_result_escapes_user_problem(tmp_path: Path) -> None:
 
     assert "<script>alert(1)</script>" not in rendered
     assert "&lt;script&gt;" in rendered
+
+
+def test_assist_works_on_dirty_worktree_without_repair(tmp_path: Path) -> None:
+    root = _fixture(tmp_path)
+    (root / "local-notes.txt").write_text("dirty\n", encoding="utf-8")
+
+    result = run_guided_session(root, problem="Checkout duplicates charge", output_root=tmp_path / "out")
+
+    assert result.status == "approval_required"
+    assert result.reproduction["status"] == "reproduced"
+    assert result.solve is not None
+    assert result.solve["status"] == "approval_required"
+    assert "dirty_worktree" not in (result.solve.get("blockers") or [])
+
+
+def test_guided_result_includes_exit_code_and_evidence_snippet(tmp_path: Path) -> None:
+    root = _fixture(tmp_path)
+    result = run_guided_session(root, problem="Checkout duplicates charge", output_root=tmp_path / "out")
+
+    rendered = render_guided_result(result)
+
+    assert "Evidence snippet" in rendered
+    assert "Selected reproduction" in rendered
+    assert "Exit" in rendered

@@ -1,3 +1,5 @@
+> **Historical:** completed release checklist. Current planning lives in `docs/roadmap.md` and `docs/project-status.md`.
+
 # TODO v0.5.1
 
 - [x] Align package, CLI, workflow defaults, README, installation, and bilingual version references.

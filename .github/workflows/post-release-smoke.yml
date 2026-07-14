@@ -1,0 +1,39 @@
+name: Post-release public install smoke
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 6 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  public-install:
+    name: PyPI install / ${{ matrix.os }} / Python ${{ matrix.python }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-15, windows-latest]
+        python: ["3.10", "3.14"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install latest public release
+        run: python -m pip install --disable-pip-version-check --no-cache-dir doctor-link
+      - name: Verify CLI and read-only preflight
+        shell: bash
+        run: |
+          doctor-link --version
+          mkdir -p smoke-project
+          printf '[project]\nname = "doctor-link-smoke"\nversion = "0.0.0"\n' > smoke-project/pyproject.toml
+          doctor-link preflight --json smoke-project > preflight.json
+          python -c 'import json; p=json.load(open("preflight.json")); assert p["status"] == "passed" and p["blocking_count"] == 0'
+      - name: Upload receipt
+        uses: actions/upload-artifact@v7
+        with:
+          name: public-install-${{ matrix.os }}-py${{ matrix.python }}
+          path: preflight.json

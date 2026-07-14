@@ -121,31 +121,46 @@ def render_guided_result(result: GuidedSessionResult) -> str:
     suggestion_rows = "".join(
         "<tr>"
         f"<td>{html.escape(str(item.get('status', 'proposed')))}</td>"
+        f"<td>{html.escape(str(item.get('return_code', '')))}</td>"
         f"<td><code>{html.escape(str(item.get('command', '')))}</code></td>"
         f"<td>{html.escape(str(item.get('rationale', '')))}</td>"
+        f"<td><pre>{html.escape(_snippet(item))}</pre></td>"
         "</tr>"
         for item in reproduction.get("suggestions", [])
-    ) or '<tr><td colspan="3">No safe candidate was available.</td></tr>'
+    ) or '<tr><td colspan="5">No safe candidate was available.</td></tr>'
     warning_items = "".join(f"<li>{html.escape(str(item))}</li>" for item in reproduction.get("warnings", [])) or "<li>None</li>"
     step_items = "".join(f"<li>{html.escape(item)}</li>" for item in result.next_steps) or "<li>Review the result.</li>"
     solve = result.solve or {}
     repair_branch = solve.get("repair_branch") or "Not created"
+    selected = reproduction.get("selected_command") or "None"
     summary = solve.get("summary") or _plain_summary(result.status)
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Doctor link guided result</title>
 <style>
 body{{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f4f7fb;color:#14213d;margin:0}}
-main{{max-width:960px;margin:0 auto;padding:32px 20px 64px}}section{{background:#fff;border:1px solid #dbe4f0;border-radius:14px;padding:22px;margin:16px 0;box-shadow:0 8px 24px #183b6610}}
-.status{{display:inline-block;background:#e8f1ff;color:#124a8a;border-radius:999px;padding:6px 12px;font-weight:700}}.muted{{color:#5f6f82}}code{{word-break:break-word}}table{{border-collapse:collapse;width:100%}}th,td{{border-bottom:1px solid #e5ebf3;padding:10px;text-align:left;vertical-align:top}}
+main{{max-width:1080px;margin:0 auto;padding:32px 20px 64px}}section{{background:#fff;border:1px solid #dbe4f0;border-radius:14px;padding:22px;margin:16px 0;box-shadow:0 8px 24px #183b6610}}
+.status{{display:inline-block;background:#e8f1ff;color:#124a8a;border-radius:999px;padding:6px 12px;font-weight:700}}.muted{{color:#5f6f82}}code,pre{{word-break:break-word;white-space:pre-wrap;font-size:12px}}table{{border-collapse:collapse;width:100%}}th,td{{border-bottom:1px solid #e5ebf3;padding:10px;text-align:left;vertical-align:top}}
 </style></head><body><main>
 <h1>Doctor link guided diagnosis</h1><p class="muted">No test-command knowledge required. Results remain local.</p>
-<section><span class="status">{html.escape(result.status)}</span><h2>{html.escape(result.problem)}</h2><p>{html.escape(str(summary))}</p><p><strong>Repair branch:</strong> {html.escape(str(repair_branch))}</p></section>
-<section><h2>What Doctor link tried</h2><table><thead><tr><th>Outcome</th><th>Check</th><th>Why</th></tr></thead><tbody>{suggestion_rows}</tbody></table></section>
+<section><span class="status">{html.escape(result.status)}</span><h2>{html.escape(result.problem)}</h2><p>{html.escape(str(summary))}</p>
+<p><strong>Selected reproduction:</strong> <code>{html.escape(str(selected))}</code></p>
+<p><strong>Repair branch:</strong> {html.escape(str(repair_branch))}</p></section>
+<section><h2>What Doctor link tried</h2><table><thead><tr><th>Outcome</th><th>Exit</th><th>Check</th><th>Why</th><th>Evidence snippet</th></tr></thead><tbody>{suggestion_rows}</tbody></table></section>
 <section><h2>Warnings</h2><ul>{warning_items}</ul></section>
 <section><h2>Next steps</h2><ol>{step_items}</ol></section>
-<section><h2>Local receipt</h2><p><code>{html.escape(result.output_dir)}</code></p></section>
+<section><h2>Local receipt</h2><p><code>{html.escape(result.output_dir)}</code></p>
+<p class="muted">Open the solve session directory for full stdout/stderr, prompts, and verification receipts when present.</p></section>
 </main></body></html>"""
+
+
+def _snippet(item: dict[str, Any], *, limit: int = 500) -> str:
+    text = "\n".join(
+        part for part in (str(item.get("stderr") or "").strip(), str(item.get("stdout") or "").strip()) if part
+    )
+    if not text:
+        return "No output captured."
+    return text if len(text) <= limit else text[: limit - 1] + "…"
 
 
 def _plain_summary(status: str) -> str:
@@ -154,4 +169,6 @@ def _plain_summary(status: str) -> str:
         "not_reproduced": "The available checks pass, so the reported problem was not reproduced.",
         "proposed": "Candidate checks were generated but not executed.",
         "reproduced": "The reported problem was reproduced.",
+        "approval_required": "The problem was reproduced. Review the plan before authorizing repair.",
+        "setup_failed": "Candidate checks failed during environment or collection setup.",
     }.get(status, "The guided session completed.")

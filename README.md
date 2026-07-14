@@ -204,6 +204,7 @@ GitHub Actions runs the full Python matrix, security checks, package installatio
 - [Automatic Solve with Codex](docs/automatic-solve.md)
 - [Full capability validation](docs/full-capability-validation.md)
 - Platform integration roadmap: [English](docs/platform-integration-roadmap.md) | [中文](docs/platform-integration-roadmap.zh-CN.md)
+- Support and maintenance: [Support](SUPPORT.md) | [Security](SECURITY.md) | [Compatibility and deprecation](docs/compatibility-and-deprecation.md)
 - [Product overview](docs/product-overview.md)
 - [Architecture overview](docs/architecture-overview.md)
 - [GitHub repository and workflow guide](docs/github-repository-guide.md)

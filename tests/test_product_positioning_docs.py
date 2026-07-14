@@ -39,9 +39,10 @@ def test_architecture_overview_has_mermaid_source() -> None:
     assert "Local read-only" in text
 
 
-def test_roadmap_and_triage_keep_p6_and_verification_boundaries() -> None:
+def test_roadmap_and_triage_keep_future_work_and_verification_boundaries() -> None:
     roadmap = Path("docs/roadmap.md").read_text(encoding="utf-8")
     triage = Path("docs/issue-triage.md").read_text(encoding="utf-8")
 
-    assert "P6 implementation requires separate explicit authorization" in roadmap
+    assert "require separate design, security review, explicit authorization" in roadmap
+    assert "not commitments for the next release" in roadmap
     assert "Verification evidence is required" in triage
