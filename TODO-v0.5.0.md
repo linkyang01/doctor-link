@@ -9,4 +9,4 @@
 - [x] Run the 24-project corpus with 100% reproduction and expectation matching.
 - [x] Pass the complete source, security, packaging, installed-wheel, and cloud validation gates.
 - [x] Publish the independent v0.5.0 PR with local and cloud evidence.
-- [ ] Merge the approved PR and publish the immutable v0.5.0 GitHub Release.
+- [x] Merge the approved PR and publish the immutable v0.5.0 GitHub Release.

@@ -4,9 +4,9 @@ Status date: 2026-07-14
 
 ## Current source development
 
-Version `v0.5.0` development closes the command-knowledge gap. `doctor-link reproduce suggest` derives ranked checks from an ordinary-language problem using configured catalogs, existing test paths, project metadata, and bounded domain aliases. `doctor-link assist` validates those checks, generates a local browser result, and enters the existing solve approval gate without requiring the user to supply a test command. Candidate checks that alter Git state are rejected.
+Published version `v0.5.0` closes the command-knowledge gap. `doctor-link reproduce suggest` derives ranked checks from an ordinary-language problem using configured catalogs, existing test paths, project metadata, and bounded domain aliases. `doctor-link assist` validates those checks, generates a local browser result, and enters the existing solve approval gate without requiring the user to supply a test command. Candidate checks that alter Git state are rejected.
 
-The retained benchmark corpus materializes 24 clean Git projects across Python and Node.js and twelve fault domains. The current run reproduced 24/24 failures with 100% expectation matching. Local validation passes 363 tests at 85.06% branch-aware coverage, Ruff, Bandit with zero medium/high findings, dependency auditing with no known vulnerabilities, build/content/Twine gates, and the installed-wheel lab across 66 routes, 75 invocations, and twelve linked scenarios. Cloud validation and publication remain pending.
+The retained benchmark corpus materializes 24 clean Git projects across Python and Node.js and twelve fault domains. The release run reproduced 24/24 failures with 100% expectation matching. Local validation passed 363 tests at 85.06% branch-aware coverage, Ruff, Bandit with zero medium/high findings, dependency auditing with no known vulnerabilities, build/content/Twine gates, and the installed-wheel lab across 66 routes, 75 invocations, and twelve linked scenarios. GitHub Actions run `29305470580` passed all ten Python 3.10–3.14, package, security, Ubuntu, macOS, and Windows jobs. PR `#150` merged as `ac5c2f5`; release workflow `29305612221` published the immutable [`v0.5.0` GitHub Release](https://github.com/linkyang01/doctor-link/releases/tag/v0.5.0) with PyPI disabled.
 
 Version `v0.3.0` extends automatic solve to Node.js JavaScript and TypeScript projects while preserving the same approval, branch isolation, protected-input, bounded-round, and independent-verification contract. It detects `package.json` or JavaScript/TypeScript source roots, selects npm, pnpm, Yarn, or Bun from package metadata and lockfiles, and falls back to `node --test` for compatible test files.
 
@@ -58,7 +58,7 @@ P7.9 implemented P6 local knowledge base and enterprise archive runtime for loca
 
 P7.10 implements final validation and closure through P7 runtime E2E validation, CI coverage, self-validation coverage, final audit, README updates, and TODO closure.
 
-P6 and P7 are complete as repository-side local-first implementation work. Version `0.2.0` is locally validated, cloud validated, merged, tagged, and published on GitHub. This does not mean Doctor link has implemented a hosted platform, account system, marketplace, real signing, hosted archive, hosted knowledge base, or PyPI distribution.
+P6 and P7 are complete as repository-side local-first implementation work. Version `0.5.0` is locally validated, cloud validated, merged, tagged, and published on GitHub. This does not mean Doctor link has implemented a hosted platform, account system, marketplace, real signing, hosted archive, hosted knowledge base, or PyPI distribution.
 
 ## Validation certification status
 
@@ -69,6 +69,9 @@ P6 and P7 are complete as repository-side local-first implementation work. Versi
 - [x] GitHub Release `v0.1.2` published (2026-07-13)
 - [x] GitHub Release `v0.1.3` published (2026-07-13, workflow 29246045227)
 - [x] GitHub Release `v0.2.0` published (2026-07-13, workflow 29256955705)
+- [x] GitHub Release `v0.3.0` published (2026-07-14, workflow 29299367180)
+- [x] GitHub Release `v0.4.0` published (2026-07-14, workflow 29303850286)
+- [x] GitHub Release `v0.5.0` published (2026-07-14, workflow 29305612221)
 - [x] Local Mac Validation Recorded (2026-06-29)
 - [x] GitHub-hosted Linux, macOS, and Windows validation
 - [x] Cross-platform CI jobs configured for Linux, macOS, and Windows

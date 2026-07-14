@@ -2,7 +2,7 @@
 
 Doctor link is a Python CLI project. This guide explains how to clone the repository, install it locally, run the CLI, and validate that the project works on a local machine.
 
-Version `0.3.0` is available from the authorized [GitHub Release](https://github.com/linkyang01/doctor-link/releases/tag/v0.3.0). Download its wheel or source archive from that page; Doctor link is not published on PyPI, so `pip install doctor-link==0.3.0` from PyPI is not supported.
+Version `0.5.0` is available from the authorized [GitHub Release](https://github.com/linkyang01/doctor-link/releases/tag/v0.5.0). Download its wheel or source archive from that page; Doctor link is not published on PyPI, so `pip install doctor-link==0.5.0` from PyPI is not supported.
 
 ## 1. Requirements
 
@@ -28,7 +28,7 @@ Recommended Python versions:
 - Python 3.13
 - Python 3.14
 
-The `v0.3.0` CI and release workflow validated Python 3.10 through 3.14. Local use should select one of these versions.
+The `v0.5.0` CI and release workflow validated Python 3.10 through 3.14. Local use should select one of these versions.
 
 ## 2. Clone the repository
 
@@ -113,16 +113,23 @@ If the command prints help text, the CLI entrypoint is installed successfully.
 ```bash
 python -m pip install build
 python -m build
-python -m pip install dist/doctor_link-0.3.0-py3-none-any.whl
+python -m pip install dist/doctor_link-0.5.0-py3-none-any.whl
 doctor-link --version
 ```
 
 ### Install the published GitHub Release wheel
 
-Download `doctor_link-0.2.0-py3-none-any.whl` from the [v0.2.0 release page](https://github.com/linkyang01/doctor-link/releases/tag/v0.2.0), then run:
+Download `doctor_link-0.5.0-py3-none-any.whl` from the [v0.5.0 release page](https://github.com/linkyang01/doctor-link/releases/tag/v0.5.0), then run:
 
 ```bash
-python -m pip install ./doctor_link-0.2.0-py3-none-any.whl
+python -m pip install ./doctor_link-0.5.0-py3-none-any.whl
+doctor-link --version
+```
+
+Or install the same published wheel directly from GitHub:
+
+```bash
+python -m pip install https://github.com/linkyang01/doctor-link/releases/download/v0.5.0/doctor_link-0.5.0-py3-none-any.whl
 doctor-link --version
 ```
 
