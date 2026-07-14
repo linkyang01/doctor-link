@@ -45,6 +45,8 @@ htmlcov/
 .doctorlink-full-capability/
 DoctorReports/
 DoctorWorkspace/
+DoctorLinkValidation/
+DoctorLinkSelfValidation/
 .wheel-smoke/
 
 # IDE / OS

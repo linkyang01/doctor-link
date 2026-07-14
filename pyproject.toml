@@ -1,6 +1,6 @@
 [project]
 name = "doctor-link"
-version = "0.2.0"
+version = "0.3.0"
 description = "Universal diagnostic and AI collaboration tool for software debugging."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -24,6 +24,8 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Topic :: Software Development :: Testing",
   "Topic :: Software Development :: Quality Assurance"
 ]

@@ -46,7 +46,7 @@ Doctor link 要做以下事情：
 
 ## 4.1 当前可交付的自动解决纵切面
 
-第一阶段只承诺 Python 项目，避免“支持所有语言”却无法可靠验收：
+当前可交付纵切面明确支持 Python 与 Node.js JavaScript/TypeScript 项目，仍不笼统宣称“支持所有语言”，以确保每种项目都能可靠复现和验收：
 
 ```bash
 # 先复现并生成修复预演，不修改代码
@@ -61,7 +61,16 @@ doctor-link solve /path/to/python-project \
   --allow-repair
 ```
 
-如果项目已经配置 `.doctorlink/reproduce.yml` 和 `.doctorlink/test-matrix.yml`，可省略命令参数。Doctor link 会执行配置中的复现和测试命令；全部命令已经通过时返回 `not_reproduced`，不会允许 AI 无目标改代码。
+Node.js 项目可显式提供命令，也可让 Doctor link 根据 `packageManager`、锁文件和 `scripts.test` 选择 npm、pnpm、Yarn 或 Bun；没有可用测试脚本但存在 JavaScript 测试文件时，可回退到 `node --test`：
+
+```bash
+doctor-link solve /path/to/node-project \
+  --problem "并发更新时丢失最后一次写入" \
+  --test-command "npm test" \
+  --allow-repair
+```
+
+如果项目已经配置 `.doctorlink/reproduce.yml` 和 `.doctorlink/test-matrix.yml`，可省略命令参数。Doctor link 会执行配置中的复现和测试命令；全部命令已经通过时返回 `not_reproduced`，不会允许 AI 无目标改代码。混合语言单体仓库应从目标包目录运行，并优先显式提供命令，避免仓库级自动发现产生歧义。
 
 ## 5. 核心设计原则
 

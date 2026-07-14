@@ -8,7 +8,7 @@ Doctor link maintains an installed-package validation lab at [`examples/full-cap
 | --- | --- |
 | Unit and regression tests | Function-level behavior, edge cases, and previously fixed defects. |
 | Full capability inventory | The declared matrix exactly matches the live Click command tree. |
-| Complex scenario runner | All 63 routes execute as real subprocesses with isolated output. |
+| Complex scenario runner | All 63 routes execute through 72 real subprocess invocations with isolated output. |
 | Installed-wheel run | The built distribution, entrypoint, dependencies, examples, and runtime files work outside the source import path. |
 | Cross-platform smoke | Core source installation and commands work on Ubuntu, macOS, and Windows. |
 
@@ -35,6 +35,8 @@ The six-bug service similarly succeeds at the scenario level only when its known
 
 The automatic-solve fixture is a clean Git-backed Python project with a real duplicate-charge defect. The lab proves that Doctor link executes the failing checks and returns `approval_required` without invoking Codex or editing code, preserving the explicit repair boundary in an installed-wheel run.
 
+A second automatic-solve fixture is a clean Git-backed Node.js project. The installed wheel must classify it as JavaScript, discover `npm test`, reproduce the failure, protect `package.json` and the original test, and stop at the same approval boundary. This adds language-specific proof without allowing the offline lab to call Codex.
+
 Package export is exercised in both directions: raw secrets must be blocked by default, while a reviewed safe package exports with portable paths. A legacy export manifest must migrate with backups and without overwriting a formal package manifest.
 
 ## CI enforcement
@@ -50,4 +52,4 @@ python -m build
 python examples/full-capability-lab/run-all.py --dist dist
 ```
 
-The run is local-first. It creates temporary evidence and executes only repository-owned fixtures, explicitly approved fixture Adapter/Plugin commands, and local Doctor link commands.
+The run is local-first. It requires Node.js and npm for the JavaScript solve fixture, creates temporary evidence, and executes only repository-owned fixtures, explicitly approved fixture Adapter/Plugin commands, and local Doctor link commands.

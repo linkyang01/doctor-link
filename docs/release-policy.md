@@ -117,4 +117,6 @@ After publication, verify:
 
 ## Current boundary
 
+Version `0.3.0` is an unreleased source candidate. Local validation has passed, but its cloud validation, merge, immutable tag, GitHub Release, and registry publication states must be established separately.
+
 Version `0.2.0` was locally and cloud validated, merged through PR `#145` as commit `40a547c`, and published as [GitHub Release `v0.2.0`](https://github.com/linkyang01/doctor-link/releases/tag/v0.2.0) on 2026-07-13. Release workflow [29256955705](https://github.com/linkyang01/doctor-link/actions/runs/29256955705) installed the final wheel, passed the full capability lab, created the immutable tag, and uploaded the wheel and source distribution. PyPI publication was disabled and was not performed.

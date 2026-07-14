@@ -70,6 +70,13 @@ def test_full_capability_lab_documents_complete_route_coverage() -> None:
     assert "security" in text.casefold()
 
 
+def test_repository_validation_outputs_are_gitignored() -> None:
+    ignored = set(Path(".gitignore").read_text(encoding="utf-8").splitlines())
+
+    assert "DoctorLinkValidation/" in ignored
+    assert "DoctorLinkSelfValidation/" in ignored
+
+
 def test_examples_guide_mentions_required_template_categories() -> None:
     text = Path("docs/examples-and-templates.md").read_text(encoding="utf-8")
 

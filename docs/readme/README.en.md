@@ -6,7 +6,7 @@ Doctor link is a human-AI shared diagnostic layer for software projects. It help
 
 Doctor link does not replace Codex, Aider, OpenHands, Continue, Cursor, or other AI coding tools. It prepares high-quality diagnostic context so AI tools can debug with less guessing, less unrelated editing, and stronger verification.
 
-The current source also provides `doctor-link solve`. For a Python project in a clean Git repository, it first reproduces the failure and writes a repair preview. Only after `--allow-repair` does Doctor link create an isolated branch, invoke Codex for up to three rounds, and independently rerun every required command. Tests, test configuration, configured catalogs, and directly referenced verification scripts are hash-protected: a Codex claim or a weakened test is not success. Only passing checks against unchanged protected inputs produce `verified`.
+The current source also provides `doctor-link solve`. For a Python or Node.js JavaScript/TypeScript project in a clean Git repository, it first reproduces the failure and writes a repair preview. Only after `--allow-repair` does Doctor link create an isolated branch, invoke Codex for up to three rounds, and independently rerun every required command. Tests, package manifests and lockfiles, test configuration, configured catalogs, and directly referenced verification scripts are hash-protected: a Codex claim or a weakened test is not success. Only passing checks against unchanged protected inputs produce `verified`.
 
 ## Current Status
 
@@ -15,6 +15,8 @@ Doctor link has completed the P0-P6 protocol, schema, productization, and ecosys
 P5: Productization and Release Readiness is complete. P6 implementation requires separate explicit authorization for hosted, external, release, signing-key, marketplace, or account-system behavior.
 
 P7.10 added the final validation and closure layer, including a P7 runtime validation script and CI coverage for the P7 command surface.
+
+The current repository source is the unreleased `v0.3.0` candidate. Its JavaScript/TypeScript automatic-solve and runtime-resilience work passed 339 local tests, 85.48% branch-aware coverage, 72 installed-wheel capability invocations across ten scenarios, and a live Node.js repair with unchanged protected acceptance inputs. [GitHub Actions run 29263187097](https://github.com/linkyang01/doctor-link/actions/runs/29263187097) passed all ten jobs for code commit `c9426e7`, covering Python 3.10–3.14, security, packaging, Ubuntu, macOS, and Windows. Merge, tag creation, and publication are pending. See [JavaScript/TypeScript Automatic Solve Validation](../validation/javascript-typescript-solve-validation.md).
 
 Doctor link remains local-first. Version `0.2.0` passed the repaired local suite and the complete GitHub Actions matrix on 2026-07-13: 319 tests, 85.39% branch coverage, Python 3.10–3.12, Ubuntu/macOS/Windows, security, package build, and isolated installation. [Final PR CI 29256743976](https://github.com/linkyang01/doctor-link/actions/runs/29256743976) passed all eight jobs. The defined repository release-readiness score remains 100/100. [GitHub Release `v0.2.0`](https://github.com/linkyang01/doctor-link/releases/tag/v0.2.0) was published from merge commit `40a547c` by [Release workflow 29256955705](https://github.com/linkyang01/doctor-link/actions/runs/29256955705); PyPI publication was disabled and not performed. The project does not create a hosted platform, external account system, telemetry service, or marketplace.
 
@@ -29,6 +31,7 @@ doctor-link wizard --folder . --tool cursor
 doctor-link preflight . --json
 doctor-link solve /path/to/python-project --problem "Checkout duplicates charges" --test-command "python -m pytest tests/test_checkout.py -q"
 doctor-link solve /path/to/python-project --problem "Checkout duplicates charges" --test-command "python -m pytest tests/test_checkout.py -q" --allow-repair
+doctor-link solve /path/to/node-project --problem "Concurrent updates lose data" --test-command "npm test" --allow-repair
 doctor-link init
 doctor-link scan <library>
 doctor-link plan <library>
@@ -83,8 +86,8 @@ python examples/full-capability-lab/run-all.py --dist dist
 
 ## Runtime Coverage
 
-P7 implements local runtime support for evidence hardening, local workbench hardening, AI handoff runtime, CI automation, distribution readiness, adapter runtime, plugin runtime, integrity and privacy gates, local knowledge indexing, and local archive helpers. The current source adds the first Python automatic-solve vertical slice on top of that foundation.
+P7 implements local runtime support for evidence hardening, local workbench hardening, AI handoff runtime, CI automation, distribution readiness, adapter runtime, plugin runtime, integrity and privacy gates, local knowledge indexing, and local archive helpers. The current source extends the automatic-solve vertical slice across Python and Node.js JavaScript/TypeScript projects.
 
 ## Boundaries
 
-Doctor link does not currently provide hosted Web platform, cloud synchronization, external account system, telemetry, marketplace, real signing keys or key management, hosted enterprise archive, hosted diagnostic knowledge base, or real RBAC. Automatic repair currently supports Python projects only, requires explicit approval, protects the original verification inputs, and never auto-commits, pushes, or publishes. The exceptional `--allow-verification-changes` path returns `review_required`, not `verified`. `--allow-repair` uses existing Codex authentication to call the service, so users should review the preview and remove sensitive data first. PyPI publication remains optional.
+Doctor link does not currently provide hosted Web platform, cloud synchronization, external account system, telemetry, marketplace, real signing keys or key management, hosted enterprise archive, hosted diagnostic knowledge base, or real RBAC. Automatic repair currently supports Python and Node.js JavaScript/TypeScript projects, requires explicit approval, protects the original verification inputs, and never auto-commits, pushes, or publishes. Other language ecosystems remain unsupported until they receive an equally testable adapter. The exceptional `--allow-verification-changes` path returns `review_required`, not `verified`. `--allow-repair` uses existing Codex authentication to call the service, so users should review the preview and remove sensitive data first. PyPI publication remains optional.

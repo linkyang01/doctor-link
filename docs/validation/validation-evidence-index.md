@@ -2,7 +2,15 @@
 
 This index separates current repaired-source evidence, historical evidence, and actions that have not occurred. A green workflow run certifies only the commit and scope named below.
 
-## Current repaired-source certification
+## Unreleased v0.3.0 candidate evidence
+
+The `v0.3.0` source candidate extends automatic solve to Node.js JavaScript/TypeScript projects and hardens command evidence against invalid bytes and operating-system launch failures. Local validation on 2026-07-13 passed 339 tests at 85.48% branch-aware coverage, Ruff, Bandit, dependency audit, build/content/Twine gates, isolated wheel installation, four repository validation flows, and the installed-wheel full-capability lab with 63/63 routes, 72 invocations, and ten complex scenarios.
+
+A disposable Node.js inventory fixture also completed a live authorized Codex repair. Doctor link automatically selected `npm test`, reproduced two failing acceptance cases, protected `package.json` and the original test, accepted a one-file production fix in one round, independently reran all three tests, and returned `verified` with unchanged protected hashes. See [JavaScript/TypeScript solve validation](javascript-typescript-solve-validation.md).
+
+Cloud validation also passed for the candidate code. PR [#147](https://github.com/linkyang01/doctor-link/pull/147) code commit `c9426e7bdb5cd1fdf4f7223e14c1635005f1453f` passed all ten jobs in [GitHub Actions run 29263187097](https://github.com/linkyang01/doctor-link/actions/runs/29263187097), covering Python 3.10 through 3.14 plus security, package, Ubuntu, macOS, and Windows validation. Merge, immutable `v0.3.0` tag creation, GitHub Release publication, and registry publication have not yet occurred.
+
+## Published v0.2.0 certification
 
 - Repository: `linkyang01/doctor-link`
 - Pull request: [#145 Prepare v0.2.0 release](https://github.com/linkyang01/doctor-link/pull/145)

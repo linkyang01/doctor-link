@@ -1,12 +1,12 @@
 # Doctor link
 
 [![Doctor link CI](https://github.com/linkyang01/doctor-link/actions/workflows/ci.yml/badge.svg)](https://github.com/linkyang01/doctor-link/actions/workflows/ci.yml)
-[![Python 3.10–3.12](https://img.shields.io/badge/python-3.10%E2%80%933.12-blue)](https://github.com/linkyang01/doctor-link/actions/workflows/ci.yml)
+[![Python 3.10–3.14](https://img.shields.io/badge/python-3.10%E2%80%933.14-blue)](https://github.com/linkyang01/doctor-link/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 Doctor link is a local-first, human-AI shared diagnostic and verified-repair layer for software projects.
 
-Doctor link 是一个本地优先、面向软件项目的人机协同诊断与修复验收层。它不仅组织问题、证据和 AI 上下文，还能在明确授权后驱动 Codex 修复 Python 项目，并独立重测是否真正解决。
+Doctor link 是一个本地优先、面向软件项目的人机协同诊断与修复验收层。它不仅组织问题、证据和 AI 上下文，还能在明确授权后驱动 Codex 修复 Python 或 Node.js JavaScript/TypeScript 项目，并独立重测是否真正解决。
 
 - [English documentation](docs/readme/README.en.md)
 - [中文文档](docs/readme/README.zh-CN.md)
@@ -27,7 +27,9 @@ Doctor link does not replace Codex, Cursor, Aider, OpenHands, Continue, Cline, W
 
 ## Verified status
 
-Current version: [`v0.2.0`](https://github.com/linkyang01/doctor-link/releases/tag/v0.2.0), published on 2026-07-13.
+Latest published version: [`v0.2.0`](https://github.com/linkyang01/doctor-link/releases/tag/v0.2.0), published on 2026-07-13.
+
+The current source is the unreleased `v0.3.0` candidate. Its JavaScript/TypeScript automatic-solve and runtime-resilience work has passed 339 local tests, 85.48% branch-aware coverage, an installed-wheel lab covering 63 routes through 72 invocations and ten complex scenarios, and a live protected-contract Node.js repair. [GitHub Actions run 29263187097](https://github.com/linkyang01/doctor-link/actions/runs/29263187097) passed all ten jobs for code commit `c9426e7`, covering Python 3.10–3.14, security, packaging, Ubuntu, macOS, and Windows. Merge, tag creation, and release publication are still pending. See the [JavaScript/TypeScript validation report](docs/validation/javascript-typescript-solve-validation.md).
 
 The verified automatic problem-solving release in [PR #145](https://github.com/linkyang01/doctor-link/pull/145) passed the complete repository validation matrix on 2026-07-13:
 
@@ -59,7 +61,7 @@ PR #145 was merged as commit `40a547c`, and the authorized [GitHub Release `v0.2
 | Evidence collection | Logs, attachments, environment metadata, command results, redaction records, and integrity indexes. |
 | Human assertions | Explicit records of user-confirmed problems that AI output must not silently dismiss. |
 | Reproduction and tests | Shell-free configured command execution, test matrices, evidence write-back, and timeout metadata. |
-| Automatic solve | Python failure reproduction, explicit repair approval, isolated Git branch, bounded Codex rounds, protected verification inputs, and independent regression acceptance. |
+| Automatic solve | Python and Node.js JavaScript/TypeScript failure reproduction, explicit repair approval, isolated Git branch, bounded Codex rounds, protected verification inputs, and independent regression acceptance. |
 | Verification | Missing-evidence reporting, linked assertion coverage, failed-test blockers, before/after comparison, and conservative closure status. |
 | AI handoff | Tool-specific packages with explicit repair, evidence, and verification-review readiness states. |
 | Local workbench | Static local HTML for reviewing diagnostic packages without a hosted service. |
@@ -100,7 +102,7 @@ doctor-link view "$PACKAGE_DIR" --build-only
 
 See [Quick Start](docs/quick-start.md) and [Installation](docs/installation.md) for Windows alternatives and complete validation instructions.
 
-Automatically solve a reproducible Python-project problem:
+Automatically solve a reproducible Python or Node.js-project problem:
 
 ```bash
 # Preview only: reproduces the issue and writes the repair plan.
@@ -115,6 +117,15 @@ doctor-link solve /path/to/project \
   --allow-repair
 ```
 
+For a Node.js project with a non-placeholder `scripts.test`, Doctor link automatically selects `npm test`, `pnpm test`, `yarn test`, or `bun run test` from `packageManager` and lockfile evidence. If no test script exists but JavaScript test files are present, it falls back to `node --test`:
+
+```bash
+doctor-link solve /path/to/node-project \
+  --problem "Concurrent updates lose the latest value" \
+  --test-command "npm test" \
+  --allow-repair
+```
+
 See [Automatic Solve with Codex](docs/automatic-solve.md) for command discovery, status codes, evidence files, and rollback.
 
 ## Typical diagnostic workflow
@@ -123,7 +134,7 @@ See [Automatic Solve with Codex](docs/automatic-solve.md) for command discovery,
 preflight → report → collect → assert → reproduce/test → verify → handoff/view
 ```
 
-For the automatic Python path, the complete workflow is:
+For the automatic Python or Node.js path, the complete workflow is:
 
 ```text
 solve preview → explicit approval → repair branch → Codex round → protected-input check → independent verification → verified/blocked/failed
@@ -145,7 +156,7 @@ Failed reproductions, failed required test jobs, and incomplete verification ret
 - Reproduction and test-matrix commands do not invoke a shell; pipelines, redirection, command substitution, and unsafe operators are rejected.
 - Adapter and plugin execution is dry-run by default and requires explicit `--allow-run` approval.
 - Automatic code repair requires `--allow-repair`, a clean Git working tree, and a failing executable check. Codex remains sandboxed to workspace-write; Doctor link does not auto-commit or push.
-- Automatic repair hash-protects tests, test configuration, reproduction/test catalogs, and directly referenced verification scripts. Protected-input changes block `verified`; the explicit exception `--allow-verification-changes` returns `review_required` instead of success.
+- Automatic repair hash-protects tests, package manifests and lockfiles, test configuration, reproduction/test catalogs, and directly referenced verification scripts. Protected-input changes block `verified`; the explicit exception `--allow-verification-changes` returns `review_required` instead of success.
 - `--allow-repair` invokes the authenticated Codex service and may send the bounded prompt, failing output, and inspected repository context. Review the preview and remove sensitive data before authorization.
 - Generated packages may still contain project-sensitive evidence. Review privacy and redaction reports before sharing them.
 - Do not attach secrets or private diagnostic packages to public GitHub issues.

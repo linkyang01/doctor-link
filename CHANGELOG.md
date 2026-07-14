@@ -6,7 +6,35 @@ Doctor link follows semantic versioning. Public release publishing requires expl
 
 ## Unreleased
 
-No changes yet.
+Candidate scope for `v0.3.0`: verified automatic repair for Node.js JavaScript and TypeScript projects.
+
+### Added
+
+- JavaScript/TypeScript project detection from `package.json` and common source roots.
+- Automatic npm, pnpm, Yarn, and Bun test selection from `packageManager` and lockfiles, with `node --test` fallback for compatible test files.
+- Cross-platform package-manager resolution binds Windows npm, pnpm, Yarn, Bun, and Corepack launchers to their concrete executable paths before safe subprocess execution.
+- Real npm integration regressions for one- and multi-round repairs, package-script weakening, and test-contract tampering.
+
+### Changed
+
+- Automatic solve now supports both Python and Node.js JavaScript/TypeScript projects while retaining the same explicit approval, isolated branch, three-round limit, and independent acceptance contract.
+- Verification-input protection now covers package manifests, lockfiles, workspace files, TypeScript/JavaScript configuration, and common Jest, Vitest, Playwright, and Cypress configuration files.
+- Project checks run with non-interactive `CI=1` and `NO_COLOR=1` environment defaults.
+- Supported-runtime validation expands through Python 3.13 and 3.14.
+- The primary quick start now begins with guided diagnosis or verified repair on the user's own project instead of an internal-format demonstration.
+
+### Security
+
+- Missing required verification executables and timed-out baseline checks block before branch creation or Codex invocation.
+- Generated dependency, build, coverage, and cache directories are pruned from protected-input discovery without weakening source test protection.
+- Command evidence preserves invalid UTF-8 safely, and empty commands, permission failures, and other operating-system launch errors return structured results instead of crashing diagnostics.
+
+### Validation
+
+- 339 automated tests pass locally with 85.48% branch-aware coverage and the enforced 85% floor.
+- The installed-wheel full-capability lab covers all 63 CLI routes through 72 real invocations and ten complex scenario invariants, including a JavaScript/npm approval-gate scenario.
+- A disposable Node.js inventory project completed a live Codex repair: two failing acceptance cases became three passing tests in one round while the package manifest and original test hashes remained unchanged.
+- GitHub Actions run `29263187097` passed all ten Python 3.10-3.14, security, package, Ubuntu, macOS, and Windows jobs for code commit `c9426e7`.
 
 ## [0.2.0] - 2026-07-13
 

@@ -15,7 +15,7 @@ Thank you for improving Doctor link. Contributions should preserve its evidence-
 ## Development requirements
 
 - Git
-- Python 3.10, 3.11, or 3.12
+- Python 3.10 through 3.14
 - A virtual environment
 
 Set up the repository:
@@ -123,7 +123,7 @@ Attach safe logs or report excerpts when useful. Never attach secrets, tokens, c
 
 PRs targeting `main` run:
 
-- Python 3.10, 3.11, and 3.12 test jobs;
+- Python 3.10 through 3.14 test jobs;
 - Ruff and branch-aware coverage;
 - CLI, E2E, and P7 runtime validation;
 - package build, content inspection, Twine, and isolated wheel installation;

@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
 from pathlib import Path
 from typing import Callable
 
 from click.testing import CliRunner
+import pytest
 
 from doctor_link.core.command_runner import CommandResult
 from doctor_link.core.solve import (
@@ -78,6 +80,34 @@ def _python_project(tmp_path: Path, *, broken: bool = True) -> Path:
     return root
 
 
+def _javascript_project(tmp_path: Path, *, broken: bool = True, scripts: bool = True) -> Path:
+    root = tmp_path / "project"
+    tests = root / "tests"
+    tests.mkdir(parents=True)
+    package: dict[str, object] = {"name": "solve-js-fixture", "version": "0.0.1", "private": True}
+    if scripts:
+        package["scripts"] = {"test": "node --test"}
+    (root / "package.json").write_text(json.dumps(package, indent=2) + "\n", encoding="utf-8")
+    expression = "a - b" if broken else "a + b"
+    (root / "calculator.js").write_text(f"exports.add = (a, b) => {expression};\n", encoding="utf-8")
+    (tests / "calculator.test.js").write_text(
+        "const test = require('node:test');\n"
+        "const assert = require('node:assert/strict');\n"
+        "const { add } = require('../calculator');\n\n"
+        "test('add returns a sum', () => {\n"
+        "  assert.equal(add(2, 3), 5);\n"
+        "});\n",
+        encoding="utf-8",
+    )
+    (root / ".gitignore").write_text("node_modules/\ncoverage/\n", encoding="utf-8")
+    _run_git(root, "init", "-b", "main")
+    _run_git(root, "config", "user.name", "Doctor link Test")
+    _run_git(root, "config", "user.email", "doctor-link@example.invalid")
+    _run_git(root, "add", ".")
+    _run_git(root, "commit", "-m", "fixture")
+    return root
+
+
 def _check_command() -> str:
     return 'python -c "from calculator import add; assert add(2, 3) == 5"'
 
@@ -85,6 +115,22 @@ def _check_command() -> str:
 def _fix(root: Path) -> None:
     (root / "calculator.py").write_text(
         "def add(a: int, b: int) -> int:\n    return a + b\n",
+        encoding="utf-8",
+    )
+
+
+def _fix_javascript(root: Path) -> None:
+    (root / "calculator.js").write_text("exports.add = (a, b) => a + b;\n", encoding="utf-8")
+
+
+def _tamper_javascript_contract(root: Path) -> None:
+    (root / "tests" / "calculator.test.js").write_text(
+        "const test = require('node:test');\n"
+        "const assert = require('node:assert/strict');\n"
+        "const { add } = require('../calculator');\n\n"
+        "test('add returns subtraction', () => {\n"
+        "  assert.equal(add(2, 3), -1);\n"
+        "});\n",
         encoding="utf-8",
     )
 
@@ -136,6 +182,226 @@ def test_discovers_pytest_when_no_matrix_exists(tmp_path: Path) -> None:
     commands = discover_solve_commands(root)
 
     assert any(item.command == "python -m pytest" for item in commands)
+
+
+def test_detects_javascript_and_typescript_projects(tmp_path: Path) -> None:
+    javascript_root = _javascript_project(tmp_path)
+
+    assert detect_project_type(javascript_root) == "javascript"
+    assert [item.command for item in discover_solve_commands(javascript_root)] == ["npm test"]
+
+    typescript_root = tmp_path / "typescript-src"
+    source = typescript_root / "src"
+    source.mkdir(parents=True)
+    (source / "service.ts").write_text("export const value: number = 1;\n", encoding="utf-8")
+
+    assert detect_project_type(typescript_root) == "javascript"
+
+
+def test_javascript_command_discovery_uses_declared_or_locked_package_manager(tmp_path: Path) -> None:
+    root = _javascript_project(tmp_path)
+    package = json.loads((root / "package.json").read_text(encoding="utf-8"))
+    package["packageManager"] = "pnpm@11.7.0"
+    (root / "package.json").write_text(json.dumps(package), encoding="utf-8")
+
+    assert [item.command for item in discover_solve_commands(root)] == ["pnpm test"]
+
+    package.pop("packageManager")
+    (root / "package.json").write_text(json.dumps(package), encoding="utf-8")
+    (root / "yarn.lock").write_text("# fixture\n", encoding="utf-8")
+
+    assert [item.command for item in discover_solve_commands(root)] == ["yarn test"]
+
+
+def test_javascript_without_test_script_falls_back_to_node_test(tmp_path: Path) -> None:
+    root = _javascript_project(tmp_path, scripts=False)
+
+    assert [item.command for item in discover_solve_commands(root)] == ["node --test"]
+
+
+@pytest.mark.skipif(shutil.which("npm") is None, reason="npm is required for the Node.js solve integration")
+def test_javascript_repair_uses_npm_and_independently_verifies(tmp_path: Path) -> None:
+    root = _javascript_project(tmp_path)
+
+    result = solve_project(
+        root,
+        problem="add returns subtraction",
+        output_root=tmp_path / "out",
+        allow_repair=True,
+        repair_executor=ScriptedRepairExecutor([_fix_javascript]),
+    )
+
+    assert result.status == "verified"
+    assert result.project_type == "javascript"
+    assert result.commands[0]["command"] == "npm test"
+    assert result.rounds[0]["verification"][0]["status"] == "passed"
+    assert "package.json" in result.protected_verification_inputs
+    assert "tests/calculator.test.js" in result.protected_verification_inputs
+
+
+@pytest.mark.skipif(shutil.which("npm") is None, reason="npm is required for the Node.js solve integration")
+def test_javascript_multi_round_repair_preserves_contract_and_then_verifies(tmp_path: Path) -> None:
+    root = _javascript_project(tmp_path)
+    (root / "calculator.js").write_text(
+        "exports.add = (a, b) => a - b;\nexports.multiply = (a, b) => a + b;\n",
+        encoding="utf-8",
+    )
+    (root / "tests" / "calculator.test.js").write_text(
+        "const test = require('node:test');\n"
+        "const assert = require('node:assert/strict');\n"
+        "const { add, multiply } = require('../calculator');\n\n"
+        "test('add returns a sum', () => assert.equal(add(2, 3), 5));\n"
+        "test('multiply returns a product', () => assert.equal(multiply(3, 4), 12));\n",
+        encoding="utf-8",
+    )
+    _run_git(root, "add", ".")
+    _run_git(root, "commit", "-m", "add second broken behavior")
+
+    def fix_add_only(project: Path) -> None:
+        (project / "calculator.js").write_text(
+            "exports.add = (a, b) => a + b;\nexports.multiply = (a, b) => a + b;\n",
+            encoding="utf-8",
+        )
+
+    def fix_both_behaviors(project: Path) -> None:
+        (project / "calculator.js").write_text(
+            "exports.add = (a, b) => a + b;\nexports.multiply = (a, b) => a * b;\n",
+            encoding="utf-8",
+        )
+
+    executor = ScriptedRepairExecutor([fix_add_only, fix_both_behaviors])
+    result = solve_project(
+        root,
+        problem="addition subtracts and multiplication adds",
+        output_root=tmp_path / "out",
+        allow_repair=True,
+        max_rounds=3,
+        repair_executor=executor,
+    )
+
+    assert result.status == "verified"
+    assert executor.calls == 2
+    assert [item["verified"] for item in result.rounds] == [False, True]
+    assert result.verification_input_changes == []
+    assert "tests/calculator.test.js" in result.protected_verification_inputs
+
+
+@pytest.mark.skipif(shutil.which("npm") is None, reason="npm is required for the Node.js solve integration")
+def test_javascript_test_tampering_is_blocked_before_npm_verification(tmp_path: Path) -> None:
+    root = _javascript_project(tmp_path)
+
+    result = solve_project(
+        root,
+        problem="add returns subtraction",
+        output_root=tmp_path / "out",
+        allow_repair=True,
+        repair_executor=ScriptedRepairExecutor([_tamper_javascript_contract]),
+    )
+
+    assert result.status == "blocked"
+    assert result.rounds[0]["verification"] == []
+    assert result.verification_input_changes[0]["path"] == "tests/calculator.test.js"
+
+
+@pytest.mark.skipif(shutil.which("npm") is None, reason="npm is required for the Node.js solve integration")
+def test_javascript_package_script_tampering_is_blocked(tmp_path: Path) -> None:
+    root = _javascript_project(tmp_path)
+
+    def weaken_package_script(project: Path) -> None:
+        _fix_javascript(project)
+        package = json.loads((project / "package.json").read_text(encoding="utf-8"))
+        package["scripts"]["test"] = "node -e \"process.exit(0)\""
+        (project / "package.json").write_text(json.dumps(package), encoding="utf-8")
+
+    result = solve_project(
+        root,
+        problem="add returns subtraction",
+        output_root=tmp_path / "out",
+        allow_repair=True,
+        repair_executor=ScriptedRepairExecutor([weaken_package_script]),
+    )
+
+    assert result.status == "blocked"
+    assert result.rounds[0]["verification"] == []
+    assert result.verification_input_changes[0]["path"] == "package.json"
+
+
+@pytest.mark.skipif(shutil.which("npm") is None, reason="npm is required for the Node.js solve integration")
+def test_javascript_runner_config_and_lockfile_tampering_is_blocked(tmp_path: Path) -> None:
+    root = _javascript_project(tmp_path)
+    (root / "package-lock.json").write_text('{"lockfileVersion": 3}\n', encoding="utf-8")
+    (root / "vitest.config.ts").write_text(
+        "export default { test: { environment: 'node' } };\n",
+        encoding="utf-8",
+    )
+    ignored_test = root / "node_modules" / "fixture.test.js"
+    ignored_test.parent.mkdir()
+    ignored_test.write_text("throw new Error('must not be scanned');\n", encoding="utf-8")
+    _run_git(root, "add", "package-lock.json", "vitest.config.ts")
+    _run_git(root, "commit", "-m", "add JavaScript verification configuration")
+
+    def weaken_runner_contract(project: Path) -> None:
+        _fix_javascript(project)
+        (project / "package-lock.json").write_text('{"lockfileVersion": 2}\n', encoding="utf-8")
+        (project / "vitest.config.ts").write_text(
+            "export default { test: { passWithNoTests: true } };\n",
+            encoding="utf-8",
+        )
+
+    result = solve_project(
+        root,
+        problem="add returns subtraction",
+        output_root=tmp_path / "out",
+        allow_repair=True,
+        repair_executor=ScriptedRepairExecutor([weaken_runner_contract]),
+    )
+
+    changed = {item["path"] for item in result.verification_input_changes}
+    assert result.status == "blocked"
+    assert result.rounds[0]["verification"] == []
+    assert {"package-lock.json", "vitest.config.ts"}.issubset(result.protected_verification_inputs)
+    assert "node_modules/fixture.test.js" not in result.protected_verification_inputs
+    assert changed == {"package-lock.json", "vitest.config.ts"}
+
+
+def test_missing_verification_tool_blocks_before_repair(tmp_path: Path) -> None:
+    root = _javascript_project(tmp_path)
+    executor = ScriptedRepairExecutor([_fix_javascript])
+
+    result = solve_project(
+        root,
+        problem="add returns subtraction",
+        test_command="doctor-link-command-that-does-not-exist --test",
+        output_root=tmp_path / "out",
+        allow_repair=True,
+        repair_executor=executor,
+    )
+
+    assert result.status == "blocked"
+    assert "verification_tool_missing" in result.blockers
+    assert executor.calls == 0
+    assert result.repair_branch is None
+
+
+def test_baseline_timeout_blocks_before_repair(tmp_path: Path) -> None:
+    root = _python_project(tmp_path)
+    executor = ScriptedRepairExecutor([_fix])
+
+    result = solve_project(
+        root,
+        problem="verification never finishes",
+        test_command='python -c "import time; time.sleep(2)"',
+        output_root=tmp_path / "out",
+        allow_repair=True,
+        command_timeout_seconds=1,
+        repair_executor=executor,
+    )
+
+    assert result.status == "blocked"
+    assert "baseline_check_timed_out" in result.blockers
+    assert result.baseline[0]["timed_out"] is True
+    assert executor.calls == 0
+    assert result.repair_branch is None
 
 
 def test_dry_run_reproduces_problem_and_requires_approval(tmp_path: Path) -> None:
