@@ -2,6 +2,10 @@
 
 This index separates current repaired-source evidence, historical evidence, and actions that have not occurred. A green workflow run certifies only the commit and scope named below.
 
+## 2026-07-15 deep-diagnostics clean-install validation
+
+Fresh `0.5.1` wheel and source artifacts passed content and Twine checks. The wheel installed with dependencies into a new Python 3.12 environment, imported from `site-packages`, confirmed and restored a changed-file hypothesis, generated actionable guidance, and blocked a dependency-only error before repair. See [report](deep-diagnostics-clean-install-validation.md) and [evidence](evidence/deep-diagnostics-clean-install-2026-07-15/) (**PASS**). These are pre-release local artifacts, not PyPI or GitHub Release publication.
+
 ## 2026-07-15 adversarial deep-diagnosis validation
 
 Eight misleading and unsafe scenarios cover multi-file call paths, conflicting recent changes and stack evidence, focused-pass/full-regression-fail, dependency-only errors, opaque failures, protected-input tampering, diagnostic worktree pollution, and exact counterfactual restoration. The suite exposed and fixed two classification defects, then retained **3/3 PASS** on Click, p-limit, and Chalk. See [report](adversarial-deep-diagnosis-validation.md) and [evidence](evidence/adversarial-deep-diagnosis-2026-07-15/) (**8/8 PASS**).

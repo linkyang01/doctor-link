@@ -32,6 +32,10 @@ Doctor link follows semantic versioning. Public release publishing requires expl
 - Two-layer automatic repair acceptance: a focused failure gate runs before the complete regression contract, with separate machine-readable receipts and explicit full-regression skip reasons.
 - Opt-in `solve --require-grounded-root-cause` admission control that blocks branch creation and repair unless failing evidence maps to project source with a precise location or production frame.
 - Project-owned test-to-production call chains and evidence-bounded repair guidance with explicit facts, inferences, verified evidence, current diff excerpts, risk, focused checks, and full regression commands.
+
+### Validation
+
+- Fresh Python 3.12 wheel installation passed dependency consistency and installed-CLI smoke tests for hypothesis confirmation, exact restoration, repair guidance, and grounded dependency-error rejection.
 - Opt-in `explain --verify-hypothesis` counterfactual checks that temporarily restore the top changed-file candidate to `HEAD`, rerun failing checks, restore exact original bytes, and report confirmation plus worktree-integrity evidence.
 - Structured failure diagnostics for pytest and common JavaScript test output, including expected/actual values, project stack frames, exact changed lines, enclosing functions, source excerpts, and evidence-backed candidate scores.
 - Repeatable real-GitHub validation across Click, p-limit, and Chalk with native baselines, reversible production mutations, natural-language reproduction, and source-hint verification (Issue #167).
