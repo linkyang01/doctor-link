@@ -122,6 +122,8 @@ doctor-link reproduce suggest /path/to/project --problem "Checkout duplicates a 
 
 `explain` runs the same safe checks as solve preview, then parses pytest and common JavaScript failure formats into structured failures. Its JSON and Markdown receipts include extracted expected/actual values, project-owned stack frames, exact changed lines, enclosing functions, source excerpts, candidate scores, and the evidence behind each score. If a diagnostic command changes the Git working tree, it returns `modified_worktree` (exit 5) and requires review. Hints remain advisory rather than verified root causes; Doctor link still accepts repairs only after independent re-verification. Session-based `diff` includes uncommitted edits while the recorded repair branch remains checked out.
 
+Add `--verify-hypothesis` to run a conservative counterfactual experiment for the first-ranked candidate. The candidate must be a tracked source file changed relative to `HEAD`. Doctor link snapshots its exact bytes and the complete worktree fingerprint, temporarily restores only that file from `HEAD`, reruns previously failing checks, then restores the original bytes in a `finally` path. Results are `confirmed`, `supported`, `rejected`, `inconclusive`, `unavailable`, or `unsafe_to_test`. `confirmed` means the counterfactual removed the observed failures; it does not prove that a proposed repair is correct.
+
 Preview a bounded Python or Node.js JavaScript/TypeScript repair without modifying code:
 
 ```bash

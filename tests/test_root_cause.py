@@ -7,6 +7,7 @@ from pathlib import Path
 from click.testing import CliRunner
 
 from doctor_link.core.root_cause import analyze_root_cause
+from doctor_link.core.hypothesis_verifier import verify_top_hypothesis
 from doctor_link.core.solve import SolveCommandResult, build_repair_prompt, solve_project
 from doctor_link.entrypoint import main
 
@@ -190,6 +191,33 @@ def test_explain_cli_reports_check_worktree_mutation(tmp_path: Path) -> None:
     assert (root / "generated.txt").read_text(encoding="utf-8") == "changed"
 
 
+def test_explain_cli_can_confirm_reversible_hypothesis(tmp_path: Path) -> None:
+    root = _python_project(tmp_path)
+    source = root / "src" / "billing.py"
+    source.write_text(source.read_text(encoding="utf-8").replace("total * 2", "total"), encoding="utf-8")
+    subprocess.run(["git", "add", "src/billing.py"], cwd=root, check=True)
+    subprocess.run(["git", "commit", "-m", "correct implementation"], cwd=root, check=True, capture_output=True)
+    source.write_text(source.read_text(encoding="utf-8").replace("return total", "return total * 2"), encoding="utf-8")
+    before = source.read_bytes()
+
+    result = CliRunner().invoke(
+        main,
+        [
+            "explain", str(root), "--problem", "checkout charges twice",
+            "--test-command", "python -m pytest -p no:cacheprovider -q",
+            "--verify-hypothesis", "--json",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    verification = payload["hypothesis_verification"]
+    assert verification["status"] == "confirmed"
+    assert verification["restored"] is True
+    assert verification["worktree_unchanged"] is True
+    assert source.read_bytes() == before
+
+
 def test_explain_cli_rejects_missing_commands_and_unsupported_projects(tmp_path: Path) -> None:
     empty = tmp_path / "empty"
     empty.mkdir()
@@ -276,3 +304,75 @@ def test_extracts_jest_expected_and_received_values(tmp_path: Path) -> None:
     frame = next(frame for frame in analysis.frames if frame["path"] == "src/price.js")
     assert frame["function"] == "price"
     assert frame["line"] == 1
+
+
+def test_hypothesis_verification_confirms_and_restores_changed_file(tmp_path: Path) -> None:
+    root = _python_project(tmp_path)
+    source = root / "src" / "billing.py"
+    source.write_text(source.read_text(encoding="utf-8").replace("total * 2", "total"), encoding="utf-8")
+    subprocess.run(["git", "add", "src/billing.py"], cwd=root, check=True)
+    subprocess.run(["git", "commit", "-m", "correct implementation"], cwd=root, check=True, capture_output=True)
+    correct = source.read_bytes()
+    source.write_text(source.read_text(encoding="utf-8").replace("return total", "return total * 2"), encoding="utf-8")
+    faulty = source.read_bytes()
+    command = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -p no:cacheprovider -q"
+
+    analysis = analyze_root_cause(
+        root,
+        problem="checkout charges twice",
+        outputs=[('File "src/billing.py", line 3, in charge_once\nE   assert 20 == 10\n', "")],
+    )
+    result = verify_top_hypothesis(
+        root,
+        hints=analysis.hints,
+        commands=[{"command_id": "test", "command": command}],
+        baseline=[{"command_id": "test", "return_code": 1, "timed_out": False}],
+        timeout_seconds=30,
+    )
+
+    assert result.status == "confirmed"
+    assert result.experiment_passed == 1
+    assert result.restored is True
+    assert result.worktree_unchanged is True
+    assert source.read_bytes() == faulty
+    assert source.read_bytes() != correct
+
+
+def test_hypothesis_verification_rejects_candidate_that_does_not_fix_failure(tmp_path: Path) -> None:
+    root = _python_project(tmp_path)
+    source = root / "src" / "billing.py"
+    source.write_text(source.read_text(encoding="utf-8").replace("total * 2", "total * 3"), encoding="utf-8")
+    analysis = analyze_root_cause(root, problem="wrong charge", outputs=[("E   assert 30 == 10", "")])
+
+    result = verify_top_hypothesis(
+        root,
+        hints=analysis.hints,
+        commands=[{"command_id": "test", "command": "python -m pytest -p no:cacheprovider -q"}],
+        baseline=[{"command_id": "test", "return_code": 1, "timed_out": False}],
+        timeout_seconds=30,
+    )
+
+    assert result.status == "rejected"
+    assert result.restored is True
+    assert source.read_text(encoding="utf-8").endswith("return total * 3\n")
+
+
+def test_hypothesis_verification_reports_command_worktree_pollution(tmp_path: Path) -> None:
+    root = _python_project(tmp_path)
+    source = root / "src" / "billing.py"
+    source.write_text(source.read_text(encoding="utf-8").replace("total * 2", "total * 3"), encoding="utf-8")
+    analysis = analyze_root_cause(root, problem="wrong charge", outputs=[("E   assert 30 == 10", "")])
+    command = "python -c \"from pathlib import Path; Path('experiment-output.txt').write_text('changed')\""
+
+    result = verify_top_hypothesis(
+        root,
+        hints=analysis.hints,
+        commands=[{"command_id": "test", "command": command}],
+        baseline=[{"command_id": "test", "return_code": 1, "timed_out": False}],
+        timeout_seconds=30,
+    )
+
+    assert result.status == "unsafe_to_test"
+    assert result.restored is True
+    assert result.worktree_unchanged is False
+    assert (root / "experiment-output.txt").is_file()

@@ -90,6 +90,7 @@ def validate_scenario(scenario: dict[str, Any], workspace: Path, doctor_link: st
                 str(selected),
                 "--command-timeout",
                 "180",
+                "--verify-hypothesis",
                 "--json",
             ],
             cwd=root,
@@ -120,12 +121,16 @@ def validate_scenario(scenario: dict[str, Any], workspace: Path, doctor_link: st
             item.get("expected") is not None or item.get("actual") is not None or item.get("frames")
             for item in failures
         )
+        hypothesis = dict(explanation.get("hypothesis_verification") or {})
         passed = (
             explain.returncode == 0
             and explanation.get("worktree_changed") is False
             and hint_rank == 1
             and location_match
             and structured_failure
+            and hypothesis.get("status") == "confirmed"
+            and hypothesis.get("restored") is True
+            and hypothesis.get("worktree_unchanged") is True
         )
         return {
             "name": scenario["name"],
@@ -142,6 +147,8 @@ def validate_scenario(scenario: dict[str, Any], workspace: Path, doctor_link: st
             "expected_function": expected_function,
             "location_match": location_match,
             "structured_failure": structured_failure,
+            "hypothesis_status": hypothesis.get("status"),
+            "hypothesis_restored": hypothesis.get("restored"),
             "worktree_changed_by_checks": explanation.get("worktree_changed"),
             "passed": passed,
         }
@@ -175,7 +182,8 @@ def main() -> None:
         f"- {'PASS' if item['passed'] else 'FAIL'} `{item['name']}`: reproduction={item['reproduction_status']}, "
         f"hint=`{item['expected_hint']}:{item['expected_line']}` function=`{item['expected_function']}` "
         f"rank={item['expected_hint_rank']}, location_match={item['location_match']}, "
-        f"structured_failure={item['structured_failure']}, checks_changed_tree={item['worktree_changed_by_checks']}"
+        f"structured_failure={item['structured_failure']}, hypothesis={item['hypothesis_status']}, "
+        f"restored={item['hypothesis_restored']}, checks_changed_tree={item['worktree_changed_by_checks']}"
         for item in results
     )
     (args.out / "results.md").write_text("\n".join(lines) + "\n", encoding="utf-8")

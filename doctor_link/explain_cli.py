@@ -10,6 +10,7 @@ from doctor_link.cli import main
 from doctor_link.core.package_transaction import atomic_write_json, atomic_write_text
 from doctor_link.core.command_runner import run_command
 from doctor_link.core.root_cause import analyze_root_cause
+from doctor_link.core.hypothesis_verifier import verify_top_hypothesis
 from doctor_link.core.safe_command_runner import run_safe_command_sequence, validate_safe_command_sequence
 from doctor_link.core.solve import (
     SolveCommand,
@@ -27,6 +28,7 @@ from doctor_link.core.solve import (
 @click.option("--reproduce-command", default=None, help="Safe command that fails while the problem exists.")
 @click.option("--test-command", default=None, help="Safe regression command used as failing evidence.")
 @click.option("--command-timeout", default=120, show_default=True, type=click.IntRange(1), help="Timeout for each check.")
+@click.option("--verify-hypothesis", is_flag=True, help="Temporarily restore the top changed-file candidate to HEAD and rerun failing checks, then restore it.")
 @click.option("--out", "output", type=click.Path(file_okay=False, path_type=Path), default=None, help="Directory for explain receipts.")
 @click.option("--json", "json_output", is_flag=True, help="Print the complete explain result as JSON.")
 def explain_command(
@@ -36,10 +38,11 @@ def explain_command(
     reproduce_command: str | None,
     test_command: str | None,
     command_timeout: int,
+    verify_hypothesis: bool,
     output: Path | None,
     json_output: bool,
 ) -> None:
-    """Cluster failing evidence into advisory root-cause source hints (no edits)."""
+    """Explain failing evidence; optional experiments are temporary and restored."""
     workspace = project_root.expanduser().resolve()
     root, package_path, target_error = resolve_solve_target(workspace, package)
     clean_problem = problem.strip()
@@ -75,6 +78,17 @@ def explain_command(
         problem=clean_problem,
         checks=[item.to_dict() for item in baseline],
     )
+    hypothesis_verification = None
+    if verify_hypothesis and not worktree_changed:
+        hypothesis_verification = verify_top_hypothesis(
+            root,
+            hints=analysis.hints,
+            commands=[item.to_dict() for item in commands],
+            baseline=[item.to_dict() for item in baseline],
+            timeout_seconds=command_timeout,
+        ).to_dict()
+        if hypothesis_verification["status"] == "unsafe_to_test":
+            worktree_changed = True
     result_status = "modified_worktree" if worktree_changed else analysis.status
     result_summary = (
         "A diagnostic check changed the Git working tree. Review and restore those changes before trusting the explanation."
@@ -91,6 +105,7 @@ def explain_command(
         "commands": [item.to_dict() for item in commands],
         "baseline": [item.to_dict() for item in baseline],
         "analysis": analysis.to_dict(),
+        "hypothesis_verification": hypothesis_verification,
         "status": result_status,
         "summary": result_summary,
         "worktree_changed": worktree_changed,
@@ -125,6 +140,9 @@ def explain_command(
                 click.echo(f"  evidence: {evidence}")
         for warning in analysis.warnings:
             click.echo(f"Warning: {warning}")
+        if hypothesis_verification:
+            click.echo(f"Hypothesis verification: {hypothesis_verification['status']}")
+            click.echo(f"  {hypothesis_verification['summary']}")
         if output is not None:
             click.echo(f"Explain session: {payload['output_dir']}")
 
@@ -229,6 +247,21 @@ def _render_markdown(payload: dict) -> str:
     if patterns:
         lines.extend(["", "## Failure patterns", ""])
         lines.extend(f"- {item}" for item in patterns)
+    verification = payload.get("hypothesis_verification")
+    if verification:
+        lines.extend([
+            "",
+            "## Counterfactual hypothesis verification",
+            "",
+            f"- Status: `{verification.get('status')}`",
+            f"- Candidate: `{verification.get('candidate_path') or 'unavailable'}`",
+            f"- Previously failing checks: {verification.get('baseline_failed', 0)}",
+            f"- Checks passing during experiment: {verification.get('experiment_passed', 0)}",
+            f"- Original file restored: `{verification.get('restored')}`",
+            f"- Worktree unchanged: `{verification.get('worktree_unchanged')}`",
+            "",
+            str(verification.get("summary") or ""),
+        ])
     return "\n".join(lines) + "\n"
 
 

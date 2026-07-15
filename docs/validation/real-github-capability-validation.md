@@ -16,7 +16,7 @@ This validation goes beyond configuration-only preflight. Three pinned public re
 
 Doctor link reproduced all three faults from ordinary-language problem descriptions. Click selected a focused `tests/test_commands.py` command; both Node projects selected their declared `npm test` entrypoint. All failures were classified as reproduced rather than setup failures.
 
-Advisory explanation ranked the actual changed production file first in every scenario and identified the exact mutation location and enclosing function: `src/click/utils.py:56` in `make_str`, `index.js:11` in `resumeNext`, and `source/index.js:199` in `applyStyle`. Every scenario also produced a structured failure record containing extracted values or project stack frames. The explain checks did not introduce additional Git changes, and the harness restored every mutation to the initial repository status. Result: **3/3 passed**.
+Advisory explanation ranked the actual changed production file first in every scenario and identified the exact mutation location and enclosing function: `src/click/utils.py:56` in `make_str`, `index.js:11` in `resumeNext`, and `source/index.js:199` in `applyStyle`. Every scenario also produced a structured failure record containing extracted values or project stack frames. With `--verify-hypothesis`, temporarily restoring each candidate to `HEAD` made its previously failing check pass, so all three hypotheses were classified `confirmed`. Exact original bytes and the complete initial worktree state were restored after every experiment. Result: **3/3 passed**.
 
 ## Scope and limitations
 
