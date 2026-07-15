@@ -6,6 +6,8 @@ Doctor link follows semantic versioning. Public release publishing requires expl
 
 ## Unreleased
 
+## [0.6.0] - 2026-07-15
+
 ### Fixed
 
 - Synthetic traceback locations such as `<string>` are no longer treated as project production code, and changed-file fallbacks no longer falsely claim stack support.

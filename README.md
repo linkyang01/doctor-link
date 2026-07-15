@@ -28,7 +28,7 @@ Doctor link does not replace Codex, Cursor, Aider, OpenHands, Continue, Cline, W
 
 ## Verified status
 
-Latest published version: [`v0.5.1`](https://github.com/linkyang01/doctor-link/releases/tag/v0.5.1), published on 2026-07-14. Available on [PyPI](https://pypi.org/project/doctor-link/).
+Latest published version: [`v0.6.0`](https://github.com/linkyang01/doctor-link/releases/tag/v0.6.0). The release workflow publishes the immutable GitHub assets first, followed by the same validated artifacts on [PyPI](https://pypi.org/project/doctor-link/).
 
 The v0.5 line passed 365 tests, all 66 installed CLI routes through 75 invocations and twelve complex scenarios, and Python 3.10–3.14 plus Ubuntu, macOS, Windows, packaging, security, Trusted Publishing, and clean pipx installation gates.
 
@@ -36,7 +36,7 @@ Evidence:
 
 - [cloud validation certificate](docs/validation/cloud-validation-certificate.md)
 - [validation evidence index](docs/validation/validation-evidence-index.md)
-- [v0.5.1 release notes](https://github.com/linkyang01/doctor-link/releases/tag/v0.5.1)
+- [v0.6.0 release notes](docs/validation/v0.6.0-release-notes.md)
 
 ## Main capabilities
 
@@ -72,7 +72,7 @@ Current support scope:
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install doctor-link==0.5.1
+python -m pip install doctor-link==0.6.0
 doctor-link --version
 doctor-link preflight . --json
 ```

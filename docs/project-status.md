@@ -1,8 +1,10 @@
 # Doctor link Project Status
 
-Status date: 2026-07-14
+Status date: 2026-07-15
 
 ## Current source development
+
+Release line `v0.6.0` adds structured failure facts, exact source localization, reversible hypothesis verification, project-owned call chains, evidence-bounded repair guidance, grounded repair admission, and focused-plus-full-regression acceptance. Local source, real-project, adversarial, package, and clean-install validation are complete; immutable GitHub and PyPI publication are performed only by the authorized release workflows after merge.
 
 Published version `v0.5.1` is the distribution-consistency patch for the v0.5 command-knowledge closure. `doctor-link reproduce suggest` derives ranked checks from an ordinary-language problem using configured catalogs, existing test paths, project metadata, and bounded domain aliases. `doctor-link assist` validates those checks, generates a local browser result, and enters the existing solve approval gate without requiring the user to supply a test command. Candidate checks that alter Git state are rejected.
 

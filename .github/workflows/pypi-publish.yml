@@ -6,7 +6,7 @@ on:
       tag:
         description: Existing immutable GitHub Release tag to publish
         required: true
-        default: v0.5.1
+        default: v0.6.0
       confirmation:
         description: Type publish-doctor-link-to-pypi
         required: true
