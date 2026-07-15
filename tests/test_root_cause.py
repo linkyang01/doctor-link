@@ -160,6 +160,28 @@ def test_explain_cli_human_output_and_no_failure_exit(tmp_path: Path) -> None:
     assert "Explain status: no_failures" in result.output
 
 
+def test_explain_cli_reports_check_worktree_mutation(tmp_path: Path) -> None:
+    root = _python_project(tmp_path)
+    # The file is already untracked before the check; content hashing must still
+    # detect that the command changed it even though porcelain status stays `??`.
+    (root / "generated.txt").write_text("before", encoding="utf-8")
+    command = (
+        "python -c \"from pathlib import Path; "
+        "Path('generated.txt').write_text('changed'); raise SystemExit(1)\""
+    )
+
+    result = CliRunner().invoke(
+        main,
+        ["explain", str(root), "--problem", "check mutates project", "--test-command", command, "--json"],
+    )
+
+    assert result.exit_code == 5, result.output
+    payload = json.loads(result.output)
+    assert payload["status"] == "modified_worktree"
+    assert payload["worktree_changed"] is True
+    assert (root / "generated.txt").read_text(encoding="utf-8") == "changed"
+
+
 def test_explain_cli_rejects_missing_commands_and_unsupported_projects(tmp_path: Path) -> None:
     empty = tmp_path / "empty"
     empty.mkdir()
@@ -207,3 +229,19 @@ def test_prompt_section_and_javascript_frame_mapping(tmp_path: Path) -> None:
     empty = analyze_root_cause(root, problem="nothing", checks=[{"status": "passed", "return_code": 0, "stdout": "", "stderr": ""}])
     assert empty.status == "no_failures"
     assert empty.prompt_section() == ""
+
+
+def test_root_cause_prioritizes_changed_production_file(tmp_path: Path) -> None:
+    root = _python_project(tmp_path)
+    source = root / "src" / "billing.py"
+    source.write_text(source.read_text(encoding="utf-8").replace("total * 2", "total * 3"), encoding="utf-8")
+
+    analysis = analyze_root_cause(
+        root,
+        problem="checkout charge is wrong",
+        outputs=[("Difference between expected and actual values", "")],
+    )
+
+    assert analysis.hints
+    assert analysis.hints[0]["candidate_paths"] == ["src/billing.py"]
+    assert "may still be unrelated" in analysis.hints[0]["rationale"]

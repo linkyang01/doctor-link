@@ -59,6 +59,7 @@ def test_diff_cli_json_from_project(tmp_path: Path) -> None:
 
 def test_diff_cli_from_solve_session_writes_receipt(tmp_path: Path) -> None:
     root = _repo(tmp_path)
+    subprocess.run(["git", "switch", "-c", "doctor-link/repair"], cwd=root, check=True, capture_output=True)
     (root / "src" / "app.py").write_text("value = 3\n", encoding="utf-8")
     session = tmp_path / "session"
     session.mkdir()
@@ -67,7 +68,12 @@ def test_diff_cli_from_solve_session_writes_receipt(tmp_path: Path) -> None:
             {
                 "project_root": str(root),
                 "original_branch": "main",
-                "repair_branch": "main",
+                "repair_branch": "doctor-link/repair",
+                "change_receipt": {
+                    "base_ref": subprocess.run(
+                        ["git", "rev-parse", "HEAD"], cwd=root, check=True, capture_output=True, text=True
+                    ).stdout.strip()
+                },
                 "protected_verification_inputs": ["tests/test_app.py"],
                 "verification_input_changes": [],
             }
@@ -78,6 +84,7 @@ def test_diff_cli_from_solve_session_writes_receipt(tmp_path: Path) -> None:
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)
     assert payload["schema"] == "doctor-link-change-receipt-v1"
+    assert "src/app.py" in payload["production_files"]
     assert (session / "change-receipt.json").is_file()
     assert (session / "change-receipt.md").is_file()
 

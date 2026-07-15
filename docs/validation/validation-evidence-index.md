@@ -2,6 +2,10 @@
 
 This index separates current repaired-source evidence, historical evidence, and actions that have not occurred. A green workflow run certifies only the commit and scope named below.
 
+## 2026-07-15 real GitHub capability validation
+
+Issue [#167](https://github.com/linkyang01/doctor-link/issues/167) adds native-test validation on pinned Click, p-limit, and Chalk repositories. Each scenario passes its clean upstream baseline, injects a reversible production fault, reproduces it from ordinary language, ranks the changed production file first as an advisory hint, verifies checks did not add Git changes, and restores the initial repository state. See [report](real-github-capability-validation.md) and [evidence](evidence/real-github-capability-2026-07-15/) (**3/3 PASS**).
+
 ## Post-v0.5.1 public-project preflight harness
 
 Issue [#156](https://github.com/linkyang01/doctor-link/issues/156) adds a pinned public-project validation harness. On 2026-07-14 the six-project set (Python: click, requests, pydantic; JavaScript: p-limit, chalk, axios) completed commit-pinned clones and read-only preflight with **6/6 PASS** (warnings allowed, zero blockers). Receipts: [public-project validation harness](public-project-validation-harness.md) and [evidence](evidence/public-project-validation-2026-07-14/).

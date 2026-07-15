@@ -604,7 +604,8 @@ def _run_repair_rounds(
                 [
                     f"Review the proposed changes on branch `{result.repair_branch}`.",
                     f'doctor-link diff "{session_dir}"',
-                    "This is not verified. Use --allow-repair only after accepting the proposal.",
+                    "This is not verified. Either review and independently test/commit the proposal, "
+                    "or discard its working-tree edits before rerunning with --allow-repair.",
                 ]
             )
             return _persist_and_finish(

@@ -1002,6 +1002,7 @@ def test_suggest_only_produces_change_receipt_without_verified(tmp_path: Path) -
     assert (session / "change-receipt.json").is_file()
     assert (session / "change-receipt.md").is_file()
     assert any("calculator.py" in path for path in result.change_receipt.get("production_files", []) + [item.get("path") for item in result.change_receipt.get("files", [])])
+    assert any("discard its working-tree edits" in step for step in result.next_steps)
 
 
 def test_suggest_only_conflicts_with_allow_repair(tmp_path: Path) -> None:

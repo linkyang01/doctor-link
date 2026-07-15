@@ -12,6 +12,8 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
+from doctor_link.core.command_runner import run_command
+
 
 EXPLAIN_SCHEMA = "doctor-link-root-cause-hints-v1"
 TRACEBACK_FRAME = re.compile(
@@ -20,7 +22,9 @@ TRACEBACK_FRAME = re.compile(
 PYTEST_NODE = re.compile(r"(?P<path>[\w./\\-]+\.py)::(?P<node>[\w\[\]-]+)")
 SYMBOL_TOKEN = re.compile(r"\b([A-Z][A-Za-z0-9_]{2,}|[a-z_][a-z0-9_]{2,}\.[A-Za-z_][A-Za-z0-9_]*)\b")
 ASSERT_LINE = re.compile(r"(?m)^E\s+assert\s+.+$|^>\s+assert\s+.+$|AssertionError:.*$")
-JS_FRAME = re.compile(r"(?P<path>[\w./\\-]+\.(?:cjs|js|jsx|mjs|ts|tsx)):(?P<line>\d+)(?::(?P<column>\d+))?")
+JS_FRAME = re.compile(
+    r"(?:file://)?(?P<path>[\w./\\-]+\.(?:cjs|js|jsx|mjs|ts|tsx)):(?P<line>\d+)(?::(?P<column>\d+))?"
+)
 IGNORED_PARTS = {
     ".git",
     ".venv",
@@ -40,6 +44,9 @@ STOP_SYMBOLS = {
     "True",
     "TypeError",
     "ValueError",
+    "Difference",
+    "TODO",
+    "Unexpected",
     "assert",
     "false",
     "self",
@@ -156,6 +163,21 @@ def analyze_root_cause(
     path_hits = Counter(frame.path for frame in production_frames if frame.path)
     hints: list[RootCauseHint] = []
 
+    changed_source_paths = _git_changed_source_paths(root)
+    for path in changed_source_paths[:5]:
+        hints.append(
+            RootCauseHint(
+                symbol=Path(path).stem,
+                confidence=0.9,
+                evidence_count=1,
+                candidate_paths=[path],
+                rationale=(
+                    "This production file differs from the current Git base and is a strong inspection candidate; "
+                    "the change may still be unrelated."
+                ),
+            )
+        )
+
     for symbol in shared[:8]:
         mapped = _map_symbol_to_sources(root, symbol)
         evidence = symbols[symbol]
@@ -193,7 +215,16 @@ def analyze_root_cause(
             )
         )
 
-    hints = sorted(hints, key=lambda item: (-item.confidence, -item.evidence_count, item.symbol))[:8]
+    hints = sorted(
+        hints,
+        key=lambda item: (
+            0 if item.rationale.startswith("This production file differs") else 1,
+            0 if item.candidate_paths else 1,
+            -item.confidence,
+            -item.evidence_count,
+            item.symbol,
+        ),
+    )[:8]
     if not hints and (production_frames or test_frames):
         top = (production_frames or test_frames)[0]
         relative = top.path
@@ -317,6 +348,8 @@ def _extract_frames(text: str, root: Path) -> list[TraceFrame]:
                 path = candidate.as_posix()
         else:
             path = path.replace("\\", "/")
+            if path.startswith("file://"):
+                path = path.removeprefix("file://")
         normalized.append(
             TraceFrame(path=path, line=frame.line, function=frame.function, in_tests=_looks_like_test_path(path))
         )
@@ -395,6 +428,25 @@ def _iter_source_files(root: Path) -> Iterable[Path]:
         except OSError:
             continue
         yield path
+
+
+def _git_changed_source_paths(root: Path) -> list[str]:
+    inside = run_command(["git", "rev-parse", "--is-inside-work-tree"], cwd=root, timeout_seconds=15)
+    if inside.returncode != 0 or inside.stdout.strip() != "true":
+        return []
+    changed = run_command(["git", "diff", "--name-only", "HEAD"], cwd=root, timeout_seconds=15)
+    if changed.returncode != 0:
+        return []
+    suffixes = {".cjs", ".js", ".jsx", ".mjs", ".py", ".ts", ".tsx"}
+    paths: list[str] = []
+    for raw in changed.stdout.splitlines():
+        normalized = raw.strip().replace("\\", "/")
+        if not normalized or Path(normalized).suffix.lower() not in suffixes:
+            continue
+        if _looks_like_test_path(normalized) or any(part in IGNORED_PARTS for part in Path(normalized).parts):
+            continue
+        paths.append(normalized)
+    return sorted(set(paths))
 
 
 def _looks_like_test_path(path: str) -> bool:
