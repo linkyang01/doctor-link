@@ -7,6 +7,8 @@ from pathlib import Path
 from click.testing import CliRunner
 
 from doctor_link.core.root_cause import analyze_root_cause
+from doctor_link.core.hypothesis_verifier import verify_top_hypothesis
+from doctor_link.core.repair_guidance import build_repair_guidance
 from doctor_link.core.solve import SolveCommandResult, build_repair_prompt, solve_project
 from doctor_link.entrypoint import main
 
@@ -77,6 +79,19 @@ def test_analyze_root_cause_clusters_shared_symbol_and_maps_source(tmp_path: Pat
     assert "ChargeEngine" in symbols or "charge_once" in symbols or "billing" in symbols
     paths = {path for hint in analysis.hints for path in hint["candidate_paths"]}
     assert any(path.endswith("billing.py") for path in paths)
+    assert analysis.failures[0]["expected"] == "10"
+    assert analysis.failures[0]["actual"] == "20"
+    billing_hint = next(hint for hint in analysis.hints if "src/billing.py" in hint["candidate_paths"])
+    assert billing_hint["locations"][0]["line"] == 3
+    assert billing_hint["locations"][0]["function"] == "charge_once"
+    assert billing_hint["locations"][0]["source"] == "return total * 2"
+    assert billing_hint["score"] > 0
+    assert billing_hint["evidence"]
+    chain = analysis.call_chains[0]
+    assert chain["complete"] is True
+    assert [node["role"] for node in chain["nodes"]] == ["test", "production"]
+    assert chain["nodes"][0]["function"] == "test_charge_once_a"
+    assert chain["nodes"][1]["function"] == "charge_once"
     assert "advisory" in " ".join(analysis.warnings).casefold() or analysis.advisory is True
 
 
@@ -111,6 +126,10 @@ def test_solve_prompt_includes_advisory_root_cause_section(tmp_path: Path) -> No
     if result.root_cause.get("hints"):
         assert "Suspected root cause" in prompt
         assert "advisory" in prompt.casefold()
+    if result.root_cause.get("failures"):
+        assert "Structured failure facts" in prompt
+    if any(chain.get("nodes") for chain in result.root_cause.get("call_chains") or []):
+        assert "Project-owned call paths" in prompt
     assert "grounded root cause" in prompt
 
 
@@ -182,6 +201,36 @@ def test_explain_cli_reports_check_worktree_mutation(tmp_path: Path) -> None:
     assert (root / "generated.txt").read_text(encoding="utf-8") == "changed"
 
 
+def test_explain_cli_can_confirm_reversible_hypothesis(tmp_path: Path) -> None:
+    root = _python_project(tmp_path)
+    source = root / "src" / "billing.py"
+    source.write_text(source.read_text(encoding="utf-8").replace("total * 2", "total"), encoding="utf-8")
+    subprocess.run(["git", "add", "src/billing.py"], cwd=root, check=True)
+    subprocess.run(["git", "commit", "-m", "correct implementation"], cwd=root, check=True, capture_output=True)
+    source.write_text(source.read_text(encoding="utf-8").replace("return total", "return total * 2"), encoding="utf-8")
+    before = source.read_bytes()
+
+    result = CliRunner().invoke(
+        main,
+        [
+            "explain", str(root), "--problem", "checkout charges twice",
+            "--test-command", "python -m pytest -p no:cacheprovider -q",
+            "--verify-hypothesis", "--json",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    verification = payload["hypothesis_verification"]
+    assert verification["status"] == "confirmed"
+    assert verification["restored"] is True
+    assert verification["worktree_unchanged"] is True
+    assert payload["repair_guidance"]["status"] == "actionable"
+    assert payload["repair_guidance"]["verification"]["focused_commands"]
+    assert payload["analysis"]["call_chains"]
+    assert source.read_bytes() == before
+
+
 def test_explain_cli_rejects_missing_commands_and_unsupported_projects(tmp_path: Path) -> None:
     empty = tmp_path / "empty"
     empty.mkdir()
@@ -221,6 +270,12 @@ def test_prompt_section_and_javascript_frame_mapping(tmp_path: Path) -> None:
         ],
     )
     assert analysis.failure_count == 2
+    assert analysis.failures[0]["expected"] == "3"
+    assert analysis.failures[0]["actual"] == "1"
+    math_frame = next(frame for frame in analysis.frames if frame["path"] == "src/math.js")
+    assert math_frame["line"] == 1
+    assert math_frame["function"] == "Object.add"
+    assert math_frame["project_code"] is True
     section = analysis.prompt_section()
     if analysis.hints:
         assert "Suspected root cause" in section
@@ -245,3 +300,125 @@ def test_root_cause_prioritizes_changed_production_file(tmp_path: Path) -> None:
     assert analysis.hints
     assert analysis.hints[0]["candidate_paths"] == ["src/billing.py"]
     assert "may still be unrelated" in analysis.hints[0]["rationale"]
+    assert analysis.hints[0]["locations"][0]["line"] == 3
+    assert analysis.hints[0]["locations"][0]["function"] == "charge_once"
+
+
+def test_extracts_jest_expected_and_received_values(tmp_path: Path) -> None:
+    root = tmp_path / "jest-app"
+    (root / "src").mkdir(parents=True)
+    (root / "src" / "price.js").write_text("export function price() { return 12; }\n", encoding="utf-8")
+    output = """Error: expect(received).toBe(expected)\n\nExpected: 10\nReceived: 12\n\n    at price (src/price.js:1:34)\n"""
+
+    analysis = analyze_root_cause(root, problem="wrong price", outputs=[(output, "")])
+
+    assert analysis.failures[0]["expected"] == "10"
+    assert analysis.failures[0]["actual"] == "12"
+    frame = next(frame for frame in analysis.frames if frame["path"] == "src/price.js")
+    assert frame["function"] == "price"
+    assert frame["line"] == 1
+
+
+def test_hypothesis_verification_confirms_and_restores_changed_file(tmp_path: Path) -> None:
+    root = _python_project(tmp_path)
+    source = root / "src" / "billing.py"
+    source.write_text(source.read_text(encoding="utf-8").replace("total * 2", "total"), encoding="utf-8")
+    subprocess.run(["git", "add", "src/billing.py"], cwd=root, check=True)
+    subprocess.run(["git", "commit", "-m", "correct implementation"], cwd=root, check=True, capture_output=True)
+    correct = source.read_bytes()
+    source.write_text(source.read_text(encoding="utf-8").replace("return total", "return total * 2"), encoding="utf-8")
+    faulty = source.read_bytes()
+    command = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -p no:cacheprovider -q"
+
+    analysis = analyze_root_cause(
+        root,
+        problem="checkout charges twice",
+        outputs=[('File "src/billing.py", line 3, in charge_once\nE   assert 20 == 10\n', "")],
+    )
+    result = verify_top_hypothesis(
+        root,
+        hints=analysis.hints,
+        commands=[{"command_id": "test", "command": command}],
+        baseline=[{"command_id": "test", "return_code": 1, "timed_out": False}],
+        timeout_seconds=30,
+    )
+
+    assert result.status == "confirmed"
+    assert result.experiment_passed == 1
+    assert result.restored is True
+    assert result.worktree_unchanged is True
+    assert source.read_bytes() == faulty
+    assert source.read_bytes() != correct
+
+
+def test_hypothesis_verification_rejects_candidate_that_does_not_fix_failure(tmp_path: Path) -> None:
+    root = _python_project(tmp_path)
+    source = root / "src" / "billing.py"
+    source.write_text(source.read_text(encoding="utf-8").replace("total * 2", "total * 3"), encoding="utf-8")
+    analysis = analyze_root_cause(root, problem="wrong charge", outputs=[("E   assert 30 == 10", "")])
+
+    result = verify_top_hypothesis(
+        root,
+        hints=analysis.hints,
+        commands=[{"command_id": "test", "command": "python -m pytest -p no:cacheprovider -q"}],
+        baseline=[{"command_id": "test", "return_code": 1, "timed_out": False}],
+        timeout_seconds=30,
+    )
+
+    assert result.status == "rejected"
+    assert result.restored is True
+    assert source.read_text(encoding="utf-8").endswith("return total * 3\n")
+
+
+def test_hypothesis_verification_reports_command_worktree_pollution(tmp_path: Path) -> None:
+    root = _python_project(tmp_path)
+    source = root / "src" / "billing.py"
+    source.write_text(source.read_text(encoding="utf-8").replace("total * 2", "total * 3"), encoding="utf-8")
+    analysis = analyze_root_cause(root, problem="wrong charge", outputs=[("E   assert 30 == 10", "")])
+    command = "python -c \"from pathlib import Path; Path('experiment-output.txt').write_text('changed')\""
+
+    result = verify_top_hypothesis(
+        root,
+        hints=analysis.hints,
+        commands=[{"command_id": "test", "command": command}],
+        baseline=[{"command_id": "test", "return_code": 1, "timed_out": False}],
+        timeout_seconds=30,
+    )
+
+    assert result.status == "unsafe_to_test"
+    assert result.restored is True
+    assert result.worktree_unchanged is False
+    assert (root / "experiment-output.txt").is_file()
+
+
+def test_repair_guidance_separates_facts_inferences_and_verified_evidence(tmp_path: Path) -> None:
+    root = _python_project(tmp_path)
+    source = root / "src" / "billing.py"
+    source.write_text(source.read_text(encoding="utf-8").replace("total * 2", "total * 3"), encoding="utf-8")
+    analysis = analyze_root_cause(
+        root,
+        problem="wrong charge",
+        outputs=[('tests/test_billing.py:8: in test_charge_once_a\nFile "src/billing.py", line 3, in charge_once\nE   assert 30 == 10', "")],
+    )
+    command = {"command_id": "test", "command": "python -m pytest tests/test_billing.py -q"}
+
+    guidance = build_repair_guidance(
+        root,
+        analysis=analysis.to_dict(),
+        hypothesis_verification={"status": "confirmed"},
+        commands=[command],
+        baseline=[{"command_id": "test", "return_code": 1}],
+    )
+
+    assert guidance["status"] == "actionable"
+    assert guidance["candidate"] == {
+        "path": "src/billing.py",
+        "line": 3,
+        "function": "charge_once",
+        "source": "return total * 3",
+    }
+    assert guidance["diagnosis"]["observed_facts"]
+    assert guidance["diagnosis"]["inferences"]
+    assert guidance["diagnosis"]["verified_evidence"]
+    assert guidance["verification"]["focused_commands"] == [command["command"]]
+    assert "total * 3" in guidance["recommended_change"]["current_diff_excerpt"]

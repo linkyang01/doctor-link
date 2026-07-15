@@ -1,0 +1,22 @@
+{
+  "schema": "doctor-link-clean-install-result-v1",
+  "date": "2026-07-15",
+  "python": "3.12.13",
+  "package_version": "0.5.1",
+  "build": "passed",
+  "twine": "passed",
+  "distribution_contents": "passed",
+  "pip_install": "passed",
+  "pip_check": "passed",
+  "installed_import_origin": "site-packages",
+  "explain_hypothesis_status": "confirmed",
+  "repair_guidance_status": "actionable",
+  "experiment_restored": true,
+  "experiment_worktree_unchanged": true,
+  "grounded_dependency_gate": "blocked",
+  "repair_branch_created_for_dependency_error": false,
+  "artifacts": [
+    {"name": "doctor_link-0.5.1-py3-none-any.whl", "bytes": 214705, "sha256": "f59dfd4c7b7b0f7d58a4a96f7e3112a836d084547e6ed574c272a228d735cf81"},
+    {"name": "doctor_link-0.5.1.tar.gz", "bytes": 469955, "sha256": "7c6475d48a52c261893f7e4446a0bfcdb1df7e4222b58bc089903ad06e525cae"}
+  ]
+}

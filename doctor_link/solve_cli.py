@@ -46,6 +46,11 @@ def _validate_repair_tool(_ctx: click.Context, _param: click.Parameter, value: s
     callback=_validate_repair_tool,
     help="Repair executor.",
 )
+@click.option(
+    "--require-grounded-root-cause",
+    is_flag=True,
+    help="Block repair unless failing evidence maps to project source with a precise location or production frame.",
+)
 @click.option("--allow-repair", is_flag=True, help="Explicitly allow branch creation, Codex execution, and code edits.")
 @click.option(
     "--suggest-only",
@@ -73,6 +78,7 @@ def solve_command(
     allow_repair: bool,
     suggest_only: bool,
     allow_verification_changes: bool,
+    require_grounded_root_cause: bool,
     max_rounds: int,
     command_timeout: int,
     repair_timeout: int,
@@ -105,6 +111,7 @@ def solve_command(
             allow_repair=allow_repair,
             allow_verification_changes=allow_verification_changes,
             suggest_only=suggest_only,
+            require_grounded_root_cause=require_grounded_root_cause,
             max_rounds=max_rounds,
             command_timeout_seconds=command_timeout,
             repair_timeout_seconds=repair_timeout,

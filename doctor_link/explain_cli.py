@@ -10,6 +10,8 @@ from doctor_link.cli import main
 from doctor_link.core.package_transaction import atomic_write_json, atomic_write_text
 from doctor_link.core.command_runner import run_command
 from doctor_link.core.root_cause import analyze_root_cause
+from doctor_link.core.hypothesis_verifier import verify_top_hypothesis
+from doctor_link.core.repair_guidance import build_repair_guidance
 from doctor_link.core.safe_command_runner import run_safe_command_sequence, validate_safe_command_sequence
 from doctor_link.core.solve import (
     SolveCommand,
@@ -27,6 +29,7 @@ from doctor_link.core.solve import (
 @click.option("--reproduce-command", default=None, help="Safe command that fails while the problem exists.")
 @click.option("--test-command", default=None, help="Safe regression command used as failing evidence.")
 @click.option("--command-timeout", default=120, show_default=True, type=click.IntRange(1), help="Timeout for each check.")
+@click.option("--verify-hypothesis", is_flag=True, help="Temporarily restore the top changed-file candidate to HEAD and rerun failing checks, then restore it.")
 @click.option("--out", "output", type=click.Path(file_okay=False, path_type=Path), default=None, help="Directory for explain receipts.")
 @click.option("--json", "json_output", is_flag=True, help="Print the complete explain result as JSON.")
 def explain_command(
@@ -36,10 +39,11 @@ def explain_command(
     reproduce_command: str | None,
     test_command: str | None,
     command_timeout: int,
+    verify_hypothesis: bool,
     output: Path | None,
     json_output: bool,
 ) -> None:
-    """Cluster failing evidence into advisory root-cause source hints (no edits)."""
+    """Explain failing evidence; optional experiments are temporary and restored."""
     workspace = project_root.expanduser().resolve()
     root, package_path, target_error = resolve_solve_target(workspace, package)
     clean_problem = problem.strip()
@@ -75,6 +79,24 @@ def explain_command(
         problem=clean_problem,
         checks=[item.to_dict() for item in baseline],
     )
+    hypothesis_verification = None
+    if verify_hypothesis and not worktree_changed:
+        hypothesis_verification = verify_top_hypothesis(
+            root,
+            hints=analysis.hints,
+            commands=[item.to_dict() for item in commands],
+            baseline=[item.to_dict() for item in baseline],
+            timeout_seconds=command_timeout,
+        ).to_dict()
+        if hypothesis_verification["status"] == "unsafe_to_test":
+            worktree_changed = True
+    repair_guidance = build_repair_guidance(
+        root,
+        analysis=analysis.to_dict(),
+        hypothesis_verification=hypothesis_verification,
+        commands=[item.to_dict() for item in commands],
+        baseline=[item.to_dict() for item in baseline],
+    )
     result_status = "modified_worktree" if worktree_changed else analysis.status
     result_summary = (
         "A diagnostic check changed the Git working tree. Review and restore those changes before trusting the explanation."
@@ -91,6 +113,8 @@ def explain_command(
         "commands": [item.to_dict() for item in commands],
         "baseline": [item.to_dict() for item in baseline],
         "analysis": analysis.to_dict(),
+        "hypothesis_verification": hypothesis_verification,
+        "repair_guidance": repair_guidance,
         "status": result_status,
         "summary": result_summary,
         "worktree_changed": worktree_changed,
@@ -116,8 +140,20 @@ def explain_command(
             )
             if hint.get("rationale"):
                 click.echo(f"  {hint['rationale']}")
+            for location in hint.get("locations", [])[:2]:
+                click.echo(
+                    f"  location={location.get('path')}:{location.get('line') or '?'} "
+                    f"function={location.get('function') or '(unknown)'}"
+                )
+            for evidence in hint.get("evidence", [])[:3]:
+                click.echo(f"  evidence: {evidence}")
         for warning in analysis.warnings:
             click.echo(f"Warning: {warning}")
+        if hypothesis_verification:
+            click.echo(f"Hypothesis verification: {hypothesis_verification['status']}")
+            click.echo(f"  {hypothesis_verification['summary']}")
+        click.echo(f"Repair guidance: {repair_guidance['status']} risk={repair_guidance['risk']['level']}")
+        click.echo(f"  {repair_guidance['recommended_change']['principle']}")
         if output is not None:
             click.echo(f"Explain session: {payload['output_dir']}")
 
@@ -198,10 +234,90 @@ def _render_markdown(payload: dict) -> str:
             f"- **{hint.get('symbol')}** (confidence {hint.get('confidence')}, "
             f"evidence {hint.get('evidence_count')}): {hint.get('rationale')} → {paths}"
         )
+        for location in hint.get("locations", [])[:3]:
+            lines.append(
+                f"  - Location: `{location.get('path')}:{location.get('line') or '?'}`; "
+                f"function `{location.get('function') or 'unknown'}`"
+            )
+            if location.get("source"):
+                lines.append(f"  - Source: `{location['source']}`")
+        for evidence in hint.get("evidence", [])[:4]:
+            lines.append(f"  - Evidence: {evidence}")
+    failures = analysis.get("failures") or []
+    if failures:
+        lines.extend(["", "## Structured failures", ""])
+        for index, failure in enumerate(failures, start=1):
+            lines.append(f"### Failure {index}")
+            lines.append("")
+    call_chains = analysis.get("call_chains") or []
+    if call_chains:
+        lines.extend(["", "## Project call chains", ""])
+        for chain in call_chains:
+            label = chain.get("test") or f"failure {chain.get('failure_index')}"
+            lines.append(f"### `{label}`")
+            lines.append("")
+            nodes = chain.get("nodes") or []
+            if not nodes:
+                lines.append("- No project-owned call frames extracted.")
+            for index, node in enumerate(nodes):
+                connector = "→" if index else ""
+                lines.append(
+                    f"- {connector} `{node.get('path')}:{node.get('line') or '?'}` "
+                    f"→ `{node.get('function') or 'unknown'}` ({node.get('role')})"
+                )
+            lines.append("")
+            lines.append(f"- Test: `{failure.get('test') or 'unknown'}`")
+            lines.append(f"- Exception: `{failure.get('exception') or 'unknown'}`")
+            lines.append(f"- Expected: `{failure.get('expected') or 'not extracted'}`")
+            lines.append(f"- Actual: `{failure.get('actual') or 'not extracted'}`")
+            lines.append("")
     patterns = analysis.get("failure_patterns") or []
     if patterns:
         lines.extend(["", "## Failure patterns", ""])
         lines.extend(f"- {item}" for item in patterns)
+    verification = payload.get("hypothesis_verification")
+    if verification:
+        lines.extend([
+            "",
+            "## Counterfactual hypothesis verification",
+            "",
+            f"- Status: `{verification.get('status')}`",
+            f"- Candidate: `{verification.get('candidate_path') or 'unavailable'}`",
+            f"- Previously failing checks: {verification.get('baseline_failed', 0)}",
+            f"- Checks passing during experiment: {verification.get('experiment_passed', 0)}",
+            f"- Original file restored: `{verification.get('restored')}`",
+            f"- Worktree unchanged: `{verification.get('worktree_unchanged')}`",
+            "",
+            str(verification.get("summary") or ""),
+        ])
+    guidance = payload.get("repair_guidance") or {}
+    if guidance:
+        candidate = guidance.get("candidate") or {}
+        diagnosis = guidance.get("diagnosis") or {}
+        recommendation = guidance.get("recommended_change") or {}
+        verification_commands = guidance.get("verification") or {}
+        lines.extend([
+            "",
+            "## Evidence-bounded repair guidance",
+            "",
+            f"- Status: `{guidance.get('status')}`",
+            f"- Risk: `{(guidance.get('risk') or {}).get('level')}`",
+            f"- Candidate: `{candidate.get('path') or 'unknown'}:{candidate.get('line') or '?'}` "
+            f"in `{candidate.get('function') or 'unknown'}`",
+            "",
+            "### Observed facts",
+            "",
+        ])
+        lines.extend(f"- {item}" for item in diagnosis.get("observed_facts") or ["No structured fact extracted."])
+        lines.extend(["", "### Inferences", ""])
+        lines.extend(f"- {item}" for item in diagnosis.get("inferences") or ["No source inference available."])
+        lines.extend(["", "### Verified evidence", ""])
+        lines.extend(f"- {item}" for item in diagnosis.get("verified_evidence") or ["No counterfactual verification completed."])
+        lines.extend(["", "### Recommended change", "", str(recommendation.get("principle") or "")])
+        lines.extend(["", "### Focused verification", ""])
+        lines.extend(f"- `{item}`" for item in verification_commands.get("focused_commands") or ["No focused command available."])
+        lines.extend(["", "### Full regression", ""])
+        lines.extend(f"- `{item}`" for item in verification_commands.get("full_regression_commands") or ["No regression command available."])
     return "\n".join(lines) + "\n"
 
 

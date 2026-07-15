@@ -1,6 +1,6 @@
 # Real GitHub capability validation
 
-This suite uses pinned source commits from Click, p-limit, and Chalk. Unlike the public-project preflight set, it runs each project's real tests, applies one reversible production-code mutation without changing tests, asks Doctor link to find and execute a reproduction from ordinary language, and checks whether advisory explanation prioritizes the changed production file.
+This suite uses pinned source commits from Click, p-limit, and Chalk. Unlike the public-project preflight set, it runs each project's real tests, applies one reversible production-code mutation without changing tests, asks Doctor link to find and execute a reproduction from ordinary language, checks exact file/line/function localization, and requires a reversible counterfactual experiment to confirm that restoring the candidate makes the failure disappear.
 
 Dependencies are intentionally prepared outside the harness so network installation is explicit and reviewable:
 

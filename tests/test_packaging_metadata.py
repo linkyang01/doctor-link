@@ -16,7 +16,7 @@ def test_pyproject_has_packaging_metadata() -> None:
     project = _pyproject()["project"]
 
     assert project["name"] == "doctor-link"
-    assert project["version"] == "0.5.1"
+    assert project["version"] == "0.6.0"
     assert project["license"] == "MIT"
     assert "Development Status :: 4 - Beta" in project["classifiers"]
     assert "Programming Language :: Python :: 3.10" in project["classifiers"]

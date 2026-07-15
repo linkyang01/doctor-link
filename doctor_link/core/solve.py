@@ -146,6 +146,7 @@ class SolveRound:
     prompt_path: str
     events_path: str
     stderr_path: str
+    verification_layers: list[dict[str, Any]] = field(default_factory=list)
     verification_input_changes: list[dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
@@ -184,6 +185,8 @@ class SolveResult:
     root_cause: dict[str, Any] = field(default_factory=dict)
     change_receipt: dict[str, Any] = field(default_factory=dict)
     suggest_only: bool = False
+    require_grounded_root_cause: bool = False
+    repair_admission: dict[str, Any] = field(default_factory=dict)
 
     @property
     def success(self) -> bool:
@@ -251,6 +254,7 @@ def solve_project(
     allow_repair: bool = False,
     allow_verification_changes: bool = False,
     suggest_only: bool = False,
+    require_grounded_root_cause: bool = False,
     max_rounds: int = 3,
     command_timeout_seconds: int = 120,
     repair_timeout_seconds: int = 900,
@@ -275,6 +279,7 @@ def solve_project(
         explicit_user_approval=allow_repair or suggest_only,
         allow_verification_changes=allow_verification_changes,
         suggest_only=suggest_only,
+        require_grounded_root_cause=require_grounded_root_cause,
     )
 
     if target_error:
@@ -430,12 +435,27 @@ def solve_project(
         checks=[item.to_dict() for item in baseline],
     )
     result.root_cause = root_cause.to_dict()
+    grounded = _root_cause_is_grounded(result.root_cause)
+    result.repair_admission = {
+        "required": require_grounded_root_cause,
+        "status": "allowed" if grounded else ("blocked" if require_grounded_root_cause else "advisory_only"),
+        "grounded": grounded,
+        "criteria": "mapped project source plus a precise location or project-owned failure frame",
+    }
     if root_cause.status in {"explained", "partial"} and root_cause.hints:
         top = root_cause.hints[0]
         paths = ", ".join(top.get("candidate_paths") or []) or "unmapped"
         result.warnings.append(
             f"Advisory root-cause hint: {top.get('symbol')} → {paths} "
             f"(confidence {top.get('confidence')}; not verified)."
+        )
+    if require_grounded_root_cause and not grounded:
+        return _persist_and_finish(
+            result,
+            output_root,
+            "blocked",
+            "Automatic repair requires a grounded project-code root cause, but the failing evidence did not provide one.",
+            blocker="grounded_root_cause_required",
         )
 
     prompt = build_repair_prompt(result, baseline, round_number=1)
@@ -552,11 +572,12 @@ def _run_repair_rounds(
             round_number=round_number,
             detected_at="before_verification",
         )
-        verification = (
-            _run_solve_commands(root, commands, command_timeout_seconds)
-            if not pre_verification_changes or result.allow_verification_changes or suggest_only
-            else []
-        )
+        if not pre_verification_changes or result.allow_verification_changes or suggest_only:
+            verification, verification_layers = _run_layered_acceptance(
+                root, commands, command_timeout_seconds
+            )
+        else:
+            verification, verification_layers = [], []
         post_verification_changes = compare_verification_inputs(
             verification_snapshot,
             snapshot_verification_inputs(root, commands),
@@ -572,6 +593,7 @@ def _run_repair_rounds(
         checks_passed = _checks_passed(commands, verification)
         verified = checks_passed and not input_changes
         atomic_write_json(round_dir / "verification.json", [item.to_dict() for item in verification])
+        atomic_write_json(round_dir / "verification-layers.json", verification_layers)
         atomic_write_json(round_dir / "verification-input-changes.json", input_changes)
         solve_round = SolveRound(
             round_number=round_number,
@@ -581,6 +603,7 @@ def _run_repair_rounds(
             prompt_path=str(prompt_path),
             events_path=str(events_path),
             stderr_path=str(stderr_path),
+            verification_layers=verification_layers,
             verification_input_changes=input_changes,
         )
         result.rounds.append(solve_round.to_dict())
@@ -1101,6 +1124,32 @@ def _format_root_cause_prompt_section(root_cause: dict[str, Any] | None) -> str:
             f"(confidence {hint.get('confidence', 0):.2f}, evidence {hint.get('evidence_count', 0)}): "
             f"{hint.get('rationale', '')} Inspect: {paths}."
         )
+        for location in (hint.get("locations") or [])[:2]:
+            lines.append(
+                f"   - Location: `{location.get('path')}:{location.get('line') or '?'}` "
+                f"in `{location.get('function') or 'unknown'}`."
+            )
+        for evidence in (hint.get("evidence") or [])[:3]:
+            lines.append(f"   - Evidence: {evidence}")
+    failures = list(root_cause.get("failures") or [])
+    if failures:
+        lines.extend(["", "Structured failure facts:"])
+        for failure in failures[:3]:
+            lines.append(
+                f"- Test `{failure.get('test') or 'unknown'}`: expected "
+                f"`{failure.get('expected') or 'unknown'}`, actual `{failure.get('actual') or 'unknown'}`."
+            )
+    chains = list(root_cause.get("call_chains") or [])
+    if chains:
+        lines.extend(["", "Project-owned call paths:"])
+        for chain in chains[:3]:
+            nodes = chain.get("nodes") or []
+            rendered = " → ".join(
+                f"{node.get('path')}:{node.get('line') or '?'}:{node.get('function') or 'unknown'}"
+                for node in nodes[:8]
+            )
+            if rendered:
+                lines.append(f"- {rendered}")
     patterns = list(root_cause.get("failure_patterns") or [])
     if patterns:
         lines.extend(["", "Observed failure patterns:", *[f"- {item}" for item in patterns[:5]]])
@@ -1130,6 +1179,48 @@ def _run_solve_commands(root: Path, commands: list[SolveCommand], timeout_second
             )
         )
     return results
+
+
+def _run_layered_acceptance(
+    root: Path,
+    commands: list[SolveCommand],
+    timeout_seconds: int,
+) -> tuple[list[SolveCommandResult], list[dict[str, Any]]]:
+    """Run a focused failure gate before the complete regression contract."""
+    focused_commands = [item for item in commands if item.kind == "reproduction"] or list(commands)
+    focused_results = _run_solve_commands(root, focused_commands, timeout_seconds)
+    layers = [
+        {
+            "layer": "focused",
+            "commands": [item.to_dict() for item in focused_commands],
+            "results": [item.to_dict() for item in focused_results],
+            "passed": _checks_passed(focused_commands, focused_results),
+        }
+    ]
+    if not layers[0]["passed"]:
+        layers.append(
+            {
+                "layer": "full_regression",
+                "commands": [item.to_dict() for item in commands],
+                "results": [],
+                "passed": False,
+                "skipped": True,
+                "reason": "focused_verification_failed",
+            }
+        )
+        return focused_results, layers
+
+    regression_results = _run_solve_commands(root, commands, timeout_seconds)
+    layers.append(
+        {
+            "layer": "full_regression",
+            "commands": [item.to_dict() for item in commands],
+            "results": [item.to_dict() for item in regression_results],
+            "passed": _checks_passed(commands, regression_results),
+            "skipped": False,
+        }
+    )
+    return regression_results, layers
 
 
 def snapshot_verification_inputs(root: Path, commands: list[SolveCommand]) -> dict[str, str]:
@@ -1266,9 +1357,27 @@ def _command_referenced_paths(root: Path, argv: list[str]) -> set[Path]:
 
 def _checks_passed(commands: list[SolveCommand], results: list[SolveCommandResult]) -> bool:
     required_ids = {item.command_id for item in commands if item.required}
-    return bool(required_ids) and all(
-        item.status == "passed" for item in results if item.command_id in required_ids
+    statuses = {item.command_id: item.status for item in results if item.command_id in required_ids}
+    return bool(required_ids) and required_ids <= statuses.keys() and all(
+        statuses[command_id] == "passed" for command_id in required_ids
     )
+
+
+def _root_cause_is_grounded(root_cause: dict[str, Any]) -> bool:
+    hints = [item for item in root_cause.get("hints") or [] if isinstance(item, dict)]
+    mapped = any(item.get("candidate_paths") for item in hints)
+    precise = any(
+        location.get("path") and (location.get("line") is not None or location.get("function"))
+        for item in hints
+        for location in (item.get("locations") or [])
+        if isinstance(location, dict)
+    )
+    project_frame = any(
+        frame.get("project_code") and not frame.get("in_tests")
+        for frame in root_cause.get("frames") or []
+        if isinstance(frame, dict)
+    )
+    return mapped and (precise or project_frame)
 
 
 def _inspect_git(root: Path, *, expected_root: Path | None = None) -> dict[str, Any]:

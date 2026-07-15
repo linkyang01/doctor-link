@@ -16,7 +16,7 @@ P5: Productization and Release Readiness is complete. P6 implementation requires
 
 P7.10 added the final validation and closure layer, including a P7 runtime validation script and CI coverage for the P7 command surface.
 
-Version [`v0.5.1`](https://github.com/linkyang01/doctor-link/releases/tag/v0.5.1) is the latest published release. It is the distribution-consistency patch for natural-language reproduction, the guided `doctor-link assist` entrypoint, and the retained 24-project Python/Node.js corpus.
+Version `v0.6.0` adds structured failure facts, exact source localization, reversible hypothesis verification, project call chains, evidence-bounded repair guidance, grounded repair admission, and layered acceptance for Python and Node.js projects.
 
 Doctor link remains local-first. The v0.5 line passes 365 tests, all 66 installed CLI routes through 75 real invocations and twelve complex scenarios, Python 3.10–3.14, Ubuntu/macOS/Windows, security checks, package builds, isolated installation, Trusted Publishing, and clean pipx installation.
 
@@ -90,4 +90,4 @@ P7 implements local runtime support for evidence hardening, local workbench hard
 
 ## Boundaries
 
-Doctor link does not currently provide hosted Web platform, cloud synchronization, external account system, telemetry, marketplace, real signing keys or key management, hosted enterprise archive, hosted diagnostic knowledge base, or real RBAC. Automatic repair currently supports Python and Node.js JavaScript/TypeScript projects, requires explicit approval, protects the original verification inputs, and never auto-commits, pushes, or publishes. Other language ecosystems remain unsupported until they receive an equally testable adapter. The exceptional `--allow-verification-changes` path returns `review_required`, not `verified`. `--allow-repair` uses existing Codex authentication to call the service, so users should review the preview and remove sensitive data first. Version `0.5.1` is published on PyPI through Trusted Publishing.
+Doctor link does not currently provide hosted Web platform, cloud synchronization, external account system, telemetry, marketplace, real signing keys or key management, hosted enterprise archive, hosted diagnostic knowledge base, or real RBAC. Automatic repair currently supports Python and Node.js JavaScript/TypeScript projects, requires explicit approval, protects the original verification inputs, and never auto-commits, pushes, or publishes. Other language ecosystems remain unsupported until they receive an equally testable adapter. The exceptional `--allow-verification-changes` path returns `review_required`, not `verified`. `--allow-repair` uses existing Codex authentication to call the service, so users should review the preview and remove sensitive data first. Version `0.6.0` is released through immutable GitHub assets and PyPI Trusted Publishing.

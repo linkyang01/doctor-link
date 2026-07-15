@@ -2,7 +2,7 @@
 
 Doctor link is a Python CLI project. This guide explains how to clone the repository, install it locally, run the CLI, and validate that the project works on a local machine.
 
-Version `0.5.1` is available from [PyPI](https://pypi.org/project/doctor-link/) and the authorized [GitHub Release](https://github.com/linkyang01/doctor-link/releases/tag/v0.5.1). For an isolated command-line application install, `pipx` is recommended.
+Version `0.6.0` is distributed through [PyPI](https://pypi.org/project/doctor-link/) and the authorized [GitHub Release](https://github.com/linkyang01/doctor-link/releases/tag/v0.6.0). For an isolated command-line application install, `pipx` is recommended.
 
 ## 1. Requirements
 
@@ -28,7 +28,7 @@ Recommended Python versions:
 - Python 3.13
 - Python 3.14
 
-The `v0.5.1` CI and release workflow validated Python 3.10 through 3.14. Local use should select one of these versions.
+The `v0.6.0` CI and release workflow validates Python 3.10 through 3.14. Local use should select one of these versions.
 
 ## 2. Clone the repository
 
@@ -113,44 +113,44 @@ If the command prints help text, the CLI entrypoint is installed successfully.
 ```bash
 python -m pip install build
 python -m build
-python -m pip install dist/doctor_link-0.5.1-py3-none-any.whl
+python -m pip install dist/doctor_link-0.6.0-py3-none-any.whl
 doctor-link --version
 ```
 
 ### Install the published GitHub Release wheel
 
-Download `doctor_link-0.5.1-py3-none-any.whl` from the [v0.5.1 release page](https://github.com/linkyang01/doctor-link/releases/tag/v0.5.1), then run:
+Download `doctor_link-0.6.0-py3-none-any.whl` from the [v0.6.0 release page](https://github.com/linkyang01/doctor-link/releases/tag/v0.6.0), then run:
 
 ```bash
-python -m pip install ./doctor_link-0.5.1-py3-none-any.whl
+python -m pip install ./doctor_link-0.6.0-py3-none-any.whl
 doctor-link --version
 ```
 
 Or install the same published wheel directly from GitHub:
 
 ```bash
-python -m pip install https://github.com/linkyang01/doctor-link/releases/download/v0.5.1/doctor_link-0.5.1-py3-none-any.whl
+python -m pip install https://github.com/linkyang01/doctor-link/releases/download/v0.6.0/doctor_link-0.6.0-py3-none-any.whl
 doctor-link --version
 ```
 
 ### Install from PyPI
 
 ```bash
-python -m pip install doctor-link==0.5.1
+python -m pip install doctor-link==0.6.0
 doctor-link --version
 ```
 
 For an isolated application install, prefer `pipx`:
 
 ```bash
-pipx install doctor-link==0.5.1
+pipx install doctor-link==0.6.0
 doctor-link --version
 ```
 
 The equivalent GitHub Release installation remains available as a fallback:
 
 ```bash
-pipx install https://github.com/linkyang01/doctor-link/releases/download/v0.5.1/doctor_link-0.5.1-py3-none-any.whl
+pipx install https://github.com/linkyang01/doctor-link/releases/download/v0.6.0/doctor_link-0.6.0-py3-none-any.whl
 doctor-link --version
 ```
 
