@@ -8,6 +8,10 @@ Doctor link follows semantic versioning. Public release publishing requires expl
 
 ### Fixed
 
+- Solve-session `diff` receipts retain uncommitted repair edits when the repair branch is checked out and use the stored immutable base commit.
+- `explain` reports when a diagnostic check changes the Git worktree instead of silently presenting the result as read-only.
+- `suggest-only` guidance distinguishes accepting and testing a proposal from discarding it before a verified repair rerun.
+- Advisory explanation prioritizes changed production files while warning that local changes may be unrelated.
 - `assist` / reproduction suggestion no longer treats pytest collection and environment setup failures (non-test exit codes) as successful reproduction.
 - Common English stop words such as `not` and `set` are excluded from problem-term matching so unrelated test files are less likely to be selected.
 - `solve` preview and `assist` no longer require a clean Git working tree; dirty trees still block only `--allow-repair`.
@@ -22,6 +26,7 @@ Doctor link follows semantic versioning. Public release publishing requires expl
 
 ### Added
 
+- Repeatable real-GitHub validation across Click, p-limit, and Chalk with native baselines, reversible production mutations, natural-language reproduction, and source-hint verification (Issue #167).
 - Authoritative post-v0.5.1 maintenance roadmap, support and security routes, compatibility/deprecation policy, issue templates, scheduled PyPI smoke workflow, and a pinned public-project preflight validation harness (Issue #156).
 - `doctor-link explain` clusters failing check output into advisory source-file root-cause hints without editing code (Issue #159).
 - `assist --interactive` prompts before each reproduction candidate (run / skip / quit remaining) without rewriting the problem (Issue #160).

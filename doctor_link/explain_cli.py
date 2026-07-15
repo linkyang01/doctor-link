@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import json
+import hashlib
 from pathlib import Path
 
 import click
 
 from doctor_link.cli import main
 from doctor_link.core.package_transaction import atomic_write_json, atomic_write_text
+from doctor_link.core.command_runner import run_command
 from doctor_link.core.root_cause import analyze_root_cause
 from doctor_link.core.safe_command_runner import run_safe_command_sequence, validate_safe_command_sequence
 from doctor_link.core.solve import (
@@ -60,11 +62,24 @@ def explain_command(
     if command_errors:
         raise click.UsageError("One or more commands use unsupported shell syntax: " + "; ".join(command_errors))
 
+    before_worktree = _git_worktree_fingerprint(root)
     baseline = _run_checks(root, commands, command_timeout)
+    after_worktree = _git_worktree_fingerprint(root)
+    worktree_changed = (
+        before_worktree is not None
+        and after_worktree is not None
+        and before_worktree != after_worktree
+    )
     analysis = analyze_root_cause(
         root,
         problem=clean_problem,
         checks=[item.to_dict() for item in baseline],
+    )
+    result_status = "modified_worktree" if worktree_changed else analysis.status
+    result_summary = (
+        "A diagnostic check changed the Git working tree. Review and restore those changes before trusting the explanation."
+        if worktree_changed
+        else analysis.summary
     )
     payload = {
         "schema": "doctor-link-explain-session-v1",
@@ -76,8 +91,9 @@ def explain_command(
         "commands": [item.to_dict() for item in commands],
         "baseline": [item.to_dict() for item in baseline],
         "analysis": analysis.to_dict(),
-        "status": analysis.status,
-        "summary": analysis.summary,
+        "status": result_status,
+        "summary": result_summary,
+        "worktree_changed": worktree_changed,
     }
 
     if output is not None:
@@ -90,8 +106,8 @@ def explain_command(
     if json_output:
         click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
     else:
-        click.echo(f"Explain status: {analysis.status}")
-        click.echo(f"Summary: {analysis.summary}")
+        click.echo(f"Explain status: {result_status}")
+        click.echo(f"Summary: {result_summary}")
         for hint in analysis.hints[:5]:
             paths = ", ".join(hint.get("candidate_paths") or []) or "(unmapped)"
             click.echo(
@@ -105,6 +121,8 @@ def explain_command(
         if output is not None:
             click.echo(f"Explain session: {payload['output_dir']}")
 
+    if worktree_changed:
+        raise click.exceptions.Exit(5)
     if analysis.status in {"no_failures"}:
         raise click.exceptions.Exit(3)
     if analysis.status == "insufficient_evidence":
@@ -133,6 +151,27 @@ def _run_checks(root: Path, commands: list[SolveCommand], timeout_seconds: int) 
             )
         )
     return results
+
+
+def _git_worktree_fingerprint(root: Path) -> str | None:
+    top = run_command(["git", "rev-parse", "--show-toplevel"], cwd=root, timeout_seconds=15)
+    if top.returncode != 0:
+        return None
+    diff = run_command(["git", "diff", "--no-ext-diff", "--binary", "HEAD"], cwd=root, timeout_seconds=30)
+    untracked = run_command(
+        ["git", "ls-files", "--others", "--exclude-standard"], cwd=root, timeout_seconds=15
+    )
+    if diff.returncode != 0 or untracked.returncode != 0:
+        return None
+    digest = hashlib.sha256(diff.stdout.encode("utf-8", errors="replace"))
+    for relative in sorted(item for item in untracked.stdout.splitlines() if item):
+        digest.update(relative.encode("utf-8", errors="replace"))
+        path = root / relative
+        try:
+            digest.update(path.read_bytes() if path.is_file() else b"<not-a-file>")
+        except OSError:
+            digest.update(b"<unreadable>")
+    return digest.hexdigest()
 
 
 def _render_markdown(payload: dict) -> str:

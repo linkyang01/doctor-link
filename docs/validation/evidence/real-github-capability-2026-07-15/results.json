@@ -1,0 +1,11 @@
+{
+  "schema": "doctor-link-real-github-capability-result-v1",
+  "generated_at": "2026-07-15T02:12:37.073893+00:00",
+  "scenario_count": 3,
+  "passed_count": 3,
+  "results": [
+    {"name":"click-command-normalization","repository":"https://github.com/pallets/click.git","commit":"00fadb8904387158ce6e9aa1573be770446895c1","language":"python","baseline_return_code":0,"reproduction_status":"reproduced","selected_command":"PYTHONDONTWRITEBYTECODE=1 python -m pytest -p no:cacheprovider tests/test_commands.py -q","explain_status":"explained","expected_hint":"src/click/utils.py","expected_hint_rank":1,"worktree_changed_by_checks":false,"passed":true},
+    {"name":"p-limit-concurrency-boundary","repository":"https://github.com/sindresorhus/p-limit.git","commit":"7bdd25c703337360236722ed7d4da5ffadcb7a08","language":"javascript","baseline_return_code":0,"reproduction_status":"reproduced","selected_command":"npm test","explain_status":"explained","expected_hint":"index.js","expected_hint_rank":1,"worktree_changed_by_checks":false,"passed":true},
+    {"name":"chalk-ansi-style-loss","repository":"https://github.com/chalk/chalk.git","commit":"51557784b829c87ff8d138206598764f2eb957b1","language":"javascript","baseline_return_code":0,"reproduction_status":"reproduced","selected_command":"npm test","explain_status":"explained","expected_hint":"source/index.js","expected_hint_rank":1,"worktree_changed_by_checks":false,"passed":true}
+  ]
+}

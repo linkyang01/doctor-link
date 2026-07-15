@@ -7,6 +7,7 @@ import click
 
 from doctor_link.cli import main
 from doctor_link.core.change_receipt import build_change_receipt, receipt_to_markdown
+from doctor_link.core.command_runner import run_command
 from doctor_link.core.package_transaction import atomic_write_json, atomic_write_text
 
 
@@ -36,9 +37,16 @@ def diff_command(
         protected = list(session_payload.get("protected_verification_inputs") or [])
         hash_changes = list(session_payload.get("verification_input_changes") or [])
         if base is None:
-            base = session_payload.get("original_branch")
-        if head == "HEAD" and session_payload.get("repair_branch"):
-            head = str(session_payload["repair_branch"])
+            stored_receipt = session_payload.get("change_receipt") or {}
+            base = stored_receipt.get("base_ref") or session_payload.get("original_branch")
+        repair_branch = str(session_payload.get("repair_branch") or "")
+        if head == "HEAD" and repair_branch:
+            current = run_command(["git", "branch", "--show-current"], cwd=project_root, timeout_seconds=15)
+            # HEAD intentionally keeps working-tree edits when the solve branch is
+            # checked out. Fall back to the branch ref only after the user has
+            # switched away, where its committed state is the only safe view.
+            if current.returncode != 0 or current.stdout.strip() != repair_branch:
+                head = repair_branch
     elif not (target / ".git").exists() and not (target / "pyproject.toml").exists() and not (target / "package.json").exists():
         raise click.UsageError("Provide a solve-session directory or a Git project root.")
 

@@ -1,0 +1,51 @@
+{
+  "schema": "doctor-link-real-github-capability-v1",
+  "scenarios": [
+    {
+      "name": "click-command-normalization",
+      "repository": "https://github.com/pallets/click.git",
+      "commit": "00fadb8904387158ce6e9aa1573be770446895c1",
+      "directory": "click",
+      "language": "python",
+      "baseline_command": [".doctorlink-validation-venv/bin/python", "-m", "pytest", "-q"],
+      "doctor_path_prefix": ".doctorlink-validation-venv/bin",
+      "problem": "subcommand names are prefixed and commands are not found",
+      "mutation": {
+        "path": "src/click/utils.py",
+        "before": "    return str(value)\n",
+        "after": "    return f\"BROKEN:{value}\"\n"
+      },
+      "expected_hint": "src/click/utils.py"
+    },
+    {
+      "name": "p-limit-concurrency-boundary",
+      "repository": "https://github.com/sindresorhus/p-limit.git",
+      "commit": "7bdd25c703337360236722ed7d4da5ffadcb7a08",
+      "directory": "p-limit",
+      "language": "javascript",
+      "baseline_command": ["npx", "ava"],
+      "problem": "reducing concurrency allows too many active tasks",
+      "mutation": {
+        "path": "index.js",
+        "before": "\t\tif (activeCount < concurrency && queue.size > 0) {\n",
+        "after": "\t\tif (activeCount <= concurrency && queue.size > 0) {\n"
+      },
+      "expected_hint": "index.js"
+    },
+    {
+      "name": "chalk-ansi-style-loss",
+      "repository": "https://github.com/chalk/chalk.git",
+      "commit": "51557784b829c87ff8d138206598764f2eb957b1",
+      "directory": "chalk",
+      "language": "javascript",
+      "baseline_command": ["npx", "ava"],
+      "problem": "styled terminal text loses ANSI color codes",
+      "mutation": {
+        "path": "source/index.js",
+        "before": "\treturn openAll + string + closeAll;\n",
+        "after": "\treturn string;\n"
+      },
+      "expected_hint": "source/index.js"
+    }
+  ]
+}

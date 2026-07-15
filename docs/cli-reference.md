@@ -120,7 +120,7 @@ doctor-link reproduce suggest /path/to/project --problem "Checkout duplicates a 
 
 `assist` validates ranked, project-owned reproduction candidates, writes a JSON receipt and local HTML diagnostic report, prepares a normal solve preview, and attaches advisory root-cause hints when failing evidence can be clustered. Add `--allow-repair` only after reviewing the reproduction. Use `--package packages/name` for a workspace package and `--no-open` in CI or headless environments. Use `--interactive` to run, skip, or quit each candidate without rewriting the problem description.
 
-`explain` runs the same safe checks as solve preview, then clusters traceback symbols and failure patterns into advisory source-file hints without editing code. Hints are not verified root causes; Doctor link still accepts repairs only after independent re-verification.
+`explain` runs the same safe checks as solve preview, then clusters traceback symbols and failure patterns into advisory source-file hints without editing source itself. If a diagnostic command changes the Git working tree, it returns `modified_worktree` (exit 5) and requires review. Hints are not verified root causes; Doctor link still accepts repairs only after independent re-verification. Session-based `diff` includes uncommitted edits while the recorded repair branch remains checked out.
 
 Preview a bounded Python or Node.js JavaScript/TypeScript repair without modifying code:
 
