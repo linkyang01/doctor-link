@@ -1101,6 +1101,32 @@ def _format_root_cause_prompt_section(root_cause: dict[str, Any] | None) -> str:
             f"(confidence {hint.get('confidence', 0):.2f}, evidence {hint.get('evidence_count', 0)}): "
             f"{hint.get('rationale', '')} Inspect: {paths}."
         )
+        for location in (hint.get("locations") or [])[:2]:
+            lines.append(
+                f"   - Location: `{location.get('path')}:{location.get('line') or '?'}` "
+                f"in `{location.get('function') or 'unknown'}`."
+            )
+        for evidence in (hint.get("evidence") or [])[:3]:
+            lines.append(f"   - Evidence: {evidence}")
+    failures = list(root_cause.get("failures") or [])
+    if failures:
+        lines.extend(["", "Structured failure facts:"])
+        for failure in failures[:3]:
+            lines.append(
+                f"- Test `{failure.get('test') or 'unknown'}`: expected "
+                f"`{failure.get('expected') or 'unknown'}`, actual `{failure.get('actual') or 'unknown'}`."
+            )
+    chains = list(root_cause.get("call_chains") or [])
+    if chains:
+        lines.extend(["", "Project-owned call paths:"])
+        for chain in chains[:3]:
+            nodes = chain.get("nodes") or []
+            rendered = " → ".join(
+                f"{node.get('path')}:{node.get('line') or '?'}:{node.get('function') or 'unknown'}"
+                for node in nodes[:8]
+            )
+            if rendered:
+                lines.append(f"- {rendered}")
     patterns = list(root_cause.get("failure_patterns") or [])
     if patterns:
         lines.extend(["", "Observed failure patterns:", *[f"- {item}" for item in patterns[:5]]])

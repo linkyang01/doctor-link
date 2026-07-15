@@ -8,6 +8,7 @@ from click.testing import CliRunner
 
 from doctor_link.core.root_cause import analyze_root_cause
 from doctor_link.core.hypothesis_verifier import verify_top_hypothesis
+from doctor_link.core.repair_guidance import build_repair_guidance
 from doctor_link.core.solve import SolveCommandResult, build_repair_prompt, solve_project
 from doctor_link.entrypoint import main
 
@@ -86,6 +87,11 @@ def test_analyze_root_cause_clusters_shared_symbol_and_maps_source(tmp_path: Pat
     assert billing_hint["locations"][0]["source"] == "return total * 2"
     assert billing_hint["score"] > 0
     assert billing_hint["evidence"]
+    chain = analysis.call_chains[0]
+    assert chain["complete"] is True
+    assert [node["role"] for node in chain["nodes"]] == ["test", "production"]
+    assert chain["nodes"][0]["function"] == "test_charge_once_a"
+    assert chain["nodes"][1]["function"] == "charge_once"
     assert "advisory" in " ".join(analysis.warnings).casefold() or analysis.advisory is True
 
 
@@ -120,6 +126,10 @@ def test_solve_prompt_includes_advisory_root_cause_section(tmp_path: Path) -> No
     if result.root_cause.get("hints"):
         assert "Suspected root cause" in prompt
         assert "advisory" in prompt.casefold()
+    if result.root_cause.get("failures"):
+        assert "Structured failure facts" in prompt
+    if any(chain.get("nodes") for chain in result.root_cause.get("call_chains") or []):
+        assert "Project-owned call paths" in prompt
     assert "grounded root cause" in prompt
 
 
@@ -215,6 +225,9 @@ def test_explain_cli_can_confirm_reversible_hypothesis(tmp_path: Path) -> None:
     assert verification["status"] == "confirmed"
     assert verification["restored"] is True
     assert verification["worktree_unchanged"] is True
+    assert payload["repair_guidance"]["status"] == "actionable"
+    assert payload["repair_guidance"]["verification"]["focused_commands"]
+    assert payload["analysis"]["call_chains"]
     assert source.read_bytes() == before
 
 
@@ -376,3 +389,36 @@ def test_hypothesis_verification_reports_command_worktree_pollution(tmp_path: Pa
     assert result.restored is True
     assert result.worktree_unchanged is False
     assert (root / "experiment-output.txt").is_file()
+
+
+def test_repair_guidance_separates_facts_inferences_and_verified_evidence(tmp_path: Path) -> None:
+    root = _python_project(tmp_path)
+    source = root / "src" / "billing.py"
+    source.write_text(source.read_text(encoding="utf-8").replace("total * 2", "total * 3"), encoding="utf-8")
+    analysis = analyze_root_cause(
+        root,
+        problem="wrong charge",
+        outputs=[('tests/test_billing.py:8: in test_charge_once_a\nFile "src/billing.py", line 3, in charge_once\nE   assert 30 == 10', "")],
+    )
+    command = {"command_id": "test", "command": "python -m pytest tests/test_billing.py -q"}
+
+    guidance = build_repair_guidance(
+        root,
+        analysis=analysis.to_dict(),
+        hypothesis_verification={"status": "confirmed"},
+        commands=[command],
+        baseline=[{"command_id": "test", "return_code": 1}],
+    )
+
+    assert guidance["status"] == "actionable"
+    assert guidance["candidate"] == {
+        "path": "src/billing.py",
+        "line": 3,
+        "function": "charge_once",
+        "source": "return total * 3",
+    }
+    assert guidance["diagnosis"]["observed_facts"]
+    assert guidance["diagnosis"]["inferences"]
+    assert guidance["diagnosis"]["verified_evidence"]
+    assert guidance["verification"]["focused_commands"] == [command["command"]]
+    assert "total * 3" in guidance["recommended_change"]["current_diff_excerpt"]

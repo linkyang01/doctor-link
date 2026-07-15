@@ -20,6 +20,7 @@ TRACEBACK_FRAME = re.compile(
     r'File "(?P<path>[^"]+)", line (?P<line>\d+)(?:, in (?P<function>[\w.<>-]+))?'
 )
 PYTEST_NODE = re.compile(r"(?P<path>[\w./\\-]+\.py)::(?P<node>[\w\[\]-]+)")
+PYTEST_FRAME = re.compile(r"(?m)^(?P<path>[\w./\\-]+\.py):(?P<line>\d+): in (?P<function>[\w.<>-]+)$")
 SYMBOL_TOKEN = re.compile(r"\b([A-Z][A-Za-z0-9_]{2,}|[a-z_][a-z0-9_]{2,}\.[A-Za-z_][A-Za-z0-9_]*)\b")
 ASSERT_LINE = re.compile(r"(?m)^E\s+assert\s+.+$|^>\s+assert\s+.+$|AssertionError:.*$")
 JS_FRAME = re.compile(
@@ -103,6 +104,7 @@ class RootCauseAnalysis:
     shared_symbols: list[str] = field(default_factory=list)
     failure_patterns: list[str] = field(default_factory=list)
     failures: list[dict[str, Any]] = field(default_factory=list)
+    call_chains: list[dict[str, Any]] = field(default_factory=list)
     frames: list[dict[str, Any]] = field(default_factory=list)
     hints: list[dict[str, Any]] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
@@ -314,6 +316,7 @@ def analyze_root_cause(
         shared_symbols=shared[:12],
         failure_patterns=[item for item, _ in patterns.most_common(8)],
         failures=failures,
+        call_chains=[_build_call_chain(index, failure) for index, failure in enumerate(failures, start=1)],
         frames=[frame.to_dict() for frame in frames[:40]],
         hints=[item.to_dict() for item in hints],
         warnings=warnings,
@@ -351,6 +354,16 @@ def _collect_failing_outputs(
 
 def _extract_frames(text: str, root: Path) -> list[TraceFrame]:
     frames: list[TraceFrame] = []
+    for match in PYTEST_FRAME.finditer(text):
+        path = match.group("path")
+        frames.append(
+            TraceFrame(
+                path=path,
+                line=int(match.group("line")),
+                function=match.group("function"),
+                in_tests=_looks_like_test_path(path),
+            )
+        )
     for match in TRACEBACK_FRAME.finditer(text):
         path = match.group("path")
         function = match.group("function")
@@ -447,6 +460,36 @@ def _extract_failure_detail(text: str, frames: Sequence[TraceFrame]) -> dict[str
         "expected": _compact_value(expected),
         "actual": _compact_value(actual),
         "frames": relevant[:20],
+    }
+
+
+def _build_call_chain(index: int, failure: Mapping[str, Any]) -> dict[str, Any]:
+    frames = list(failure.get("frames") or [])
+    test_frames = [item for item in frames if item.get("in_tests")]
+    production_frames = [item for item in frames if not item.get("in_tests")]
+    ordered = test_frames + production_frames
+    nodes: list[dict[str, Any]] = []
+    seen: set[tuple[Any, ...]] = set()
+    for item in ordered:
+        key = (item.get("path"), item.get("line"), item.get("function"))
+        if key in seen:
+            continue
+        seen.add(key)
+        nodes.append(
+            {
+                "role": "test" if item.get("in_tests") else "production",
+                "path": item.get("path"),
+                "line": item.get("line"),
+                "function": item.get("function"),
+                "source": item.get("source"),
+            }
+        )
+    return {
+        "failure_index": index,
+        "test": failure.get("test"),
+        "order": "test_to_failure",
+        "nodes": nodes,
+        "complete": bool(test_frames and production_frames),
     }
 
 

@@ -122,6 +122,10 @@ def validate_scenario(scenario: dict[str, Any], workspace: Path, doctor_link: st
             for item in failures
         )
         hypothesis = dict(explanation.get("hypothesis_verification") or {})
+        call_chains = list((explanation.get("analysis") or {}).get("call_chains") or [])
+        call_chain_nodes = sum(len(item.get("nodes") or []) for item in call_chains)
+        guidance = dict(explanation.get("repair_guidance") or {})
+        focused_commands = list((guidance.get("verification") or {}).get("focused_commands") or [])
         passed = (
             explain.returncode == 0
             and explanation.get("worktree_changed") is False
@@ -131,6 +135,9 @@ def validate_scenario(scenario: dict[str, Any], workspace: Path, doctor_link: st
             and hypothesis.get("status") == "confirmed"
             and hypothesis.get("restored") is True
             and hypothesis.get("worktree_unchanged") is True
+            and call_chain_nodes > 0
+            and guidance.get("status") == "actionable"
+            and bool(focused_commands)
         )
         return {
             "name": scenario["name"],
@@ -149,6 +156,9 @@ def validate_scenario(scenario: dict[str, Any], workspace: Path, doctor_link: st
             "structured_failure": structured_failure,
             "hypothesis_status": hypothesis.get("status"),
             "hypothesis_restored": hypothesis.get("restored"),
+            "call_chain_nodes": call_chain_nodes,
+            "repair_guidance_status": guidance.get("status"),
+            "focused_verification_count": len(focused_commands),
             "worktree_changed_by_checks": explanation.get("worktree_changed"),
             "passed": passed,
         }
@@ -183,7 +193,8 @@ def main() -> None:
         f"hint=`{item['expected_hint']}:{item['expected_line']}` function=`{item['expected_function']}` "
         f"rank={item['expected_hint_rank']}, location_match={item['location_match']}, "
         f"structured_failure={item['structured_failure']}, hypothesis={item['hypothesis_status']}, "
-        f"restored={item['hypothesis_restored']}, checks_changed_tree={item['worktree_changed_by_checks']}"
+        f"restored={item['hypothesis_restored']}, chain_nodes={item['call_chain_nodes']}, "
+        f"guidance={item['repair_guidance_status']}, checks_changed_tree={item['worktree_changed_by_checks']}"
         for item in results
     )
     (args.out / "results.md").write_text("\n".join(lines) + "\n", encoding="utf-8")

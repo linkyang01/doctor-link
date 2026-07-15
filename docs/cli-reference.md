@@ -124,6 +124,8 @@ doctor-link reproduce suggest /path/to/project --problem "Checkout duplicates a 
 
 Add `--verify-hypothesis` to run a conservative counterfactual experiment for the first-ranked candidate. The candidate must be a tracked source file changed relative to `HEAD`. Doctor link snapshots its exact bytes and the complete worktree fingerprint, temporarily restores only that file from `HEAD`, reruns previously failing checks, then restores the original bytes in a `finally` path. Results are `confirmed`, `supported`, `rejected`, `inconclusive`, `unavailable`, or `unsafe_to_test`. `confirmed` means the counterfactual removed the observed failures; it does not prove that a proposed repair is correct.
 
+The receipt also presents project-owned frames as a test-to-failure call chain and generates evidence-bounded repair guidance. Guidance separates observed facts, source-location inferences, and counterfactually verified evidence; includes the current candidate diff excerpt; assigns a risk level; and lists focused plus full-regression commands. `actionable` means there is enough evidence to prepare a minimal change for review, not permission to edit or proof that an arbitrary patch is safe.
+
 Preview a bounded Python or Node.js JavaScript/TypeScript repair without modifying code:
 
 ```bash
