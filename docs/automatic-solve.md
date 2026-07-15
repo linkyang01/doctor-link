@@ -167,7 +167,7 @@ Paths are resolved relative to the manifest. Scenario IDs are constrained to saf
 ## Safety and rollback
 
 - Doctor link refuses a dirty working tree only when `--allow-repair` is set, so existing user changes are not confused with AI edits. Preview mode and `assist` can still reproduce and prepare a plan on a dirty tree.
-- After reproduction, Doctor link may attach advisory root-cause hints (`explain` / `root_cause` in the solve session). Hints narrow inspection only; they never replace independent verification.
+- After reproduction, Doctor link may attach advisory root-cause hints (`explain` / `root_cause` in the solve session). The structured record separates observed expected/actual values and project stack frames from inferred candidate locations, with explicit scoring evidence. Hints narrow inspection only; they never replace independent verification.
 - `--suggest-only` is a middle ground between preview and `--allow-repair`: it creates an isolated branch, runs a single repair proposal, writes a structured change receipt (`change-receipt.json` / `.md`), and returns `suggestion_ready` (exit 7) without claiming `verified`. After review, either independently test and commit the proposal or discard its working-tree edits before starting a fresh `--allow-repair` run.
 - `doctor-link diff <session-or-project>` summarizes production vs test vs config changes and protected-input impact beyond a raw git diff. For a checked-out solve branch it includes uncommitted repair edits and uses the session's stored base commit.
 - Reproduction and test commands run before branch creation and are checked again for unexpected repository changes.

@@ -116,6 +116,13 @@ def explain_command(
             )
             if hint.get("rationale"):
                 click.echo(f"  {hint['rationale']}")
+            for location in hint.get("locations", [])[:2]:
+                click.echo(
+                    f"  location={location.get('path')}:{location.get('line') or '?'} "
+                    f"function={location.get('function') or '(unknown)'}"
+                )
+            for evidence in hint.get("evidence", [])[:3]:
+                click.echo(f"  evidence: {evidence}")
         for warning in analysis.warnings:
             click.echo(f"Warning: {warning}")
         if output is not None:
@@ -198,6 +205,26 @@ def _render_markdown(payload: dict) -> str:
             f"- **{hint.get('symbol')}** (confidence {hint.get('confidence')}, "
             f"evidence {hint.get('evidence_count')}): {hint.get('rationale')} → {paths}"
         )
+        for location in hint.get("locations", [])[:3]:
+            lines.append(
+                f"  - Location: `{location.get('path')}:{location.get('line') or '?'}`; "
+                f"function `{location.get('function') or 'unknown'}`"
+            )
+            if location.get("source"):
+                lines.append(f"  - Source: `{location['source']}`")
+        for evidence in hint.get("evidence", [])[:4]:
+            lines.append(f"  - Evidence: {evidence}")
+    failures = analysis.get("failures") or []
+    if failures:
+        lines.extend(["", "## Structured failures", ""])
+        for index, failure in enumerate(failures, start=1):
+            lines.append(f"### Failure {index}")
+            lines.append("")
+            lines.append(f"- Test: `{failure.get('test') or 'unknown'}`")
+            lines.append(f"- Exception: `{failure.get('exception') or 'unknown'}`")
+            lines.append(f"- Expected: `{failure.get('expected') or 'not extracted'}`")
+            lines.append(f"- Actual: `{failure.get('actual') or 'not extracted'}`")
+            lines.append("")
     patterns = analysis.get("failure_patterns") or []
     if patterns:
         lines.extend(["", "## Failure patterns", ""])

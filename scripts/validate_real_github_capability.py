@@ -102,10 +102,30 @@ def validate_scenario(scenario: dict[str, Any], workspace: Path, doctor_link: st
             (index for index, hint in enumerate(hints, start=1) if expected_hint in (hint.get("candidate_paths") or [])),
             None,
         )
+        expected_hint_item = next(
+            (hint for hint in hints if expected_hint in (hint.get("candidate_paths") or [])),
+            {},
+        )
+        locations = list(expected_hint_item.get("locations") or [])
+        expected_line = int(scenario["expected_line"])
+        expected_function = str(scenario["expected_function"])
+        location_match = any(
+            item.get("path") == expected_hint
+            and item.get("line") == expected_line
+            and item.get("function") == expected_function
+            for item in locations
+        )
+        failures = list((explanation.get("analysis") or {}).get("failures") or [])
+        structured_failure = any(
+            item.get("expected") is not None or item.get("actual") is not None or item.get("frames")
+            for item in failures
+        )
         passed = (
             explain.returncode == 0
             and explanation.get("worktree_changed") is False
             and hint_rank == 1
+            and location_match
+            and structured_failure
         )
         return {
             "name": scenario["name"],
@@ -118,6 +138,10 @@ def validate_scenario(scenario: dict[str, Any], workspace: Path, doctor_link: st
             "explain_status": explanation.get("status"),
             "expected_hint": expected_hint,
             "expected_hint_rank": hint_rank,
+            "expected_line": expected_line,
+            "expected_function": expected_function,
+            "location_match": location_match,
+            "structured_failure": structured_failure,
             "worktree_changed_by_checks": explanation.get("worktree_changed"),
             "passed": passed,
         }
@@ -149,7 +173,9 @@ def main() -> None:
     lines = ["# Real GitHub capability validation", "", f"Passed: {payload['passed_count']}/{payload['scenario_count']}", ""]
     lines.extend(
         f"- {'PASS' if item['passed'] else 'FAIL'} `{item['name']}`: reproduction={item['reproduction_status']}, "
-        f"hint=`{item['expected_hint']}` rank={item['expected_hint_rank']}, checks_changed_tree={item['worktree_changed_by_checks']}"
+        f"hint=`{item['expected_hint']}:{item['expected_line']}` function=`{item['expected_function']}` "
+        f"rank={item['expected_hint_rank']}, location_match={item['location_match']}, "
+        f"structured_failure={item['structured_failure']}, checks_changed_tree={item['worktree_changed_by_checks']}"
         for item in results
     )
     (args.out / "results.md").write_text("\n".join(lines) + "\n", encoding="utf-8")

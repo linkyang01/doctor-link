@@ -77,6 +77,14 @@ def test_analyze_root_cause_clusters_shared_symbol_and_maps_source(tmp_path: Pat
     assert "ChargeEngine" in symbols or "charge_once" in symbols or "billing" in symbols
     paths = {path for hint in analysis.hints for path in hint["candidate_paths"]}
     assert any(path.endswith("billing.py") for path in paths)
+    assert analysis.failures[0]["expected"] == "10"
+    assert analysis.failures[0]["actual"] == "20"
+    billing_hint = next(hint for hint in analysis.hints if "src/billing.py" in hint["candidate_paths"])
+    assert billing_hint["locations"][0]["line"] == 3
+    assert billing_hint["locations"][0]["function"] == "charge_once"
+    assert billing_hint["locations"][0]["source"] == "return total * 2"
+    assert billing_hint["score"] > 0
+    assert billing_hint["evidence"]
     assert "advisory" in " ".join(analysis.warnings).casefold() or analysis.advisory is True
 
 
@@ -221,6 +229,12 @@ def test_prompt_section_and_javascript_frame_mapping(tmp_path: Path) -> None:
         ],
     )
     assert analysis.failure_count == 2
+    assert analysis.failures[0]["expected"] == "3"
+    assert analysis.failures[0]["actual"] == "1"
+    math_frame = next(frame for frame in analysis.frames if frame["path"] == "src/math.js")
+    assert math_frame["line"] == 1
+    assert math_frame["function"] == "Object.add"
+    assert math_frame["project_code"] is True
     section = analysis.prompt_section()
     if analysis.hints:
         assert "Suspected root cause" in section
@@ -245,3 +259,20 @@ def test_root_cause_prioritizes_changed_production_file(tmp_path: Path) -> None:
     assert analysis.hints
     assert analysis.hints[0]["candidate_paths"] == ["src/billing.py"]
     assert "may still be unrelated" in analysis.hints[0]["rationale"]
+    assert analysis.hints[0]["locations"][0]["line"] == 3
+    assert analysis.hints[0]["locations"][0]["function"] == "charge_once"
+
+
+def test_extracts_jest_expected_and_received_values(tmp_path: Path) -> None:
+    root = tmp_path / "jest-app"
+    (root / "src").mkdir(parents=True)
+    (root / "src" / "price.js").write_text("export function price() { return 12; }\n", encoding="utf-8")
+    output = """Error: expect(received).toBe(expected)\n\nExpected: 10\nReceived: 12\n\n    at price (src/price.js:1:34)\n"""
+
+    analysis = analyze_root_cause(root, problem="wrong price", outputs=[(output, "")])
+
+    assert analysis.failures[0]["expected"] == "10"
+    assert analysis.failures[0]["actual"] == "12"
+    frame = next(frame for frame in analysis.frames if frame["path"] == "src/price.js")
+    assert frame["function"] == "price"
+    assert frame["line"] == 1

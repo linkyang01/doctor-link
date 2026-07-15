@@ -25,3 +25,5 @@ def test_real_github_scenarios_are_pinned_cross_language_and_reversible() -> Non
     assert all(len(item["commit"]) == 40 for item in scenarios)
     assert all(item["mutation"]["before"] != item["mutation"]["after"] for item in scenarios)
     assert all(item["expected_hint"] == item["mutation"]["path"] for item in scenarios)
+    assert all(isinstance(item["expected_line"], int) and item["expected_line"] > 0 for item in scenarios)
+    assert all(item["expected_function"] for item in scenarios)

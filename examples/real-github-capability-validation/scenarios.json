@@ -15,7 +15,9 @@
         "before": "    return str(value)\n",
         "after": "    return f\"BROKEN:{value}\"\n"
       },
-      "expected_hint": "src/click/utils.py"
+      "expected_hint": "src/click/utils.py",
+      "expected_line": 56,
+      "expected_function": "make_str"
     },
     {
       "name": "p-limit-concurrency-boundary",
@@ -30,7 +32,9 @@
         "before": "\t\tif (activeCount < concurrency && queue.size > 0) {\n",
         "after": "\t\tif (activeCount <= concurrency && queue.size > 0) {\n"
       },
-      "expected_hint": "index.js"
+      "expected_hint": "index.js",
+      "expected_line": 11,
+      "expected_function": "resumeNext"
     },
     {
       "name": "chalk-ansi-style-loss",
@@ -45,7 +49,9 @@
         "before": "\treturn openAll + string + closeAll;\n",
         "after": "\treturn string;\n"
       },
-      "expected_hint": "source/index.js"
+      "expected_hint": "source/index.js",
+      "expected_line": 199,
+      "expected_function": "applyStyle"
     }
   ]
 }

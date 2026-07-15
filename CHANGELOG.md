@@ -26,6 +26,7 @@ Doctor link follows semantic versioning. Public release publishing requires expl
 
 ### Added
 
+- Structured failure diagnostics for pytest and common JavaScript test output, including expected/actual values, project stack frames, exact changed lines, enclosing functions, source excerpts, and evidence-backed candidate scores.
 - Repeatable real-GitHub validation across Click, p-limit, and Chalk with native baselines, reversible production mutations, natural-language reproduction, and source-hint verification (Issue #167).
 - Authoritative post-v0.5.1 maintenance roadmap, support and security routes, compatibility/deprecation policy, issue templates, scheduled PyPI smoke workflow, and a pinned public-project preflight validation harness (Issue #156).
 - `doctor-link explain` clusters failing check output into advisory source-file root-cause hints without editing code (Issue #159).
