@@ -395,8 +395,78 @@ def test_javascript_repair_uses_npm_and_independently_verifies(tmp_path: Path) -
     assert result.project_type == "javascript"
     assert result.commands[0]["command"] == "npm test"
     assert result.rounds[0]["verification"][0]["status"] == "passed"
+    assert [layer["layer"] for layer in result.rounds[0]["verification_layers"]] == [
+        "focused",
+        "full_regression",
+    ]
+    assert all(layer["passed"] for layer in result.rounds[0]["verification_layers"])
     assert "package.json" in result.protected_verification_inputs
     assert "tests/calculator.test.js" in result.protected_verification_inputs
+
+
+def test_failed_focused_verification_skips_full_regression(tmp_path: Path) -> None:
+    root = _python_project(tmp_path)
+
+    result = solve_project(
+        root,
+        problem="add returns subtraction",
+        test_command=_check_command(),
+        output_root=tmp_path / "out",
+        allow_repair=True,
+        max_rounds=1,
+        repair_executor=ScriptedRepairExecutor([lambda _root: None]),
+    )
+
+    assert result.status == "failed"
+    layers = result.rounds[0]["verification_layers"]
+    assert layers[0]["layer"] == "focused"
+    assert layers[0]["passed"] is False
+    assert layers[1]["layer"] == "full_regression"
+    assert layers[1]["skipped"] is True
+    assert layers[1]["reason"] == "focused_verification_failed"
+
+
+def test_grounded_root_cause_gate_blocks_unmapped_failure_before_branch_creation(tmp_path: Path) -> None:
+    root = _python_project(tmp_path)
+
+    result = solve_project(
+        root,
+        problem="opaque failure",
+        test_command='python -c "raise SystemExit(9)"',
+        output_root=tmp_path / "out",
+        allow_repair=True,
+        require_grounded_root_cause=True,
+        repair_executor=ScriptedRepairExecutor([_fix]),
+    )
+
+    assert result.status == "blocked"
+    assert "grounded_root_cause_required" in result.blockers
+    assert result.repair_admission["status"] == "blocked"
+    assert result.repair_branch is None
+
+
+def test_grounded_root_cause_gate_allows_precise_project_traceback(tmp_path: Path) -> None:
+    root = _python_project(tmp_path)
+    (root / "calculator.py").write_text(
+        "def add(a: int, b: int) -> int:\n    raise RuntimeError('broken add')\n",
+        encoding="utf-8",
+    )
+    _run_git(root, "add", "calculator.py")
+    _run_git(root, "commit", "-m", "traceable fault")
+
+    result = solve_project(
+        root,
+        problem="add crashes",
+        test_command='python -c "from calculator import add; assert add(2, 3) == 5"',
+        output_root=tmp_path / "out",
+        allow_repair=True,
+        require_grounded_root_cause=True,
+        repair_executor=ScriptedRepairExecutor([_fix]),
+    )
+
+    assert result.status == "verified"
+    assert result.repair_admission["status"] == "allowed"
+    assert result.repair_admission["grounded"] is True
 
 
 @pytest.mark.skipif(shutil.which("npm") is None, reason="npm is required for the Node.js solve integration")

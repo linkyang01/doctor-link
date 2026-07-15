@@ -69,6 +69,7 @@ doctor-link solve /path/to/project \
   --problem "Checkout creates two charges" \
   --reproduce-command "python -m pytest tests/test_checkout.py::test_single_charge -q" \
   --test-command "python -m pytest tests/test_checkout.py -q" \
+  --require-grounded-root-cause \
   --allow-repair
 ```
 
@@ -83,6 +84,8 @@ Doctor link then:
 - returns `verified` only when all required checks pass without changing the original acceptance contract.
 
 Use `--max-rounds 1`, `2`, or `3` to reduce the retry budget. Use `--command-timeout` and `--repair-timeout` to set separate limits for project checks and Codex work.
+
+Use `--require-grounded-root-cause` when automatic editing must not start from an opaque failure. The gate requires a mapped project source candidate plus a precise line/function or production stack frame, and blocks before branch creation otherwise. This is a grounded-evidence gate for committed defects, not the stronger changed-file counterfactual performed by `explain --verify-hypothesis`.
 
 If a repair legitimately requires a test or verification configuration change, add `--allow-verification-changes` together with `--allow-repair`. This is an exception path: passing checks return `review_required` with exit code `6`, never `verified`, and every changed protected file remains in the receipt for human review.
 
@@ -171,6 +174,7 @@ Paths are resolved relative to the manifest. Scenario IDs are constrained to saf
 - `--suggest-only` is a middle ground between preview and `--allow-repair`: it creates an isolated branch, runs a single repair proposal, writes a structured change receipt (`change-receipt.json` / `.md`), and returns `suggestion_ready` (exit 7) without claiming `verified`. After review, either independently test and commit the proposal or discard its working-tree edits before starting a fresh `--allow-repair` run.
 - `doctor-link diff <session-or-project>` summarizes production vs test vs config changes and protected-input impact beyond a raw git diff. For a checked-out solve branch it includes uncommitted repair edits and uses the session's stored base commit.
 - Reproduction and test commands run before branch creation and are checked again for unexpected repository changes.
+- After each repair round, Doctor link runs a focused acceptance layer first. Only when it passes does Doctor link run the complete discovered regression contract. Both layers are written to `verification-layers.json`; a missing required result can never count as passing.
 - Tests, package manifests and lockfiles, JavaScript/TypeScript test-runner configuration, Python test configuration, reproduction/test catalogs, and directly referenced verification scripts are hash-protected by default.
 - A repair that changes protected verification inputs cannot return `verified`; without exception approval it is blocked immediately.
 - Codex receives workspace-write access only after `--allow-repair`.

@@ -156,6 +156,10 @@ JavaScript/TypeScript test discovery respects `packageManager` and lockfiles. It
 
 By default, `solve` hash-protects tests, package manifests and lockfiles, test configuration, configured reproduction/test catalogs, and directly referenced verification scripts. If Codex changes any protected input, Doctor link returns `blocked` with `verification_inputs_modified`, even when the changed checks pass. `--allow-verification-changes` is an explicit exception that is valid only with `--allow-repair`; passing checks then return `review_required` (exit 6), never `verified`.
 
+Repair acceptance is layered. Doctor link first runs explicit reproduction commands, or the complete command set when no narrower reproduction exists. A failure at this focused layer skips the full regression layer. When focused verification passes, every required command is rerun as the complete regression contract. Each round records both layers in `verification-layers.json`; `verified` requires an explicit passing result for every required command and unchanged protected verification inputs.
+
+Use `--require-grounded-root-cause` to block automatic branch creation and editing when the failure cannot be mapped to project source with a precise line/function or production stack frame. The solve receipt records this decision under `repair_admission`. This gate is suitable for committed defects where reverting to `HEAD` cannot be used as a counterfactual; for uncommitted regressions, `explain --verify-hypothesis` provides the stronger `confirmed` experiment.
+
 Run repeatable scenarios across projects with a versioned YAML or JSON manifest:
 
 ```bash

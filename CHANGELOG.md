@@ -8,6 +8,7 @@ Doctor link follows semantic versioning. Public release publishing requires expl
 
 ### Fixed
 
+- Automatic solve no longer treats missing required verification results as passing; every required command must have an explicit `passed` result.
 - Solve-session `diff` receipts retain uncommitted repair edits when the repair branch is checked out and use the stored immutable base commit.
 - `explain` reports when a diagnostic check changes the Git worktree instead of silently presenting the result as read-only.
 - `suggest-only` guidance distinguishes accepting and testing a proposal from discarding it before a verified repair rerun.
@@ -26,6 +27,8 @@ Doctor link follows semantic versioning. Public release publishing requires expl
 
 ### Added
 
+- Two-layer automatic repair acceptance: a focused failure gate runs before the complete regression contract, with separate machine-readable receipts and explicit full-regression skip reasons.
+- Opt-in `solve --require-grounded-root-cause` admission control that blocks branch creation and repair unless failing evidence maps to project source with a precise location or production frame.
 - Project-owned test-to-production call chains and evidence-bounded repair guidance with explicit facts, inferences, verified evidence, current diff excerpts, risk, focused checks, and full regression commands.
 - Opt-in `explain --verify-hypothesis` counterfactual checks that temporarily restore the top changed-file candidate to `HEAD`, rerun failing checks, restore exact original bytes, and report confirmation plus worktree-integrity evidence.
 - Structured failure diagnostics for pytest and common JavaScript test output, including expected/actual values, project stack frames, exact changed lines, enclosing functions, source excerpts, and evidence-backed candidate scores.
