@@ -2,6 +2,10 @@
 
 This index separates current repaired-source evidence, historical evidence, and actions that have not occurred. A green workflow run certifies only the commit and scope named below.
 
+## 2026-07-15 adversarial deep-diagnosis validation
+
+Eight misleading and unsafe scenarios cover multi-file call paths, conflicting recent changes and stack evidence, focused-pass/full-regression-fail, dependency-only errors, opaque failures, protected-input tampering, diagnostic worktree pollution, and exact counterfactual restoration. The suite exposed and fixed two classification defects, then retained **3/3 PASS** on Click, p-limit, and Chalk. See [report](adversarial-deep-diagnosis-validation.md) and [evidence](evidence/adversarial-deep-diagnosis-2026-07-15/) (**8/8 PASS**).
+
 ## 2026-07-15 real GitHub capability validation
 
 Issue [#167](https://github.com/linkyang01/doctor-link/issues/167) adds native-test validation on pinned Click, p-limit, and Chalk repositories. Each scenario passes its clean upstream baseline, injects a reversible production fault, reproduces it from ordinary language, ranks the changed production file first as an advisory hint, verifies checks did not add Git changes, and restores the initial repository state. See [report](real-github-capability-validation.md) and [evidence](evidence/real-github-capability-2026-07-15/) (**3/3 PASS**).

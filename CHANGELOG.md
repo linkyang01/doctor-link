@@ -8,6 +8,8 @@ Doctor link follows semantic versioning. Public release publishing requires expl
 
 ### Fixed
 
+- Synthetic traceback locations such as `<string>` are no longer treated as project production code, and changed-file fallbacks no longer falsely claim stack support.
+- Changed production candidates that disagree with project stack frames now emit an explicit conflicting-evidence warning instead of silently presenting aligned evidence.
 - Automatic solve no longer treats missing required verification results as passing; every required command must have an explicit `passed` result.
 - Solve-session `diff` receipts retain uncommitted repair edits when the repair branch is checked out and use the stored immutable base commit.
 - `explain` reports when a diagnostic check changes the Git worktree instead of silently presenting the result as read-only.

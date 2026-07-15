@@ -184,8 +184,8 @@ def analyze_root_cause(
     if not shared:
         shared = [name for name, _ in symbols.most_common(8)]
 
-    production_frames = [frame for frame in frames if not frame.in_tests]
-    test_frames = [frame for frame in frames if frame.in_tests]
+    production_frames = [frame for frame in frames if frame.project_code and not frame.in_tests]
+    test_frames = [frame for frame in frames if frame.project_code and frame.in_tests]
     path_hits = Counter(frame.path for frame in production_frames if frame.path)
     hints: list[RootCauseHint] = []
 
@@ -194,7 +194,8 @@ def analyze_root_cause(
         locations = _locations_for_path(root, path, frames)
         evidence = ["production file differs from Git HEAD"]
         score = 40
-        if locations:
+        stack_referenced = any(frame.path == path and not frame.in_tests for frame in frames)
+        if stack_referenced:
             evidence.append("failure stack references this production file")
             score += 35
         hints.append(
@@ -264,8 +265,8 @@ def analyze_root_cause(
         key=lambda item: (
             0 if item.rationale.startswith("This production file differs") else 1,
             0 if item.candidate_paths else 1,
-            -item.confidence,
             -item.score,
+            -item.confidence,
             -item.evidence_count,
             item.symbol,
         ),
@@ -302,6 +303,12 @@ def analyze_root_cause(
         summary = "Failing output was present, but no stable symbol or source path could be clustered."
 
     warnings: list[str] = []
+    changed_set = set(changed_source_paths)
+    stack_set = {frame.path for frame in production_frames}
+    if changed_set and stack_set and changed_set.isdisjoint(stack_set):
+        warnings.append(
+            "Changed production files and production stack frames do not overlap; treat ranking as conflicting evidence and verify the changed-file hypothesis before editing."
+        )
     if all(frame.in_tests for frame in frames) and frames:
         warnings.append("Tracebacks only listed test files; production mapping may be incomplete.")
     warnings.append("Hints are advisory and must not be treated as verified root cause.")
@@ -421,7 +428,7 @@ def _extract_frames(text: str, root: Path) -> list[TraceFrame]:
             path = path.replace("\\", "/")
             if path.startswith("file://"):
                 path = path.removeprefix("file://")
-        project_code = not Path(path).is_absolute() and not any(part in IGNORED_PARTS for part in Path(path).parts)
+        project_code = _is_project_source_path(root, path)
         normalized.append(TraceFrame(
             path=path,
             line=frame.line,
@@ -431,6 +438,20 @@ def _extract_frames(text: str, root: Path) -> list[TraceFrame]:
             source=_source_line(root, path, frame.line),
         ))
     return normalized
+
+
+def _is_project_source_path(root: Path, path: str) -> bool:
+    candidate = Path(path)
+    if candidate.is_absolute() or candidate.suffix.lower() not in {".cjs", ".js", ".jsx", ".mjs", ".py", ".ts", ".tsx"}:
+        return False
+    if any(part in IGNORED_PARTS for part in candidate.parts):
+        return False
+    try:
+        resolved = (root / candidate).resolve()
+        resolved.relative_to(root)
+    except (OSError, ValueError):
+        return False
+    return resolved.is_file()
 
 
 def _extract_failure_detail(text: str, frames: Sequence[TraceFrame]) -> dict[str, Any]:

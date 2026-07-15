@@ -1,0 +1,17 @@
+{
+  "schema": "doctor-link-adversarial-deep-diagnosis-result-v1",
+  "generated_at": "2026-07-15",
+  "scenario_count": 8,
+  "passed_count": 8,
+  "real_github_regression": {"scenario_count": 3, "passed_count": 3},
+  "scenarios": [
+    {"name": "multi-file-call-chain", "passed": true},
+    {"name": "conflicting-changed-file-and-stack", "passed": true},
+    {"name": "focused-pass-full-regression-fail", "passed": true},
+    {"name": "dependency-error-not-project-code", "passed": true},
+    {"name": "opaque-failure-admission-block", "passed": true},
+    {"name": "protected-verification-input-block", "passed": true},
+    {"name": "diagnostic-worktree-pollution", "passed": true},
+    {"name": "counterfactual-exact-restoration", "passed": true}
+  ]
+}
