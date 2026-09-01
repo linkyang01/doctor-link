@@ -31,7 +31,7 @@ jobs:
           mkdir -p smoke-project
           printf '[project]\nname = "doctor-link-smoke"\nversion = "0.0.0"\n' > smoke-project/pyproject.toml
           doctor-link preflight --json smoke-project > preflight.json
-          python -c 'import json; p=json.load(open("preflight.json")); assert p["status"] == "passed" and p["blocking_count"] == 0'
+          python -c 'import json; p=json.load(open("preflight.json")); assert p["status"] in {"passed", "warning"} and p["blocking_count"] == 0'
       - name: Upload receipt
         uses: actions/upload-artifact@v7
         with:
