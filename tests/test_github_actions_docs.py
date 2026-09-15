@@ -9,7 +9,7 @@ import yaml
 ACTION_MAJORS = {
     "actions/checkout": "v7",
     "actions/download-artifact": "v8",
-    "actions/setup-python": "v6",
+    "actions/setup-python": "v7",
     "actions/upload-artifact": "v7",
     "softprops/action-gh-release": "v3",
 }
